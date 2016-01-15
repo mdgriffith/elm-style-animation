@@ -14,6 +14,7 @@ import Time exposing (Time, second)
 import Signal exposing (Address)
 
 import ElmUI as UI
+import Animation exposing (..)
 
 import Debug
 
@@ -23,7 +24,6 @@ import Debug
 type alias Model = { i : Int
                    , animation : UI.Model 
                    }
-
 
 -- UPDATE
 
@@ -38,10 +38,15 @@ update action model =
   case action of
     Increment ->
       let 
-        ( anim, fx ) = UI.update 
-                            (UI.Begin 
-                                  <| UI.FadeIn (2*second))
-                            model.animation
+        (anim, fx) = UI.update 
+                        (UI.Begin 
+                             [ UI.opacity 
+                                 (animation 0 
+                                      |> from 0.0 
+                                      |> to 1.0
+                                      |> duration (2.0*second) )
+                             ])
+                        model.animation
       in
         ( { model | i = model.i + 1
                   , animation = anim }
@@ -65,9 +70,10 @@ update action model =
 
 view : Address Action -> Model -> Html
 view address model =
-            div [ style (UI.render model.animation) ]
+            div [ ]
                 [ button [ onClick address Decrement ] [ text "-" ]
-                , div [ ] [ text (toString model.i) ]
+                , div [ style (UI.render model.animation) ] 
+                      [ text (toString model.i) ]
                 , button [ onClick address Increment ] [ text "+" ]
                 ]
 
