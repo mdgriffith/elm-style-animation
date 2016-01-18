@@ -8,6 +8,7 @@ import Time exposing (Time, second)
 import Effects exposing (Effects)
 
 import Signal exposing (Address)
+import String
 
 import Animation as A
 
@@ -21,24 +22,26 @@ type alias Model = { start : Maybe Time
 
 
 type PropAnimation
-        = Opacity A.Animation
+        = Prop String String A.Animation
+        | Opacity A.Animation
         | Height DistanceUnit A.Animation
         | Width DistanceUnit A.Animation
         | Left DistanceUnit A.Animation
         | Top DistanceUnit A.Animation
         | Right DistanceUnit A.Animation
         | Bottom DistanceUnit A.Animation
-        | Prop String String A.Animation
 
-type Transform 
-        = NoTransform
-        --| Matrix --Float Float Float Float Float Float 
-        --| Matrix3d -- Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float 
+        --| PaddingLeft DistanceUnit
+        
+
+        -- Transformations
+--        --| Matrix --Float Float Float Float Float Float 
+--        --| Matrix3d -- Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float 
         | Translate DistanceUnit A.Animation A.Animation
         | Translate3d DistanceUnit A.Animation A.Animation A.Animation
         | TranslateX DistanceUnit A.Animation
         | TranslateY DistanceUnit A.Animation
-        | Scale A.Animation A.Animation
+        | Scale A.Animation
         | Scale3d A.Animation A.Animation A.Animation
         | ScaleX A.Animation
         | ScaleY A.Animation
@@ -49,11 +52,8 @@ type Transform
         | RotateY RotationUnit A.Animation
         | Skew RotationUnit A.Animation A.Animation
         | SkewX RotationUnit A.Animation 
-        | SkeyY RotationUnit A.Animation
+        | SkewY RotationUnit A.Animation
         | Perspective A.Animation
-        | Initial
-        | Inherit
-
 
 type DistanceUnit
       = Px
@@ -68,33 +68,12 @@ type RotationUnit
       | Turn
 
 
+--type MatrixAnimation = MatrixAnimation
 
+--type Matrix3dAnimation = Matrix3dAnimation
 
-
---none  Defines that there should be no transformation  Play it »
 --matrix(n,n,n,n,n,n) Defines a 2D transformation, using a matrix of six values Play it »
 --matrix3d(n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n) Defines a 3D transformation, using a 4x4 matrix of 16 values  
---translate(x,y)  Defines a 2D translation  Play it »
---translate3d(x,y,z)  Defines a 3D translation  
---translateX(x) Defines a translation, using only the value for the X-axis  Play it »
---translateY(y) Defines a translation, using only the value for the Y-axis  Play it »
---translateZ(z) Defines a 3D translation, using only the value for the Z-axis 
---scale(x,y)  Defines a 2D scale transformation Play it »
---scale3d(x,y,z)  Defines a 3D scale transformation 
---scaleX(x) Defines a scale transformation by giving a value for the X-axis Play it »
---scaleY(y) Defines a scale transformation by giving a value for the Y-axis Play it »
---scaleZ(z) Defines a 3D scale transformation by giving a value for the Z-axis  
---rotate(angle) Defines a 2D rotation, the angle is specified in the parameter  Play it »
---rotate3d(x,y,z,angle) Defines a 3D rotation 
---rotateX(angle)  Defines a 3D rotation along the X-axis  Play it »
---rotateY(angle)  Defines a 3D rotation along the Y-axis  Play it »
---rotateZ(angle)  Defines a 3D rotation along the Z-axis  Play it »
---skew(x-angle,y-angle) Defines a 2D skew transformation along the X- and the Y-axis  Play it »
---skewX(angle)  Defines a 2D skew transformation along the X-axis Play it »
---skewY(angle)  Defines a 2D skew transformation along the Y-axis Play it »
---perspective(n)  Defines a perspective view for a 3D transformed element 
---initial Sets this property to its default value. Read about initial 
---inherit Inherits this property from its parent element. Read about inherit
 
 
 
@@ -116,80 +95,172 @@ render model =
             case model.anim of
               Nothing -> []
               Just anim ->
-                List.map (renderSplat model.elapsed) anim
+                -- Combine all transform properties
+                let
+                  rendered = 
+                      List.map (renderProp model.elapsed) anim
+
+                  transformsNprops = 
+                      List.partition (\s -> fst s == "transform") rendered
+
+                  combinedTransforms = ("transform", 
+                        String.concat (List.intersperse " " 
+                        (List.map (snd) (fst transformsNprops))))
+                in
+                  snd transformsNprops ++ [combinedTransforms]
+               
                 
 
-renderSplat : Time -> PropAnimation -> (String, String)
-renderSplat elapsed propAnim =
-                let
-                  (propName, anim) = 
-                    case propAnim of
-                      Prop str _ a -> (str, a)
-                      Opacity a -> ("opacity", a)
-                      Height _ a -> ("height", a)
-                      Width _ a -> ("width", a)
-                      Left _ a -> ("left", a)
-                      Right _ a -> ("right", a)
-                      Bottom _ a -> ("bottom", a)
-                      Top _ a -> ("top", a)
- 
-                  propValue = renderUnit propAnim (A.animate elapsed anim)
-                in
-                  (propName, propValue)
+renderProp : Time -> PropAnimation -> (String, String)
+renderProp elapsed propAnim =
+                  ( renderName propAnim
+                  , renderValue propAnim elapsed
+                  )
 
-renderUnit : PropAnimation -> Float -> String
-renderUnit prop val =
+renderName : PropAnimation -> String
+renderName propAnim = 
+            case propAnim of
+              Prop str _ _-> str
+
+              Opacity _   -> "opacity"
+              Height _ _  -> "height"
+              Width _ _   -> "width"
+              Left _ _    -> "left"
+              Right _ _   -> "right"
+              Bottom _ _  -> "bottom"
+              Top _ _     -> "top"
+
+              Translate _ _ _ -> "transform"
+              Translate3d _ _ _ _ ->"transform"
+              TranslateX _ _-> "transform"
+              TranslateY _ _-> "transform"
+              Scale _ -> "transform"
+              Scale3d _ _ _ -> "transform"
+              ScaleX _ -> "transform"
+              ScaleY _ -> "transform"
+              ScaleZ _ -> "transform"
+              Rotate _ _ -> "transform"
+              Rotate3d _ _ _ _ _ -> "transform"
+              RotateX _ _ -> "transform"
+              RotateY _ _ -> "transform"
+              Skew _ _ _  -> "transform"
+              SkewX _ _ -> "transform"
+              SkewY _ _ -> "transform"
+              Perspective _ -> "transform"
+
+
+renderValue : PropAnimation -> Float -> String
+renderValue prop elapsed =
+            let
+              val a = toString (A.animate elapsed a)
+              dval unit a = dUnit unit (val a)
+              rval unit a = rUnit unit (val a)
+            in
               case prop of
-                Opacity _ -> toString val
-                Height unit _ -> renderDistanceUnit unit val
-                Width unit _ -> renderDistanceUnit unit val
-                Left unit _ -> renderDistanceUnit unit val
-                Top unit _ -> renderDistanceUnit unit val
-                Right unit _ -> renderDistanceUnit unit val
-                Bottom unit _ -> renderDistanceUnit unit val
-                Prop _ u _ -> toString val ++ u
+                Opacity a -> val a
+                Height unit a -> dval unit a
+                Width unit a -> dval unit a
+                Left unit a -> dval unit a
+                Top unit a -> dval unit a
+                Right unit a -> dval unit a
+                Bottom unit a -> dval unit a
+                Prop _ u a -> (val a) ++ u
+
+                Translate unit a1 a2 -> "translate(" ++ (dval unit a1) 
+                                              ++ "," ++ (dval unit a2) 
+                                              ++ ")"
+                Translate3d unit a1 a2 a3 -> "translate3d(" ++ (dval unit a1) 
+                                                     ++ "," ++ (dval unit a2) 
+                                                     ++  "," ++ (dval unit a3) 
+                                                     ++ ")"
+                TranslateX unit a -> "translateX(" ++ dval unit a ++ ")"
+                TranslateY unit a -> "translateY(" ++ dval unit a ++ ")"
+                Scale a1 -> "scale(" ++ (val a1)  ++ ")"
+                Scale3d a1 a2 a3 -> "scale3d(" ++ (val a1) 
+                                        ++ "," ++ (val a2) 
+                                        ++ "," ++ (val a3) 
+                                        ++ ")"
+                ScaleX a -> "scaleX(" ++ val a ++ ")"
+                ScaleY a -> "scaleY(" ++ val a ++ ")"
+                ScaleZ a -> "scaleZ(" ++ val a ++ ")"
+                Rotate unit a -> "rotate(" ++ rval unit a ++ ")"
+                Rotate3d unit a1 a2 a3 a4 -> 
+                                          "scale3d(" ++ (val a1) 
+                                              ++ "," ++ (val a2) 
+                                              ++ "," ++ (val a3) 
+                                              ++ "," ++ (rval unit a4) 
+                                              ++ ")"
+
+                RotateX unit a -> "rotateX(" ++ rval unit a ++ ")"
+                RotateY unit a -> "rotateY(" ++rval unit a ++ ")"
+                Skew unit a1 a2 -> 
+                              "skew(" ++ (rval unit a1) 
+                               ++ "," ++ (rval unit a2) 
+                               ++ ")"
+                SkewX unit a -> "skewX(" ++ rval unit a ++ ")"
+                SkewY unit a -> "skewY(" ++ rval unit a ++ ")"
+                Perspective a -> "perspective(" ++ (val a) ++ ")"
 
 
-renderDistanceUnit : DistanceUnit -> Float -> String
-renderDistanceUnit unit num = 
-                  case unit of
-                    Px -> toString num ++ "px"
+isDone : Time -> PropAnimation -> Bool
+isDone elapsed propAnim = 
+              let
+                done a = A.isDone elapsed a
+              in 
+                case propAnim of
+                    Prop _ _ a -> done a
+                    Opacity a -> done a
+                    Height _ a -> done a
+                    Width _ a -> done a
+                    Left _ a -> done a
+                    Right _ a -> done a
+                    Bottom _ a -> done a
+                    Top _ a -> done a
+                    Translate _ a1 a2 -> done a1 && done a2
+                    Translate3d _ a1 a2 a3 -> done a1 && done a2 && done a3
+                    TranslateX _ a -> done a
+                    TranslateY _ a -> done a
+                    Scale a1 -> done a1 
+                    Scale3d a1 a2 a3 -> done a1 && done a2 && done a3
+                    ScaleX a -> done a
+                    ScaleY a -> done a
+                    ScaleZ a -> done a
+                    Rotate _ a -> done a
+                    Rotate3d _ a1 a2 a3 a4 -> done a1 && done a2 && done a3 && done a4
+                    RotateX _ a -> done a
+                    RotateY _ a -> done a
+                    Skew _ a1 a2 -> done a1 && done a2 
+                    SkewX _ a -> done a
+                    SkewY _ a -> done a
+                    Perspective a -> done a
 
-                    Percent -> toString num ++ "%"
 
-                    Rem -> toString num ++ "rem"
+dUnit : DistanceUnit -> String -> String
+dUnit unit num = 
+          case unit of
+            Px -> num ++ "px"
 
-                    Em -> toString num ++ "em"
+            Percent -> num ++ "%"
+
+            Rem -> num ++ "rem"
+
+            Em -> num ++ "em"
 
 
+rUnit : RotationUnit -> String -> String
+rUnit unit num =
+          case unit of
+            Deg -> num ++ "deg"
+
+            Grad -> num ++ "grad"
+
+            Rad -> num ++ "rad"
+
+            Turn -> num ++ "turn"
 
 
-
+animate : List PropAnimation -> Model -> ( Model, Effects Action )
 animate anims model = update (Begin anims) model
-
-
---propStartValues : List PropAnimation -> List (PropAnimation, Float)
---propStartValues propAnims = 
---                  List.map (\pa -> (pa, A.getFrom pa.animation)) propAnims
-
-
---propEndValues : List PropAnimation -> List (PropAnimation, Float)
---propEndValues propAnims = 
---                  List.map (\pa -> (pa, A.getTo pa.animation)) propAnims
-
---equalAnimationValues : List (PropAnimation, Float) -> List (PropAnimation, Float) -> Bool
---equalAnimationValues props1 props2 = 
---                          List.all
---                            (\(p1, v1) ->
---                                List.any 
---                                  (\(p2, v2) ->
---                                    p1.property == p2.property
---                                    && v1 == v2
---                                  ) 
---                                props2
---                            )
---                            props1
-
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -197,26 +268,10 @@ update action model =
         case action of
 
           Begin anim ->
-            --let
-            --  newEndValues = propEndValues anim
-            --  alreadyGoingThere = 
-            --    case model.anim of
-            --      Nothing -> False
-            --      Just a ->
-            --        let
-            --          oldEndValue = propEndValues a
-            --        in
-            --          equalAnimationValues newEndValues oldEndValue
-
-             
-            --in
-            --  if alreadyGoingThere then
-            --    ( model, Effects.none )
-            --  else
-                ( { model | anim = Just anim
-                          , elapsed = 0.0
-                          , start = Nothing }
-                , Effects.tick Tick )
+            ( { model | anim = Just anim
+                      , elapsed = 0.0
+                      , start = Nothing }
+            , Effects.tick Tick )
 
           Tick now ->
             let
@@ -242,12 +297,7 @@ update action model =
                           , start = Just start }
                 , Effects.tick Tick )
 
---opacity : A.Animation -> PropAnimation
---opacity anim = 
 
---            { animation = anim
---               , property = Opacity 
---               }
 
 fadeIn : Time -> PropAnimation
 fadeIn dur = Opacity 
@@ -264,28 +314,7 @@ fadeOut dur = Opacity
                       |> A.duration dur) 
 
 
---animate : Property -> A.Animation -> PropAnimation
---animate prop anim = { animation = anim
---                    , property = prop }
 
-
-
-
-isDone : Time -> PropAnimation -> Bool
-isDone elapsed propAnim = 
-                  let
-                    anim =
-                      case propAnim of
-                        Prop _ _ a -> a
-                        Opacity a -> a
-                        Height _ a -> a
-                        Width _ a -> a
-                        Left _ a -> a
-                        Right _ a -> a
-                        Bottom _ a -> a
-                        Top _ a -> a
-                  in 
-                    A.isDone elapsed anim
 
 
 

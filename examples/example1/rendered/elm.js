@@ -10850,84 +10850,168 @@ Elm.ElmUI.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var isDone = F2(function (elapsed,propAnim) {
-      var anim = function () {
-         var _p0 = propAnim;
-         switch (_p0.ctor)
-         {case "Prop": return _p0._2;
-            case "Opacity": return _p0._0;
-            case "Height": return _p0._1;
-            case "Width": return _p0._1;
-            case "Left": return _p0._1;
-            case "Right": return _p0._1;
-            case "Bottom": return _p0._1;
-            default: return _p0._1;}
-      }();
-      return A2($Animation.isDone,elapsed,anim);
+   var rUnit = F2(function (unit,num) {
+      var _p0 = unit;
+      switch (_p0.ctor)
+      {case "Deg": return A2($Basics._op["++"],num,"deg");
+         case "Grad": return A2($Basics._op["++"],num,"grad");
+         case "Rad": return A2($Basics._op["++"],num,"rad");
+         default: return A2($Basics._op["++"],num,"turn");}
    });
-   var renderDistanceUnit = F2(function (unit,num) {
+   var dUnit = F2(function (unit,num) {
       var _p1 = unit;
       switch (_p1.ctor)
-      {case "Px": return A2($Basics._op["++"],$Basics.toString(num),"px");
-         case "Percent": return A2($Basics._op["++"],$Basics.toString(num),"%");
-         case "Rem": return A2($Basics._op["++"],$Basics.toString(num),"rem");
-         default: return A2($Basics._op["++"],$Basics.toString(num),"em");}
+      {case "Px": return A2($Basics._op["++"],num,"px");
+         case "Percent": return A2($Basics._op["++"],num,"%");
+         case "Rem": return A2($Basics._op["++"],num,"rem");
+         default: return A2($Basics._op["++"],num,"em");}
    });
-   var renderUnit = F2(function (prop,val) {
-      var _p2 = prop;
+   var isDone = F2(function (elapsed,propAnim) {
+      var done = function (a) {    return A2($Animation.isDone,elapsed,a);};
+      var _p2 = propAnim;
       switch (_p2.ctor)
-      {case "Opacity": return $Basics.toString(val);
-         case "Height": return A2(renderDistanceUnit,_p2._0,val);
-         case "Width": return A2(renderDistanceUnit,_p2._0,val);
-         case "Left": return A2(renderDistanceUnit,_p2._0,val);
-         case "Top": return A2(renderDistanceUnit,_p2._0,val);
-         case "Right": return A2(renderDistanceUnit,_p2._0,val);
-         case "Bottom": return A2(renderDistanceUnit,_p2._0,val);
-         default: return A2($Basics._op["++"],$Basics.toString(val),_p2._1);}
+      {case "Prop": return done(_p2._2);
+         case "Opacity": return done(_p2._0);
+         case "Height": return done(_p2._1);
+         case "Width": return done(_p2._1);
+         case "Left": return done(_p2._1);
+         case "Right": return done(_p2._1);
+         case "Bottom": return done(_p2._1);
+         case "Top": return done(_p2._1);
+         case "Translate": return done(_p2._1) && done(_p2._2);
+         case "Translate3d": return done(_p2._1) && (done(_p2._2) && done(_p2._3));
+         case "TranslateX": return done(_p2._1);
+         case "TranslateY": return done(_p2._1);
+         case "Scale": return done(_p2._0);
+         case "Scale3d": return done(_p2._0) && (done(_p2._1) && done(_p2._2));
+         case "ScaleX": return done(_p2._0);
+         case "ScaleY": return done(_p2._0);
+         case "ScaleZ": return done(_p2._0);
+         case "Rotate": return done(_p2._1);
+         case "Rotate3d": return done(_p2._1) && (done(_p2._2) && (done(_p2._3) && done(_p2._4)));
+         case "RotateX": return done(_p2._1);
+         case "RotateY": return done(_p2._1);
+         case "Skew": return done(_p2._1) && done(_p2._2);
+         case "SkewX": return done(_p2._1);
+         case "SkewY": return done(_p2._1);
+         default: return done(_p2._0);}
    });
-   var renderSplat = F2(function (elapsed,propAnim) {
-      var _p3 = function () {
-         var _p4 = propAnim;
-         switch (_p4.ctor)
-         {case "Prop": return {ctor: "_Tuple2",_0: _p4._0,_1: _p4._2};
-            case "Opacity": return {ctor: "_Tuple2",_0: "opacity",_1: _p4._0};
-            case "Height": return {ctor: "_Tuple2",_0: "height",_1: _p4._1};
-            case "Width": return {ctor: "_Tuple2",_0: "width",_1: _p4._1};
-            case "Left": return {ctor: "_Tuple2",_0: "left",_1: _p4._1};
-            case "Right": return {ctor: "_Tuple2",_0: "right",_1: _p4._1};
-            case "Bottom": return {ctor: "_Tuple2",_0: "bottom",_1: _p4._1};
-            default: return {ctor: "_Tuple2",_0: "top",_1: _p4._1};}
-      }();
-      var propName = _p3._0;
-      var anim = _p3._1;
-      var propValue = A2(renderUnit,propAnim,A2($Animation.animate,elapsed,anim));
-      return {ctor: "_Tuple2",_0: propName,_1: propValue};
+   var renderValue = F2(function (prop,elapsed) {
+      var val = function (a) {    return $Basics.toString(A2($Animation.animate,elapsed,a));};
+      var dval = F2(function (unit,a) {    return A2(dUnit,unit,val(a));});
+      var rval = F2(function (unit,a) {    return A2(rUnit,unit,val(a));});
+      var _p3 = prop;
+      switch (_p3.ctor)
+      {case "Opacity": return val(_p3._0);
+         case "Height": return A2(dval,_p3._0,_p3._1);
+         case "Width": return A2(dval,_p3._0,_p3._1);
+         case "Left": return A2(dval,_p3._0,_p3._1);
+         case "Top": return A2(dval,_p3._0,_p3._1);
+         case "Right": return A2(dval,_p3._0,_p3._1);
+         case "Bottom": return A2(dval,_p3._0,_p3._1);
+         case "Prop": return A2($Basics._op["++"],val(_p3._2),_p3._1);
+         case "Translate": var _p4 = _p3._0;
+           return A2($Basics._op["++"],
+           "translate(",
+           A2($Basics._op["++"],A2(dval,_p4,_p3._1),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(dval,_p4,_p3._2),")"))));
+         case "Translate3d": var _p5 = _p3._0;
+           return A2($Basics._op["++"],
+           "translate3d(",
+           A2($Basics._op["++"],
+           A2(dval,_p5,_p3._1),
+           A2($Basics._op["++"],",",A2($Basics._op["++"],A2(dval,_p5,_p3._2),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(dval,_p5,_p3._3),")"))))));
+         case "TranslateX": return A2($Basics._op["++"],"translateX(",A2($Basics._op["++"],A2(dval,_p3._0,_p3._1),")"));
+         case "TranslateY": return A2($Basics._op["++"],"translateY(",A2($Basics._op["++"],A2(dval,_p3._0,_p3._1),")"));
+         case "Scale": return A2($Basics._op["++"],"scale(",A2($Basics._op["++"],val(_p3._0),")"));
+         case "Scale3d": return A2($Basics._op["++"],
+           "scale3d(",
+           A2($Basics._op["++"],
+           val(_p3._0),
+           A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p3._1),A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p3._2),")"))))));
+         case "ScaleX": return A2($Basics._op["++"],"scaleX(",A2($Basics._op["++"],val(_p3._0),")"));
+         case "ScaleY": return A2($Basics._op["++"],"scaleY(",A2($Basics._op["++"],val(_p3._0),")"));
+         case "ScaleZ": return A2($Basics._op["++"],"scaleZ(",A2($Basics._op["++"],val(_p3._0),")"));
+         case "Rotate": return A2($Basics._op["++"],"rotate(",A2($Basics._op["++"],A2(rval,_p3._0,_p3._1),")"));
+         case "Rotate3d": return A2($Basics._op["++"],
+           "scale3d(",
+           A2($Basics._op["++"],
+           val(_p3._1),
+           A2($Basics._op["++"],
+           ",",
+           A2($Basics._op["++"],
+           val(_p3._2),
+           A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p3._3),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(rval,_p3._0,_p3._4),")"))))))));
+         case "RotateX": return A2($Basics._op["++"],"rotateX(",A2($Basics._op["++"],A2(rval,_p3._0,_p3._1),")"));
+         case "RotateY": return A2($Basics._op["++"],"rotateY(",A2($Basics._op["++"],A2(rval,_p3._0,_p3._1),")"));
+         case "Skew": var _p6 = _p3._0;
+           return A2($Basics._op["++"],
+           "skew(",
+           A2($Basics._op["++"],A2(rval,_p6,_p3._1),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(rval,_p6,_p3._2),")"))));
+         case "SkewX": return A2($Basics._op["++"],"skewX(",A2($Basics._op["++"],A2(rval,_p3._0,_p3._1),")"));
+         case "SkewY": return A2($Basics._op["++"],"skewY(",A2($Basics._op["++"],A2(rval,_p3._0,_p3._1),")"));
+         default: return A2($Basics._op["++"],"perspective(",A2($Basics._op["++"],val(_p3._0),")"));}
    });
+   var renderName = function (propAnim) {
+      var _p7 = propAnim;
+      switch (_p7.ctor)
+      {case "Prop": return _p7._0;
+         case "Opacity": return "opacity";
+         case "Height": return "height";
+         case "Width": return "width";
+         case "Left": return "left";
+         case "Right": return "right";
+         case "Bottom": return "bottom";
+         case "Top": return "top";
+         case "Translate": return "transform";
+         case "Translate3d": return "transform";
+         case "TranslateX": return "transform";
+         case "TranslateY": return "transform";
+         case "Scale": return "transform";
+         case "Scale3d": return "transform";
+         case "ScaleX": return "transform";
+         case "ScaleY": return "transform";
+         case "ScaleZ": return "transform";
+         case "Rotate": return "transform";
+         case "Rotate3d": return "transform";
+         case "RotateX": return "transform";
+         case "RotateY": return "transform";
+         case "Skew": return "transform";
+         case "SkewX": return "transform";
+         case "SkewY": return "transform";
+         default: return "transform";}
+   };
+   var renderProp = F2(function (elapsed,propAnim) {    return {ctor: "_Tuple2",_0: renderName(propAnim),_1: A2(renderValue,propAnim,elapsed)};});
    var render = function (model) {
-      var _p5 = model.anim;
-      if (_p5.ctor === "Nothing") {
+      var _p8 = model.anim;
+      if (_p8.ctor === "Nothing") {
             return _U.list([]);
          } else {
-            return A2($List.map,renderSplat(model.elapsed),_p5._0);
+            var rendered = A2($List.map,renderProp(model.elapsed),_p8._0);
+            var transformsNprops = A2($List.partition,function (s) {    return _U.eq($Basics.fst(s),"transform");},rendered);
+            var combinedTransforms = {ctor: "_Tuple2"
+                                     ,_0: "transform"
+                                     ,_1: $String.concat(A2($List.intersperse," ",A2($List.map,$Basics.snd,$Basics.fst(transformsNprops))))};
+            return A2($Basics._op["++"],$Basics.snd(transformsNprops),_U.list([combinedTransforms]));
          }
    };
    var Tick = function (a) {    return {ctor: "Tick",_0: a};};
    var update = F2(function (action,model) {
-      var _p6 = action;
-      if (_p6.ctor === "Begin") {
-            return {ctor: "_Tuple2",_0: _U.update(model,{anim: $Maybe.Just(_p6._0),elapsed: 0.0,start: $Maybe.Nothing}),_1: $Effects.tick(Tick)};
+      var _p9 = action;
+      if (_p9.ctor === "Begin") {
+            return {ctor: "_Tuple2",_0: _U.update(model,{anim: $Maybe.Just(_p9._0),elapsed: 0.0,start: $Maybe.Nothing}),_1: $Effects.tick(Tick)};
          } else {
-            var _p9 = _p6._0;
-            var start = function () {    var _p7 = model.start;if (_p7.ctor === "Nothing") {    return _p9;} else {    return _p7._0;}}();
-            var newElapsed = _p9 - start;
+            var _p12 = _p9._0;
+            var start = function () {    var _p10 = model.start;if (_p10.ctor === "Nothing") {    return _p12;} else {    return _p10._0;}}();
+            var newElapsed = _p12 - start;
             var done = function () {
-               var _p8 = model.anim;
-               if (_p8.ctor === "Nothing") {
+               var _p11 = model.anim;
+               if (_p11.ctor === "Nothing") {
                      return true;
                   } else {
-                     return A2($List.all,isDone(newElapsed),_p8._0);
+                     return A2($List.all,isDone(newElapsed),_p11._0);
                   }
             }();
             return done ? {ctor: "_Tuple2",_0: _U.update(model,{elapsed: newElapsed}),_1: $Effects.none} : {ctor: "_Tuple2"
@@ -10947,10 +11031,8 @@ Elm.ElmUI.make = function (_elm) {
    var Rem = {ctor: "Rem"};
    var Percent = {ctor: "Percent"};
    var Px = {ctor: "Px"};
-   var Inherit = {ctor: "Inherit"};
-   var Initial = {ctor: "Initial"};
    var Perspective = function (a) {    return {ctor: "Perspective",_0: a};};
-   var SkeyY = F2(function (a,b) {    return {ctor: "SkeyY",_0: a,_1: b};});
+   var SkewY = F2(function (a,b) {    return {ctor: "SkewY",_0: a,_1: b};});
    var SkewX = F2(function (a,b) {    return {ctor: "SkewX",_0: a,_1: b};});
    var Skew = F3(function (a,b,c) {    return {ctor: "Skew",_0: a,_1: b,_2: c};});
    var RotateY = F2(function (a,b) {    return {ctor: "RotateY",_0: a,_1: b};});
@@ -10961,13 +11043,11 @@ Elm.ElmUI.make = function (_elm) {
    var ScaleY = function (a) {    return {ctor: "ScaleY",_0: a};};
    var ScaleX = function (a) {    return {ctor: "ScaleX",_0: a};};
    var Scale3d = F3(function (a,b,c) {    return {ctor: "Scale3d",_0: a,_1: b,_2: c};});
-   var Scale = F2(function (a,b) {    return {ctor: "Scale",_0: a,_1: b};});
+   var Scale = function (a) {    return {ctor: "Scale",_0: a};};
    var TranslateY = F2(function (a,b) {    return {ctor: "TranslateY",_0: a,_1: b};});
    var TranslateX = F2(function (a,b) {    return {ctor: "TranslateX",_0: a,_1: b};});
    var Translate3d = F4(function (a,b,c,d) {    return {ctor: "Translate3d",_0: a,_1: b,_2: c,_3: d};});
    var Translate = F3(function (a,b,c) {    return {ctor: "Translate",_0: a,_1: b,_2: c};});
-   var NoTransform = {ctor: "NoTransform"};
-   var Prop = F3(function (a,b,c) {    return {ctor: "Prop",_0: a,_1: b,_2: c};});
    var Bottom = F2(function (a,b) {    return {ctor: "Bottom",_0: a,_1: b};});
    var Right = F2(function (a,b) {    return {ctor: "Right",_0: a,_1: b};});
    var Top = F2(function (a,b) {    return {ctor: "Top",_0: a,_1: b};});
@@ -10977,9 +11057,11 @@ Elm.ElmUI.make = function (_elm) {
    var Opacity = function (a) {    return {ctor: "Opacity",_0: a};};
    var fadeIn = function (dur) {    return Opacity(A2($Animation.duration,dur,A2($Animation.to,1.0,A2($Animation.from,0.0,$Animation.animation(0)))));};
    var fadeOut = function (dur) {    return Opacity(A2($Animation.duration,dur,A2($Animation.to,0.0,A2($Animation.from,1.0,$Animation.animation(0)))));};
+   var Prop = F3(function (a,b,c) {    return {ctor: "Prop",_0: a,_1: b,_2: c};});
    var Model = F3(function (a,b,c) {    return {start: a,elapsed: b,anim: c};});
    return _elm.ElmUI.values = {_op: _op
                               ,Model: Model
+                              ,Prop: Prop
                               ,Opacity: Opacity
                               ,Height: Height
                               ,Width: Width
@@ -10987,8 +11069,6 @@ Elm.ElmUI.make = function (_elm) {
                               ,Top: Top
                               ,Right: Right
                               ,Bottom: Bottom
-                              ,Prop: Prop
-                              ,NoTransform: NoTransform
                               ,Translate: Translate
                               ,Translate3d: Translate3d
                               ,TranslateX: TranslateX
@@ -11004,10 +11084,8 @@ Elm.ElmUI.make = function (_elm) {
                               ,RotateY: RotateY
                               ,Skew: Skew
                               ,SkewX: SkewX
-                              ,SkeyY: SkeyY
+                              ,SkewY: SkewY
                               ,Perspective: Perspective
-                              ,Initial: Initial
-                              ,Inherit: Inherit
                               ,Px: Px
                               ,Percent: Percent
                               ,Rem: Rem
@@ -11020,14 +11098,59 @@ Elm.ElmUI.make = function (_elm) {
                               ,Begin: Begin
                               ,Tick: Tick
                               ,render: render
-                              ,renderSplat: renderSplat
-                              ,renderUnit: renderUnit
-                              ,renderDistanceUnit: renderDistanceUnit
+                              ,renderProp: renderProp
+                              ,renderName: renderName
+                              ,renderValue: renderValue
+                              ,isDone: isDone
+                              ,dUnit: dUnit
+                              ,rUnit: rUnit
                               ,animate: animate
                               ,update: update
                               ,fadeIn: fadeIn
-                              ,fadeOut: fadeOut
-                              ,isDone: isDone};
+                              ,fadeOut: fadeOut};
+};
+Elm.Multi = Elm.Multi || {};
+Elm.Multi.make = function (_elm) {
+   "use strict";
+   _elm.Multi = _elm.Multi || {};
+   if (_elm.Multi.values) return _elm.Multi.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $ElmUI = Elm.ElmUI.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var render = F2(function (i,model) {
+      return A2($List.concatMap,function (x) {    return _U.eq($Basics.fst(x),i) ? $ElmUI.render($Basics.snd(x)) : _U.list([]);},model);
+   });
+   var Dispatch = F2(function (a,b) {    return {ctor: "Dispatch",_0: a,_1: b};});
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      var _p7 = _p0._0;
+      var updated = A2($List.map,
+      function (_p1) {
+         var _p2 = _p1;
+         var _p5 = _p2._1;
+         var _p4 = _p2._0;
+         if (_U.eq(_p4,_p7)) {
+               var _p3 = A2($ElmUI.update,_p0._1,_p5);
+               var ui2 = _p3._0;
+               var fx = _p3._1;
+               return {ctor: "_Tuple2",_0: {ctor: "_Tuple2",_0: _p4,_1: ui2},_1: _U.list([{ctor: "_Tuple2",_0: _p7,_1: fx}])};
+            } else return {ctor: "_Tuple2",_0: {ctor: "_Tuple2",_0: _p4,_1: _p5},_1: _U.list([])};
+      },
+      model);
+      var _p6 = A2($Maybe.withDefault,{ctor: "_Tuple2",_0: 0,_1: $Effects.none},$List.head(A2($List.concatMap,$Basics.snd,updated)));
+      var fxID = _p6._0;
+      var fx = _p6._1;
+      return {ctor: "_Tuple2",_0: A2($List.map,$Basics.fst,updated),_1: A2($Effects.map,Dispatch(fxID),fx)};
+   });
+   var animate = F3(function (id,anims,model) {    return A2(update,A2(Dispatch,id,$ElmUI.Begin(anims)),model);});
+   return _elm.Multi.values = {_op: _op,Dispatch: Dispatch,render: render,animate: animate,update: update};
 };
 Elm.ElmUIExampleTwo = Elm.ElmUIExampleTwo || {};
 Elm.ElmUIExampleTwo.make = function (_elm) {
@@ -11045,81 +11168,83 @@ Elm.ElmUIExampleTwo.make = function (_elm) {
    $Html$Events = Elm.Html.Events.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
+   $Multi = Elm.Multi.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var init = {ctor: "_Tuple2",_0: {menuAnimation: $ElmUI.empty},_1: $Effects.none};
-   var viewMenu = F2(function (address,model) {
-      var menuStyle = _U.list([{ctor: "_Tuple2",_0: "opacity",_1: "0"}
-                              ,{ctor: "_Tuple2",_0: "position",_1: "absolute"}
-                              ,{ctor: "_Tuple2",_0: "left",_1: "-300px"}
-                              ,{ctor: "_Tuple2",_0: "top",_1: "0px"}
-                              ,{ctor: "_Tuple2",_0: "padding",_1: "25px"}
-                              ,{ctor: "_Tuple2",_0: "width",_1: "300px"}
-                              ,{ctor: "_Tuple2",_0: "height",_1: "100%"}
-                              ,{ctor: "_Tuple2",_0: "background-color",_1: "rgb(58,40,69)"}
-                              ,{ctor: "_Tuple2",_0: "color",_1: "white"}]);
+   var init = {ctor: "_Tuple2"
+              ,_0: {animations: _U.list([{ctor: "_Tuple2",_0: 1,_1: $ElmUI.empty}
+                                        ,{ctor: "_Tuple2",_0: 2,_1: $ElmUI.empty}
+                                        ,{ctor: "_Tuple2",_0: 3,_1: $ElmUI.empty}])}
+              ,_1: $Effects.none};
+   var box = F4(function (address,model,action,animI) {
+      var boxStyle = _U.list([{ctor: "_Tuple2",_0: "position",_1: "relative"}
+                             ,{ctor: "_Tuple2",_0: "display",_1: "inline-block"}
+                             ,{ctor: "_Tuple2",_0: "margin-left",_1: "20px"}
+                             ,{ctor: "_Tuple2",_0: "margin-top",_1: "50px"}
+                             ,{ctor: "_Tuple2",_0: "padding",_1: "25px"}
+                             ,{ctor: "_Tuple2",_0: "text-align",_1: "center"}
+                             ,{ctor: "_Tuple2",_0: "width",_1: "100px"}
+                             ,{ctor: "_Tuple2",_0: "height",_1: "100px"}
+                             ,{ctor: "_Tuple2",_0: "background-color",_1: "rgb(58,40,69)"}
+                             ,{ctor: "_Tuple2",_0: "color",_1: "white"}
+                             ,{ctor: "_Tuple2",_0: "cursor",_1: "pointer"}]);
       return A2($Html.div,
-      _U.list([$Html$Attributes.style(A2($Basics._op["++"],menuStyle,$ElmUI.render(model.menuAnimation)))]),
-      _U.list([A2($Html.h1,_U.list([]),_U.list([$Html.text("Hidden Menu")]))
-              ,A2($Html.ul,
-              _U.list([]),
-              _U.list([A2($Html.li,_U.list([]),_U.list([$Html.text("Some things")])),A2($Html.li,_U.list([]),_U.list([$Html.text("in a list")]))]))]));
+      _U.list([$Html$Attributes.style(A2($Basics._op["++"],boxStyle,A2($Multi.render,animI,model.animations))),A2($Html$Events.onClick,address,action)]),
+      _U.list([$Html.text("Poke Me")]));
    });
    var Animate = function (a) {    return {ctor: "Animate",_0: a};};
    var update = F2(function (action,model) {
       var _p0 = action;
       switch (_p0.ctor)
-      {case "Show": var _p1 = A2($ElmUI.animate,
-           _U.list([$ElmUI.fadeIn(0.3 * $Time.second)
-                   ,A2($ElmUI.Left,$ElmUI.Px,A2($Animation.duration,0.3 * $Time.second,A2($Animation.to,0,A2($Animation.from,-300,$Animation.animation(0)))))]),
-           model.menuAnimation);
+      {case "Rotate": var _p1 = A3($Multi.animate,
+           _p0._0,
+           _U.list([A2($ElmUI.Rotate,
+           $ElmUI.Turn,
+           A2($Animation.duration,3.0 * $Time.second,A2($Animation.to,1,A2($Animation.from,0,$Animation.animation(0)))))]),
+           model.animations);
            var anim = _p1._0;
            var fx = _p1._1;
-           return {ctor: "_Tuple2",_0: _U.update(model,{menuAnimation: anim}),_1: A2($Effects.map,Animate,fx)};
-         case "Hide": var _p2 = A2($ElmUI.animate,
-           _U.list([$ElmUI.fadeOut(5.0 * $Time.second)
-                   ,A2($ElmUI.Left,$ElmUI.Px,A2($Animation.duration,0.3 * $Time.second,A2($Animation.to,-300,A2($Animation.from,0,$Animation.animation(0)))))]),
-           model.menuAnimation);
+           return {ctor: "_Tuple2",_0: _U.update(model,{animations: anim}),_1: A2($Effects.map,Animate,fx)};
+         case "Blink": var _p2 = A3($Multi.animate,
+           2,
+           _U.list([$ElmUI.Scale(A2($Animation.duration,3.0 * $Time.second,A2($Animation.to,2,A2($Animation.from,1,$Animation.animation(0)))))]),
+           model.animations);
            var anim = _p2._0;
            var fx = _p2._1;
-           return {ctor: "_Tuple2",_0: _U.update(model,{menuAnimation: anim}),_1: A2($Effects.map,Animate,fx)};
-         default: var _p3 = A2($ElmUI.update,_p0._0,model.menuAnimation);
+           return {ctor: "_Tuple2",_0: _U.update(model,{animations: anim}),_1: A2($Effects.map,Animate,fx)};
+         default: var _p3 = A2($Multi.update,_p0._0,model.animations);
            var anim = _p3._0;
            var fx = _p3._1;
-           return {ctor: "_Tuple2",_0: _U.update(model,{menuAnimation: anim}),_1: A2($Effects.map,Animate,fx)};}
+           return {ctor: "_Tuple2",_0: _U.update(model,{animations: anim}),_1: A2($Effects.map,Animate,fx)};}
    });
-   var Hide = {ctor: "Hide"};
-   var Show = {ctor: "Show"};
+   var Blink = {ctor: "Blink"};
+   var Rotate = function (a) {    return {ctor: "Rotate",_0: a};};
    var view = F2(function (address,model) {
-      var triggerStyle = _U.list([{ctor: "_Tuple2",_0: "position",_1: "absolute"}
+      var triggerStyle = _U.list([{ctor: "_Tuple2",_0: "position",_1: "relative"}
                                  ,{ctor: "_Tuple2",_0: "left",_1: "0px"}
                                  ,{ctor: "_Tuple2",_0: "top",_1: "0px"}
-                                 ,{ctor: "_Tuple2",_0: "width",_1: "350px"}
-                                 ,{ctor: "_Tuple2",_0: "height",_1: "100%"}
-                                 ,{ctor: "_Tuple2",_0: "background-color",_1: "#AAA"}]);
+                                 ,{ctor: "_Tuple2",_0: "width",_1: "100%"}
+                                 ,{ctor: "_Tuple2",_0: "height",_1: "100%"}]);
       return A2($Html.div,
-      _U.list([A2($Html$Events.onMouseEnter,address,Show),A2($Html$Events.onMouseLeave,address,Hide),$Html$Attributes.style(triggerStyle)]),
-      _U.list([A2($Html.h1,
-              _U.list([$Html$Attributes.style(_U.list([{ctor: "_Tuple2",_0: "padding",_1: "25px"}]))]),
-              _U.list([$Html.text("Hover here to see menu!")]))
-              ,A2(viewMenu,address,model)]));
+      _U.list([$Html$Attributes.style(triggerStyle)]),
+      _U.list([A4(box,address,model,Rotate(1),1),A4(box,address,model,Blink,2),A4(box,address,model,Rotate(3),3)]));
    });
    var app = $StartApp.start({init: init,update: update,view: view,inputs: _U.list([])});
    var main = app.html;
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
-   var Model = function (a) {    return {menuAnimation: a};};
+   var Model = function (a) {    return {animations: a};};
    return _elm.ElmUIExampleTwo.values = {_op: _op
                                         ,Model: Model
-                                        ,Show: Show
-                                        ,Hide: Hide
+                                        ,Rotate: Rotate
+                                        ,Blink: Blink
                                         ,Animate: Animate
                                         ,update: update
                                         ,view: view
-                                        ,viewMenu: viewMenu
+                                        ,box: box
                                         ,init: init
                                         ,app: app
                                         ,main: main};

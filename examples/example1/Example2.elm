@@ -16,6 +16,7 @@ import Signal exposing (Address)
 import ElmUI as UI
 import Animation exposing (..)
 
+--import Multi
 
 
 -- MODEL
@@ -48,7 +49,7 @@ update action model =
 
     Hide ->
         let 
-          (anim, fx) = UI.animate [ UI.fadeOut (5.0*second)
+          (anim, fx) = UI.animate [ UI.fadeOut (0.3*second)
                                   , UI.Left UI.Px
                                           (animation 0 
                                             |> from 0 
@@ -67,9 +68,6 @@ update action model =
         , Effects.map Animate fx )
 
 
-
-
--- VIEW
 
 
 view : Address Action -> Model -> Html
