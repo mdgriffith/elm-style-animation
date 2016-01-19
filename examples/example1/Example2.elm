@@ -39,7 +39,7 @@ update action model =
         (anim, fx) = UI.animate [ UI.fadeIn (0.3*second)
                                 , UI.Left UI.Px
                                       (animation 0 
-                                        |> from -300 
+                                        |> from -350 
                                         |> to 0
                                         |> duration (0.3*second))
                                 ] model.menuAnimation
@@ -53,7 +53,7 @@ update action model =
                                   , UI.Left UI.Px
                                           (animation 0 
                                             |> from 0 
-                                            |> to -300
+                                            |> to -350
                                             |> duration (0.3*second))
                                   ] model.menuAnimation  
         in
@@ -94,9 +94,9 @@ view address model =
 viewMenu : Address Action -> Model -> Html
 viewMenu address model =
                 let
-                  menuStyle = [ ("opacity", "0")
+                  menuStyle = [ ("opacity", "1")
                                 , ("position", "absolute")
-                                , ("left", "-300px")
+                                , ("left", "-350px")
                                 , ("top", "0px")
                                 , ("padding", "25px")
                                 , ("width", "300px")

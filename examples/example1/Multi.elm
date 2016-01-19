@@ -1,10 +1,7 @@
 module Multi where
 
-
 import Effects exposing (Effects)
-
 import List
-
 import ElmUI
 
 
@@ -16,12 +13,15 @@ type Action = Dispatch Int ElmUI.Action
 render : Int -> Model -> List (String, String)
 render i model =
               List.concatMap 
-                  (\x -> if fst x == i then 
-                              ElmUI.render (snd x)
-                         else [] ) model
+                  (\x -> 
+                    if fst x == i then 
+                      ElmUI.render (snd x)
+                    else [] ) model
+
 
 animate : Int -> List ElmUI.PropAnimation -> Model -> ( Model, Effects Action )
 animate id anims model = update (Dispatch id (ElmUI.Begin anims)) model
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =

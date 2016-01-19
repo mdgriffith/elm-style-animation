@@ -24,9 +24,6 @@ import Multi
 
 type alias Model = { animations : Multi.Model }
 
---type alias Model = { rotateAnim : UI.Model
---                   , blinkAnim : UI.Model
---                   , tiltAnim : UI.Model }
 
 -- UPDATE
 
@@ -97,7 +94,6 @@ view address model =
                   , box address model Blink 2
                   , box address model (Rotate 3) 3
                   ]
-
 
 
 box : Address Action -> Model -> Action -> Int -> Html
