@@ -36,26 +36,21 @@ update action model =
   case action of
     Show ->
       let 
-        (anim, fx) = UI.animate [ UI.fadeIn (0.3*second)
-                                , UI.Left UI.Px
-                                      (animation 0 
-                                        |> from -350 
-                                        |> to 0
-                                        |> duration (0.3*second))
-                                ] model.menuAnimation
+        (anim, fx) = UI.animate 
+                          ( UI.start 
+                                [ UI.Left UI.Px (UI.to 0) ]
+                          )
+                                model.menuAnimation
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )
 
     Hide ->
         let 
-          (anim, fx) = UI.animate [ UI.fadeOut (0.3*second)
-                                  , UI.Left UI.Px
-                                          (animation 0 
-                                            |> from 0 
-                                            |> to -350
-                                            |> duration (0.3*second))
-                                  ] model.menuAnimation  
+          (anim, fx) = UI.animate  
+                          ( UI.start 
+                                [ UI.Left UI.Px (UI.to -350) ]
+                          ) model.menuAnimation  
         in
           ( { model | menuAnimation = anim }
           , Effects.map Animate fx )
@@ -116,8 +111,11 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { menuAnimation=UI.empty }
-       , Effects.none )
+init = 
+        ( { menuAnimation = UI.init [ UI.Left UI.Px 0.0 ]
+
+          }
+        , Effects.none )
 
 app =
   StartApp.start

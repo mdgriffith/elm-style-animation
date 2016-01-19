@@ -15,56 +15,98 @@ import Animation as A
 import List
 
 
-type alias Model = { start : Maybe Time 
-                   , elapsed : Time
-                   , anim : Maybe (List PropAnimation)
-                   , state : Maybe (List PropAnimation)
-                   }
+
+type alias Model =
+            { start : Maybe Time
+            , elapsed : Time
+            , anim : Maybe StyleAnimation
+            , previous : Style
+            }
+
+init : Style -> Model
+init style = { empty | previous = style }
 
 
-type PropAnimation
-        = Prop String String A.Animation
-        | Opacity A.Animation
-        | Height Length A.Animation
-        | Width Length A.Animation
-        | Left Length A.Animation
-        | Top Length A.Animation
-        | Right Length A.Animation
-        | Bottom Length A.Animation
+empty : Model
+empty = { elapsed = 0.0
+        , start = Nothing
+        , anim = Nothing
+        , previous = []
+        }
 
-        | Padding Length A.Animation
-        | PaddingLeft Length A.Animation
-        | PaddingRight Length A.Animation
-        | PaddingTop Length A.Animation
-        | PaddingBottom Length A.Animation
+emptyAnimation : StyleAnimation
+emptyAnimation = { target = []
+                 , duration = defaultDuration
+                 , ease = defaultEasing 
+                 }
 
-        | Margin Length A.Animation
-        | MarginLeft Length A.Animation
-        | MarginRight Length A.Animation
-        | MarginTop Length A.Animation
-        | MarginBottom Length A.Animation
+
+defaultDuration : Float
+defaultDuration = 0.4 * second
+
+defaultEasing : Float -> Float
+defaultEasing x = (1 - cos (pi*x))/2
+
+
+type alias StyleAnimation =
+            { target : Style
+            , duration : Time
+            , ease : (Float -> Float)
+            }
+
+to : Float -> Float
+to f = f
+
+type alias Style 
+             = List StyleProperty
+
+
+type StyleProperty
+        = Prop String String Float
+        | Opacity Float
+        | Height Length Float
+        | Width Length Float
+        | Left Length Float
+        | Top Length Float
+        | Right Length Float
+        | Bottom Length Float
+
+        | Padding Length Float
+        | PaddingLeft Length Float
+        | PaddingRight Length Float
+        | PaddingTop Length Float
+        | PaddingBottom Length Float
+
+        | Margin Length Float
+        | MarginLeft Length Float
+        | MarginRight Length Float
+        | MarginTop Length Float
+        | MarginBottom Length Float
         
 
         -- Transformations
 --        --| Matrix --Float Float Float Float Float Float 
 --        --| Matrix3d -- Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float 
-        | Translate Length A.Animation A.Animation
-        | Translate3d Length A.Animation A.Animation A.Animation
-        | TranslateX Length A.Animation
-        | TranslateY Length A.Animation
-        | Scale A.Animation
-        | Scale3d A.Animation A.Animation A.Animation
-        | ScaleX A.Animation
-        | ScaleY A.Animation
-        | ScaleZ A.Animation
-        | Rotate Angle A.Animation
-        | Rotate3d Angle A.Animation A.Animation A.Animation A.Animation
-        | RotateX Angle A.Animation
-        | RotateY Angle A.Animation
-        | Skew Angle A.Animation A.Animation
-        | SkewX Angle A.Animation 
-        | SkewY Angle A.Animation
-        | Perspective A.Animation
+        | Translate Length Float Float
+        | Translate3d Length Float Float Float
+        | TranslateX Length Float
+        | TranslateY Length Float
+        | Scale Float
+        | Scale3d Float Float Float
+        | ScaleX Float
+        | ScaleY Float
+        | ScaleZ Float
+        | Rotate Angle Float
+        | Rotate3d Angle Float Float Float Float
+        | RotateX Angle Float
+        | RotateY Angle Float
+        | Skew Angle Float Float
+        | SkewX Angle Float 
+        | SkewY Angle Float
+        | Perspective Float
+
+
+
 
 type Length
       = Px
@@ -100,185 +142,178 @@ type Angle
 
 
 
-empty : Model
-empty = { elapsed = 0.0
-        , start = Nothing
-        , anim = Nothing
-        , state = Nothing
-        }
+
 
 
 type Action 
-        = Begin (List PropAnimation)
-        | Continue (List PropAnimation)
+        = Begin StyleAnimation
+        --| Continue Style
         | Tick Time
 
 
-to : Float -> A.Animation
-to t = A.animation 0.0 
-                |> to t
 
-
-animate : List PropAnimation -> Model -> ( Model, Effects Action )
-animate anims model = update (Continue anims) model
-
-
-zipMatching : List PropAnimation -> List PropAnimation -> List (Maybe PropAnimation, Maybe PropAnimation)
-zipMatching anim1 anim2 = 
-                  let
-                    findBy fn xs = List.head (List.filter fn xs)
-                    matchPropID a b = propId a == propId b
-
-                    matching = 
-                      List.map
-                          (\a  ->
-                            (Just a, findBy (matchPropID a)  anim2)
-                          ) anim1
-
-                    remaining = 
-                      List.concatMap
-                          (\a  ->
-                            let
-                              found = findBy (matchPropID a) anim1
-                            in
-                              case found of
-                                Nothing ->
-                                  [(Nothing, Just a)]
-                                Just _ ->
-                                  []
-                          ) anim2
-                  in
-                    matching ++ remaining
+animate : StyleAnimation -> Model -> ( Model, Effects Action )
+animate anims model = update (Begin anims) model
 
 
 
---restart : Time -> A.Animation -> A.Animation
---restart start (A.A anim) =
---              A.A { anim | start = start } 
+start : List StyleProperty -> StyleAnimation
+start props = { emptyAnimation | target = props} 
+
+--zipMatching : List PropAnimation -> List PropAnimation -> List (Maybe PropAnimation, Maybe PropAnimation)
+--zipMatching anim1 anim2 = 
+--                  let
+--                    findBy fn xs = List.head (List.filter fn xs)
+--                    matchPropID a b = propId a == propId b
+
+--                    matching = 
+--                      List.map
+--                          (\a  ->
+--                            (Just a, findBy (matchPropID a)  anim2)
+--                          ) anim1
+
+--                    remaining = 
+--                      List.concatMap
+--                          (\a  ->
+--                            let
+--                              found = findBy (matchPropID a) anim1
+--                            in
+--                              case found of
+--                                Nothing ->
+--                                  [(Nothing, Just a)]
+--                                Just _ ->
+--                                  []
+--                          ) anim2
+--                  in
+--                    matching ++ remaining
 
 
-retarget : Time -> PropAnimation -> PropAnimation -> PropAnimation
-retarget current anim1 anim2 = 
-            let
-              default = anim1
-            in
-              case anim1 of
-                Prop name unit a -> 
-                  case anim2 of
-                    Prop _ _ a2 ->
-                       Prop name unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
 
-                Opacity a -> 
-                  case anim2 of
-                    Opacity a2 ->
-                       Opacity (A.retarget current (A.getTo a2) a)
-                    _ -> default
+--retarget : Time -> PropAnimation -> PropAnimation -> PropAnimation
+--retarget current anim1 anim2 = 
+--            let
+--              default = anim1
+--            in
+--              case anim1 of
+--                Prop name unit a -> 
+--                  case anim2 of
+--                    Prop _ _ a2 ->
+--                       Prop name unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                Height unit a -> 
-                  case anim2 of
-                    Height _ a2 ->
-                       Height unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
+--                Opacity a -> 
+--                  case anim2 of
+--                    Opacity a2 ->
+--                       Opacity (A.retarget current (A.getTo a2) a)
+--                    _ -> default
 
-                Width unit a -> 
-                  case anim2 of
-                    Width _ a2 ->
-                       Width unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
+--                Height unit a -> 
+--                  case anim2 of
+--                    Height _ a2 ->
+--                       Height unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                Left unit a -> 
-                  case anim2 of
-                    Left _ a2 ->
-                      Left unit (A.retarget current (A.getTo a2) a)
-                    _ -> default
+--                Width unit a -> 
+--                  case anim2 of
+--                    Width _ a2 ->
+--                       Width unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                Right unit a -> 
-                  case anim2 of
-                    Right _ a2 ->
-                       Right unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
+--                Left unit a -> 
+--                  case anim2 of
+--                    Left _ a2 ->
+--                      Left unit (A.retarget current (A.getTo a2) a)
+--                    _ -> default
 
-                Bottom unit a -> 
-                  case anim2 of
-                    Bottom _ a2 ->
-                       Bottom unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
+--                Right unit a -> 
+--                  case anim2 of
+--                    Right _ a2 ->
+--                       Right unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                Top unit a -> 
-                  case anim2 of
-                    Right _ a2 ->
-                       Right unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
+--                Bottom unit a -> 
+--                  case anim2 of
+--                    Bottom _ a2 ->
+--                       Bottom unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                Padding unit a       -> 
-                  case anim2 of
-                    Padding _ a2 ->
-                       Padding unit (A.retarget 0 (A.getTo a2) a)
-                    _ -> default
+--                Top unit a -> 
+--                  case anim2 of
+--                    Right _ a2 ->
+--                       Right unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                PaddingLeft _ a   -> default 
-                PaddingRight _ a  -> default
-                PaddingTop _ a    -> default 
-                PaddingBottom _ a -> default 
+--                Padding unit a       -> 
+--                  case anim2 of
+--                    Padding _ a2 ->
+--                       Padding unit (A.retarget 0 (A.getTo a2) a)
+--                    _ -> default
 
-                Margin _ a       -> default 
-                MarginLeft _ a   -> default 
-                MarginRight _ a  -> default 
-                MarginTop _ a    -> default 
-                MarginBottom _ a -> default 
+--                PaddingLeft _ a   -> default 
+--                PaddingRight _ a  -> default
+--                PaddingTop _ a    -> default 
+--                PaddingBottom _ a -> default 
 
-                Translate _ a1 a2 -> default
-                Translate3d _ a1 a2 a3 -> default
-                TranslateX _ a -> default
-                TranslateY _ a -> default
-                Scale a1 -> default
-                Scale3d a1 a2 a3 -> default
-                ScaleX a -> default
-                ScaleY a -> default
-                ScaleZ a -> default
-                Rotate _ a -> default
-                Rotate3d _ a1 a2 a3 a4 -> default
-                RotateX _ a -> default
-                RotateY _ a -> default
-                Skew _ a1 a2 -> default 
-                SkewX _ a -> default
-                SkewY _ a -> default
-                Perspective a -> default
+--                Margin _ a       -> default 
+--                MarginLeft _ a   -> default 
+--                MarginRight _ a  -> default 
+--                MarginTop _ a    -> default 
+--                MarginBottom _ a -> default 
 
-
-resolveRetarget : Time -> (Maybe PropAnimation, Maybe PropAnimation) -> List PropAnimation
-resolveRetarget current anims = 
-                      case anims of
-                        (Nothing, Nothing) -> []
-
-                        (Just a, Nothing) -> [a]
-
-                        (Nothing, Just b) -> [b]
-
-                        (Just a, Just b) -> 
-                          if isDone current a then
-                            [b]
-                          else
-                            [retarget current a b]
+--                Translate _ a1 a2 -> default
+--                Translate3d _ a1 a2 a3 -> default
+--                TranslateX _ a -> default
+--                TranslateY _ a -> default
+--                Scale a1 -> default
+--                Scale3d a1 a2 a3 -> default
+--                ScaleX a -> default
+--                ScaleY a -> default
+--                ScaleZ a -> default
+--                Rotate _ a -> default
+--                Rotate3d _ a1 a2 a3 a4 -> default
+--                RotateX _ a -> default
+--                RotateY _ a -> default
+--                Skew _ a1 a2 -> default 
+--                SkewX _ a -> default
+--                SkewY _ a -> default
+--                Perspective a -> default
 
 
-resetElapsed : Time -> (Maybe PropAnimation, Maybe PropAnimation) -> Bool
-resetElapsed current anims = 
-                  case anims of
-                    (Nothing, Nothing) -> True
+--resolveRetarget : Time -> (Maybe PropAnimation, Maybe PropAnimation) -> List PropAnimation
+--resolveRetarget current anims = 
+--                      case anims of
+--                        (Nothing, Nothing) -> []
 
-                    (Just a, Nothing) -> True
+--                        (Just a, Nothing) -> [a]
 
-                    (Nothing, Just b) -> True
+--                        (Nothing, Just b) -> [b]
 
-                    (Just a, Just b) -> 
-                      if isDone current a then
-                        True
-                      else
-                        False
+--                        (Just a, Just b) -> 
+--                          if isDone current a then
+--                            [b]
+--                          else
+--                            [retarget current a b]
 
-                          
+
+--resetElapsed : Time -> (Maybe PropAnimation, Maybe PropAnimation) -> Bool
+--resetElapsed current anims = 
+--                  case anims of
+--                    (Nothing, Nothing) -> True
+
+--                    (Just a, Nothing) -> True
+
+--                    (Nothing, Just b) -> True
+
+--                    (Just a, Just b) -> 
+--                      if isDone current a then
+--                        True
+--                      else
+--                        False
+
+                   
+
+
+
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -286,33 +321,41 @@ update action model =
         case action of
 
           Begin anims ->
-            ( { model | anim = Just anims
-                      , elapsed = 0.0
-                      , start = Nothing }
-            , Effects.tick Tick )
-
-          Continue anims ->
-            case model.anim of
-              Nothing ->
+              let
+                previous = 
+                  case model.anim of
+                    Nothing -> model.previous
+                    Just a -> 
+                      bake model.elapsed a model.previous
+              in
                 ( { model | anim = Just anims
                           , elapsed = 0.0
-                          , start = Nothing }
+                          , start = Nothing 
+                          , previous = previous }
                 , Effects.tick Tick )
 
-              Just modelAnim ->
-                let
-                  zipped = zipMatching modelAnim anims
-                  resolved = List.concatMap (resolveRetarget model.elapsed) zipped
-                  (start, elapsed) = 
-                        if List.all (resetElapsed model.elapsed) zipped then
-                          (Nothing, 0.0)
-                        else
-                          (model.start, model.elapsed)
-                in
-                  ( { model | anim = Just resolved 
-                            , elapsed = elapsed
-                            , start = start }
-                  , Effects.tick Tick )
+          --Continue anims ->
+          --  case model.anim of
+          --    Nothing ->
+          --      ( { model | anim = Just anims
+          --                , elapsed = 0.0
+          --                , start = Nothing }
+          --      , Effects.tick Tick )
+
+          --    Just modelAnim ->
+          --      let
+          --        zipped = zipMatching modelAnim anims
+          --        resolved = List.concatMap (resolveRetarget model.elapsed) zipped
+          --        (start, elapsed) = 
+          --              if List.all (resetElapsed model.elapsed) zipped then
+          --                (Nothing, 0.0)
+          --              else
+          --                (model.start, model.elapsed)
+          --      in
+          --        ( { model | anim = Just resolved 
+          --                  , elapsed = elapsed
+          --                  , start = start }
+          --        , Effects.tick Tick )
 
           Tick now ->
             let
@@ -322,15 +365,8 @@ update action model =
                   Just t -> t
               newElapsed = now - start
 
-              done = 
-                case model.anim of
-                  Nothing -> True
-                  Just anims ->
-                    List.all 
-                      (isDone newElapsed) anims
-
             in
-              if done then
+              if done model then
                 ( { model | elapsed = newElapsed }
                 , Effects.none )
               else
@@ -339,36 +375,161 @@ update action model =
                 , Effects.tick Tick )
 
 
+findFrom : Style -> StyleProperty -> Maybe StyleProperty
+findFrom state prop =
+            let
+              findBy fn xs = List.head (List.filter fn xs)
+              matchPropID a b = propId a == propId b
+            in 
+              findBy (matchPropID prop) state
+
+
+
+
+--bake : StyleAnimation -> Style Static -> BakedStyleAnimation
+--bake animation previousStyle  =
+--          let
+--            target = List.map toStatic animation.target
+
+
+--            toStatic transition = 
+--              let
+--                from = findFrom previousStyle transition
+--              in
+--                case transition of
+--                  Prop name unit to ->  
+--                    let
+--                      fromVal = 
+--                        case from of
+--                          Nothing -> 0.0
+--                          Just (Prop _ _ x) -> x
+--                          _ -> 0.0
+--                    in
+--                      Prop name unit (to from)
+
+--                  Opacity to -> 
+--                    let
+--                      fromVal = 
+--                        case from of
+--                          Nothing -> 0.0
+--                          Just (Opacity x) -> x
+--                          _ -> 0.0
+--                    in
+--                      Opacity (to from)
+
+--                  Height unit to -> 
+--                    let
+--                      fromVal = 
+--                        case from of
+--                          Nothing -> 0.0
+--                          Just (Height _ x) -> x
+--                          _ -> 0.0
+--                    in
+--                      Height unit (to fromVal)
+
+--                  Width unit to  -> 
+--                    let
+--                      fromVal = 
+--                        case from of
+--                          Nothing -> 0.0
+--                          Just (Width _ x) -> x
+--                          _ -> 0.0
+--                    in
+--                      Width unit (to fromVal)
+
+--                  Left unit to   -> 
+--                      let
+--                        fromVal = 
+--                          case from of
+--                            Nothing -> 0.0
+--                            Just (Left _ x) -> x
+--                            _ -> 0.0
+--                      in
+--                        Left unit (to fromVal)
+
+--                  Right unit to  -> 6
+--                  Bottom unit to -> 7
+--                  Top unit to    -> 8
+
+--                  Padding unit to       -> 9
+--                  PaddingLeft unit to   -> 10
+--                  PaddingRight unit to  -> 11
+--                  PaddingTop unit to    -> 12
+--                  PaddingBottom unit to -> 13
+
+--                  Margin unit to       -> 14
+--                  MarginLeft unit to   -> 15
+--                  MarginRight unit to  -> 16
+--                  MarginTop unit to    -> 17
+--                  MarginBottom unit to -> 18
+
+--                  Translate unit x y -> 19
+--                  Translate3d unit x y z -> 20
+--                  TranslateX unit to -> 21
+--                  TranslateY unit to -> 22
+--                  Scale to        -> 23 
+--                  Scale3d x y z  -> 24
+--                  ScaleX to      -> 25
+--                  ScaleY to      -> 26
+--                  ScaleZ to      -> 27
+--                  Rotate unit to -> 28
+--                  Rotate3d unit x y z angle -> 29
+--                  RotateX unit to           -> 30
+--                  RotateY unit to           -> 31
+--                  Skew unit x y             -> 32 
+--                  SkewX unit to             -> 33
+--                  SkewY unit to             -> 34
+--                  Perspective to            -> 35
+
+
+--          in
+--            { duration = animation.duration
+--            , ease = animation.ease
+--            , target = target
+--            }
+
+
+
+
+
 render : Model -> List (String, String)
 render model = 
-            case model.anim of
-              Nothing -> []
-              Just anim ->
-                -- Combine all transform properties
-                let
-                  rendered = 
-                      List.map (renderProp model.elapsed) anim
+        case model.anim of
+          Nothing -> []
+          Just anim ->
+            -- Combine all transform properties
+            let
+              rendered = 
+                  List.map (renderProp model anim) anim.target
 
-                  transformsNprops = 
-                      List.partition (\s -> fst s == "transform") rendered
+              transformsNprops = 
+                  List.partition (\s -> fst s == "transform") rendered
 
-                  combinedTransforms = ("transform", 
-                        String.concat (List.intersperse " " 
-                        (List.map (snd) (fst transformsNprops))))
-                in
-                  snd transformsNprops ++ [combinedTransforms]
+              combinedTransforms = ("transform", 
+                    String.concat (List.intersperse " " 
+                    (List.map (snd) (fst transformsNprops))))
+            in
+              snd transformsNprops ++ [combinedTransforms]
                
-                
-renderProp : Time -> PropAnimation -> (String, String)
-renderProp elapsed propAnim =
-                  ( renderName propAnim
-                  , renderValue propAnim elapsed
+
+
+
+
+renderProp : Model -> StyleAnimation -> StyleProperty -> (String, String)
+renderProp model anim prop =
+                let
+                  percentComplete = model.elapsed / anim.duration
+                  eased = anim.ease percentComplete
+                  from = findFrom model.previous prop
+                in
+                  ( renderName prop 
+                  , renderValue prop eased from
                   )
 
 
-renderName : PropAnimation -> String
-renderName propAnim = 
-            case propAnim of
+renderName : StyleProperty -> String
+renderName styleProp = 
+            case styleProp of
               Prop str _ _-> str
 
               Opacity _   -> "opacity"
@@ -411,10 +572,433 @@ renderName propAnim =
 
 
 
-renderValue : PropAnimation -> Float -> String
-renderValue prop elapsed =
+--bake model.elapsed a model.previous
+
+
+bake : Time -> StyleAnimation -> Style -> Style
+bake elapsed anim prev = 
+          let
+            percentComplete = elapsed / anim.duration
+            eased = anim.ease percentComplete
+          in
+
+
+
+
+
+renderValue : StyleProperty -> Float -> Maybe StyleProperty -> String
+renderValue prop percentComplete prev =
             let
-              val a = toString (A.animate elapsed a)
+
+              value from to = ((to-from)*percentComplete) + from
+
+              val from to = toString <| value from to
+
+              renderLength unit from to = addLengthUnits unit (val from to)
+
+              renderAngle unit from to = addAngleUnits unit (val from to)
+            in
+              case prop of
+                Prop _ unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Prop _ _ x) -> x
+                        _ -> 0.0
+                  in
+                    (val from to) ++ unit
+
+
+                Opacity to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Opacity x) -> x
+                        _ -> 0.0
+                  in
+                    val from to
+
+
+                Height unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Height _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Width unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Width _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Left unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Left _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Top unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Top _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Right unit to ->  
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Right _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Bottom unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Bottom _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Padding unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Padding _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                PaddingLeft unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (PaddingLeft _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                PaddingRight unit to  -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (PaddingRight _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                PaddingTop unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (PaddingTop _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                PaddingBottom unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (PaddingBottom _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                Margin unit to ->
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Margin _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to 
+
+
+                MarginLeft unit to   -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (MarginLeft _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+
+                MarginRight unit to  -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (MarginRight _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+                MarginTop unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (MarginTop _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to 
+
+                MarginBottom unit to ->  
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (MarginBottom _ x) -> x
+                        _ -> 0.0
+                  in
+                    renderLength unit from to
+
+                Translate unit x y -> 
+                  let
+                    (xFrom, yFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0)
+                        Just (Translate _ x1 y1) -> (x1, y1)
+                        _ -> (0.0, 0.0)
+                  in
+                    "translate(" ++ (renderLength unit xFrom x) 
+                          ++ "," ++ (renderLength unit yFrom y) 
+                          ++ ")"
+
+                Translate3d unit x y z -> 
+                  let
+                    (xFrom, yFrom, zFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0)
+                        Just (Translate3d _ x1 y1 z1) -> (x1, y1, z1)
+                        _ -> (0.0, 0.0, 0.0)
+                  in
+                    "translate3d(" ++ (renderLength unit xFrom x) 
+                            ++ "," ++ (renderLength unit yFrom y) 
+                            ++ "," ++ (renderLength unit zFrom z) 
+                            ++ ")"
+
+
+                TranslateX unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (TranslateX _ x) -> x
+                        _ -> 0.0
+                  in
+                    "translateX(" ++ renderLength unit from to ++ ")"
+
+
+                TranslateY unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (TranslateY _ x) -> x
+                        _ -> 0.0
+                  in
+                    "translateY(" ++ renderLength unit from to ++ ")"
+
+
+                Scale to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Scale x) -> x
+                        _ -> 0.0
+                  in
+                    "scale(" ++ (val from to)  ++ ")"
+
+
+                Scale3d x y z -> 
+                  let
+                    (xFrom, yFrom, zFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0)
+                        Just (Scale3d x1 y1 z1) -> (x1, y1, z1)
+                        _ -> (0.0, 0.0, 0.0)
+                  in
+                    "scale3d(" ++ (val xFrom x) 
+                          ++ "," ++ (val yFrom y) 
+                          ++ "," ++ (val zFrom z) 
+                          ++ ")"
+
+
+                ScaleX to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (ScaleX x) -> x
+                        _ -> 0.0
+                  in
+                    "scaleX(" ++ (val from to)  ++ ")"
+
+
+                ScaleY to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (ScaleY x) -> x
+                        _ -> 0.0
+                  in
+                    "scaleY(" ++ (val from to)  ++ ")"
+
+
+                ScaleZ to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (ScaleZ x) -> x
+                        _ -> 0.0
+                  in
+                    "scaleZ(" ++ (val from to)  ++ ")"
+
+
+                Rotate unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (Rotate _ x) -> x
+                        _ -> 0.0
+                  in
+                    "rotate(" ++ renderAngle unit from to ++ ")"
+
+
+                Rotate3d unit x y z a ->
+                  let
+                    (xFrom, yFrom, zFrom, aFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0, 0.0)
+                        Just (Rotate3d _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
+                        _ -> (0.0, 0.0, 0.0, 0.0)
+                  in 
+                    "scale3d(" ++ (val xFrom x) 
+                        ++ "," ++ (val yFrom y) 
+                        ++ "," ++ (val zFrom z) 
+                        ++ "," ++ (renderAngle unit aFrom a) 
+                        ++ ")"
+
+                RotateX unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (RotateX _ x) -> x
+                        _ -> 0.0
+                  in
+                    "rotateX(" ++ renderAngle unit from to ++ ")"
+
+                RotateY unit to -> 
+                  let
+                    from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (RotateY _ x) -> x
+                        _ -> 0.0
+                  in
+                    "rotateY(" ++ renderAngle unit from to ++ ")"
+
+
+                Skew unit x y ->
+                  let
+                    (xFrom, yFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0)
+                        Just (Skew _ x y) -> (x, y)
+                        _ -> (0.0, 0.0)
+                  in
+                    "skew(" ++ (renderAngle unit xFrom x) 
+                     ++ "," ++ (renderAngle unit yFrom y) 
+                     ++ ")"
+
+                SkewX unit to -> 
+                  let
+                     from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (SkewX _ x) -> x
+                        _ -> 0.0
+                  in
+                    "skewX(" ++ renderAngle unit from to ++ ")"
+
+                SkewY unit to -> 
+                  let
+                     from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (SkewY _ x) -> x
+                        _ -> 0.0
+                  in
+                    "skewY(" ++ renderAngle unit from to ++ ")"
+
+                Perspective to -> 
+                  let
+                     from =
+                      case prev of
+                        Nothing -> 0.0
+                        Just (SkewY _ x) -> x
+                        _ -> 0.0
+                  in
+                    "perspective(" ++ (val from to) ++ ")"
+
+
+
+
+
+
+
+
+renderValue : StyleProperty -> String
+renderValue prop  =
+            let
+              val a = toString a
               renderLength unit a = addLengthUnits unit (val a)
               renderAngle unit a = addAngleUnits unit (val a)
             in
@@ -477,93 +1061,102 @@ renderValue prop elapsed =
                 Perspective a -> "perspective(" ++ (val a) ++ ")"
 
 
-isDone : Time -> PropAnimation -> Bool
-isDone elapsed propAnim = 
-              let
-                done a = A.isDone elapsed a
-              in 
-                case propAnim of
-                    Prop _ _ a  -> done a
-                    Opacity a   -> done a
-                    Height _ a  -> done a
-                    Width _ a   -> done a
-                    Left _ a    -> done a
-                    Right _ a   -> done a
-                    Bottom _ a  -> done a
-                    Top _ a     -> done a
-
-                    Padding _ a       -> done a 
-                    PaddingLeft _ a   -> done a 
-                    PaddingRight _ a  -> done a
-                    PaddingTop _ a    -> done a 
-                    PaddingBottom _ a -> done a 
-
-                    Margin _ a       -> done a 
-                    MarginLeft _ a   -> done a 
-                    MarginRight _ a  -> done a 
-                    MarginTop _ a    -> done a 
-                    MarginBottom _ a -> done a 
-
-                    Translate _ a1 a2      -> done a1 && done a2
-                    Translate3d _ a1 a2 a3 -> done a1 && done a2 && done a3
-                    TranslateX _ a -> done a
-                    TranslateY _ a -> done a
-                    Scale a1       -> done a1 
-                    Scale3d a1 a2 a3 -> done a1 && done a2 && done a3
-                    ScaleX a   -> done a
-                    ScaleY a   -> done a
-                    ScaleZ a   -> done a
-                    Rotate _ a -> done a
-                    Rotate3d _ a1 a2 a3 a4 -> done a1 && done a2 && done a3 && done a4
-                    RotateX _ a -> done a
-                    RotateY _ a -> done a
-                    Skew _ a1 a2 -> done a1 && done a2 
-                    SkewX _ a -> done a
-                    SkewY _ a -> done a
-                    Perspective a -> done a
 
 
-propId : PropAnimation -> Int
+done : Model -> Bool
+done model =
+        case model.anim of
+          Nothing -> True
+          Just a ->
+            model.elapsed >= a.duration
+
+--isDone : Time -> PropAnimation -> Bool
+--isDone elapsed propAnim = 
+--              let
+--                done a = A.isDone elapsed a
+--              in 
+--                case propAnim of
+--                    Prop _ _ a  -> done a
+--                    Opacity a   -> done a
+--                    Height _ a  -> done a
+--                    Width _ a   -> done a
+--                    Left _ a    -> done a
+--                    Right _ a   -> done a
+--                    Bottom _ a  -> done a
+--                    Top _ a     -> done a
+
+--                    Padding _ a       -> done a 
+--                    PaddingLeft _ a   -> done a 
+--                    PaddingRight _ a  -> done a
+--                    PaddingTop _ a    -> done a 
+--                    PaddingBottom _ a -> done a 
+
+--                    Margin _ a       -> done a 
+--                    MarginLeft _ a   -> done a 
+--                    MarginRight _ a  -> done a 
+--                    MarginTop _ a    -> done a 
+--                    MarginBottom _ a -> done a 
+
+--                    Translate _ a1 a2      -> done a1 && done a2
+--                    Translate3d _ a1 a2 a3 -> done a1 && done a2 && done a3
+--                    TranslateX _ a -> done a
+--                    TranslateY _ a -> done a
+--                    Scale a1       -> done a1 
+--                    Scale3d a1 a2 a3 -> done a1 && done a2 && done a3
+--                    ScaleX a   -> done a
+--                    ScaleY a   -> done a
+--                    ScaleZ a   -> done a
+--                    Rotate _ a -> done a
+--                    Rotate3d _ a1 a2 a3 a4 -> done a1 && done a2 && done a3 && done a4
+--                    RotateX _ a -> done a
+--                    RotateY _ a -> done a
+--                    Skew _ a1 a2 -> done a1 && done a2 
+--                    SkewX _ a -> done a
+--                    SkewY _ a -> done a
+--                    Perspective a -> done a
+
+
+propId : StyleProperty -> Int
 propId prop =
         case prop of
-            Prop _ _ _ -> 1
-            Opacity _  -> 2
-            Height _ _ -> 3
-            Width _ _  -> 4
-            Left _ _   -> 5
-            Right _ _  -> 6
-            Bottom _ _ -> 7
-            Top _ _    -> 8
+          Prop _ _ _ -> 1
+          Opacity _  -> 2
+          Height _ _ -> 3
+          Width _ _  -> 4
+          Left _ _   -> 5
+          Right _ _  -> 6
+          Bottom _ _ -> 7
+          Top _ _    -> 8
 
-            Padding _ _      -> 9
-            PaddingLeft _ _  -> 10
-            PaddingRight _ _ -> 11
-            PaddingTop _ _   -> 12
-            PaddingBottom _ _-> 13
+          Padding _ _      -> 9
+          PaddingLeft _ _  -> 10
+          PaddingRight _ _ -> 11
+          PaddingTop _ _   -> 12
+          PaddingBottom _ _-> 13
 
-            Margin _ _      -> 14
-            MarginLeft _ _  -> 15
-            MarginRight _ _ -> 16
-            MarginTop _ _   -> 17
-            MarginBottom _ _-> 18
+          Margin _ _      -> 14
+          MarginLeft _ _  -> 15
+          MarginRight _ _ -> 16
+          MarginTop _ _   -> 17
+          MarginBottom _ _-> 18
 
-            Translate _ _ _ -> 19
-            Translate3d _ _ _ _ -> 20
-            TranslateX _ _ -> 21
-            TranslateY _ _ -> 22
-            Scale _        -> 23 
-            Scale3d _ _ _  -> 24
-            ScaleX _   -> 25
-            ScaleY _   -> 26
-            ScaleZ _   -> 27
-            Rotate _ _ -> 28
-            Rotate3d _ _ _ _ _ -> 29
-            RotateX _ _   -> 30
-            RotateY _ _   -> 31
-            Skew _ _ _    -> 32 
-            SkewX _ _     -> 33
-            SkewY _ _     -> 34
-            Perspective _ -> 35
+          Translate _ _ _ -> 19
+          Translate3d _ _ _ _ -> 20
+          TranslateX _ _ -> 21
+          TranslateY _ _ -> 22
+          Scale _        -> 23 
+          Scale3d _ _ _  -> 24
+          ScaleX _   -> 25
+          ScaleY _   -> 26
+          ScaleZ _   -> 27
+          Rotate _ _ -> 28
+          Rotate3d _ _ _ _ _ -> 29
+          RotateX _ _   -> 30
+          RotateY _ _   -> 31
+          Skew _ _ _    -> 32 
+          SkewX _ _     -> 33
+          SkewY _ _     -> 34
+          Perspective _ -> 35
 
 
 
@@ -601,25 +1194,6 @@ addAngleUnits unit num =
             Rad -> num ++ "rad"
 
             Turn -> num ++ "turn"
-
-
-
-
-
-fadeIn : Time -> PropAnimation
-fadeIn dur = Opacity 
-               (A.animation 0 
-                    |> A.from 0.0 
-                    |> A.to 1.0
-                    |> A.duration dur) 
-
-fadeOut : Time -> PropAnimation
-fadeOut dur = Opacity 
-                 (A.animation 0 
-                      |> A.from 1.0 
-                      |> A.to 0.0
-                      |> A.duration dur) 
-
 
 
 
