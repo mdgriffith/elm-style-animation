@@ -10879,133 +10879,147 @@ Elm.ElmUI.make = function (_elm) {
          case "Pt": return "pt";
          default: return "pc";}
    };
+   var colorAUnit = function (color) {    var _p2 = color;if (_p2.ctor === "RGBA") {    return "rgba";} else {    return "hsla";}};
+   var colorUnit = function (color) {    var _p3 = color;if (_p3.ctor === "RGB") {    return "rgb";} else {    return "hsl";}};
    var propId = function (prop) {
-      var _p2 = prop;
-      switch (_p2.ctor)
-      {case "Prop": return A2($Basics._op["++"],_p2._0,_p2._1);
+      var _p4 = prop;
+      switch (_p4.ctor)
+      {case "Prop": return A2($Basics._op["++"],_p4._0,_p4._1);
          case "Opacity": return "opacity";
-         case "Height": return A2($Basics._op["++"],"height",lenUnit(_p2._0));
-         case "Width": return A2($Basics._op["++"],"width",lenUnit(_p2._0));
-         case "Left": return A2($Basics._op["++"],"left",lenUnit(_p2._0));
-         case "Right": return A2($Basics._op["++"],"right",lenUnit(_p2._0));
-         case "Bottom": return A2($Basics._op["++"],"bottom",lenUnit(_p2._0));
-         case "Top": return A2($Basics._op["++"],"top",lenUnit(_p2._0));
-         case "Padding": return A2($Basics._op["++"],"padding",lenUnit(_p2._0));
-         case "PaddingLeft": return A2($Basics._op["++"],"padding-left",lenUnit(_p2._0));
-         case "PaddingRight": return A2($Basics._op["++"],"padding-right",lenUnit(_p2._0));
-         case "PaddingTop": return A2($Basics._op["++"],"padding-top",lenUnit(_p2._0));
-         case "PaddingBottom": return A2($Basics._op["++"],"padding-bottom",lenUnit(_p2._0));
-         case "Margin": return A2($Basics._op["++"],"margin",lenUnit(_p2._0));
-         case "MarginLeft": return A2($Basics._op["++"],"margin-left",lenUnit(_p2._0));
-         case "MarginRight": return A2($Basics._op["++"],"margin-right",lenUnit(_p2._0));
-         case "MarginTop": return A2($Basics._op["++"],"margin-top",lenUnit(_p2._0));
-         case "MarginBottom": return A2($Basics._op["++"],"margin-bottom",lenUnit(_p2._0));
+         case "Height": return A2($Basics._op["++"],"height",lenUnit(_p4._0));
+         case "Width": return A2($Basics._op["++"],"width",lenUnit(_p4._0));
+         case "Left": return A2($Basics._op["++"],"left",lenUnit(_p4._0));
+         case "Right": return A2($Basics._op["++"],"right",lenUnit(_p4._0));
+         case "Bottom": return A2($Basics._op["++"],"bottom",lenUnit(_p4._0));
+         case "Top": return A2($Basics._op["++"],"top",lenUnit(_p4._0));
+         case "Padding": return A2($Basics._op["++"],"padding",lenUnit(_p4._0));
+         case "PaddingLeft": return A2($Basics._op["++"],"padding-left",lenUnit(_p4._0));
+         case "PaddingRight": return A2($Basics._op["++"],"padding-right",lenUnit(_p4._0));
+         case "PaddingTop": return A2($Basics._op["++"],"padding-top",lenUnit(_p4._0));
+         case "PaddingBottom": return A2($Basics._op["++"],"padding-bottom",lenUnit(_p4._0));
+         case "Margin": return A2($Basics._op["++"],"margin",lenUnit(_p4._0));
+         case "MarginLeft": return A2($Basics._op["++"],"margin-left",lenUnit(_p4._0));
+         case "MarginRight": return A2($Basics._op["++"],"margin-right",lenUnit(_p4._0));
+         case "MarginTop": return A2($Basics._op["++"],"margin-top",lenUnit(_p4._0));
+         case "MarginBottom": return A2($Basics._op["++"],"margin-bottom",lenUnit(_p4._0));
+         case "Color": return A2($Basics._op["++"],"color",colorUnit(_p4._0));
+         case "BackgroundColor": return A2($Basics._op["++"],"background-color",colorUnit(_p4._0));
+         case "ColorA": return A2($Basics._op["++"],"color",colorAUnit(_p4._0));
+         case "BackgroundColorA": return A2($Basics._op["++"],"background-color",colorAUnit(_p4._0));
          case "Matrix": return "matrix";
          case "Matrix3d": return "matrix3d";
-         case "Translate": return A2($Basics._op["++"],"translate",lenUnit(_p2._0));
-         case "Translate3d": return A2($Basics._op["++"],"translate3d",lenUnit(_p2._0));
-         case "TranslateX": return A2($Basics._op["++"],"translatex",lenUnit(_p2._0));
-         case "TranslateY": return A2($Basics._op["++"],"translatey",lenUnit(_p2._0));
+         case "Translate": return A2($Basics._op["++"],"translate",lenUnit(_p4._0));
+         case "Translate3d": return A2($Basics._op["++"],"translate3d",lenUnit(_p4._0));
+         case "TranslateX": return A2($Basics._op["++"],"translatex",lenUnit(_p4._0));
+         case "TranslateY": return A2($Basics._op["++"],"translatey",lenUnit(_p4._0));
          case "Scale": return "scale";
          case "Scale3d": return "scale3d";
          case "ScaleX": return "scalex";
          case "ScaleY": return "scaley";
          case "ScaleZ": return "scalez";
-         case "Rotate": return A2($Basics._op["++"],"rotate",angleUnit(_p2._0));
-         case "Rotate3d": return A2($Basics._op["++"],"rotate3d",angleUnit(_p2._0));
-         case "RotateX": return A2($Basics._op["++"],"rotatex",angleUnit(_p2._0));
-         case "RotateY": return A2($Basics._op["++"],"rotatey",angleUnit(_p2._0));
-         case "Skew": return A2($Basics._op["++"],"skew",angleUnit(_p2._0));
-         case "SkewX": return A2($Basics._op["++"],"skewx",angleUnit(_p2._0));
-         case "SkewY": return A2($Basics._op["++"],"skewy",angleUnit(_p2._0));
+         case "Rotate": return A2($Basics._op["++"],"rotate",angleUnit(_p4._0));
+         case "Rotate3d": return A2($Basics._op["++"],"rotate3d",angleUnit(_p4._0));
+         case "RotateX": return A2($Basics._op["++"],"rotatex",angleUnit(_p4._0));
+         case "RotateY": return A2($Basics._op["++"],"rotatey",angleUnit(_p4._0));
+         case "Skew": return A2($Basics._op["++"],"skew",angleUnit(_p4._0));
+         case "SkewX": return A2($Basics._op["++"],"skewx",angleUnit(_p4._0));
+         case "SkewY": return A2($Basics._op["++"],"skewy",angleUnit(_p4._0));
          default: return "perspective";}
    };
    var done = F2(function (model,elapsed) {
-      var _p3 = model.anim;
-      if (_p3.ctor === "Nothing") {
+      var _p5 = model.anim;
+      if (_p5.ctor === "Nothing") {
             return true;
          } else {
-            return _U.cmp(elapsed,_p3._0.duration) > -1;
+            return _U.cmp(elapsed,_p5._0.duration) > -1;
          }
    });
    var renderValue = function (prop) {
-      var renderList = function (xs) {    return $String.concat(A2($List.intersperse,",",A2($List.map,$Basics.toString,xs)));};
+      var renderList = function (xs) {
+         return A2($Basics._op["++"],"(",A2($Basics._op["++"],$String.concat(A2($List.intersperse,",",A2($List.map,$Basics.toString,xs))),")"));
+      };
       var val = function (a) {    return $Basics.toString(a);};
       var renderLength = F2(function (unit,a) {    return A2($Basics._op["++"],val(a),lenUnit(unit));});
       var renderAngle = F2(function (unit,a) {    return A2($Basics._op["++"],val(a),angleUnit(unit));});
-      var _p4 = prop;
-      switch (_p4.ctor)
-      {case "Prop": return A2($Basics._op["++"],val(_p4._2),_p4._1);
-         case "Opacity": return val(_p4._0);
-         case "Height": return A2(renderLength,_p4._0,_p4._1);
-         case "Width": return A2(renderLength,_p4._0,_p4._1);
-         case "Left": return A2(renderLength,_p4._0,_p4._1);
-         case "Top": return A2(renderLength,_p4._0,_p4._1);
-         case "Right": return A2(renderLength,_p4._0,_p4._1);
-         case "Bottom": return A2(renderLength,_p4._0,_p4._1);
-         case "Padding": return A2(renderLength,_p4._0,_p4._1);
-         case "PaddingLeft": return A2(renderLength,_p4._0,_p4._1);
-         case "PaddingRight": return A2(renderLength,_p4._0,_p4._1);
-         case "PaddingTop": return A2(renderLength,_p4._0,_p4._1);
-         case "PaddingBottom": return A2(renderLength,_p4._0,_p4._1);
-         case "Margin": return A2(renderLength,_p4._0,_p4._1);
-         case "MarginLeft": return A2(renderLength,_p4._0,_p4._1);
-         case "MarginRight": return A2(renderLength,_p4._0,_p4._1);
-         case "MarginTop": return A2(renderLength,_p4._0,_p4._1);
-         case "MarginBottom": return A2(renderLength,_p4._0,_p4._1);
-         case "Translate": var _p5 = _p4._0;
+      var _p6 = prop;
+      switch (_p6.ctor)
+      {case "Prop": return A2($Basics._op["++"],val(_p6._2),_p6._1);
+         case "Opacity": return val(_p6._0);
+         case "Height": return A2(renderLength,_p6._0,_p6._1);
+         case "Width": return A2(renderLength,_p6._0,_p6._1);
+         case "Left": return A2(renderLength,_p6._0,_p6._1);
+         case "Top": return A2(renderLength,_p6._0,_p6._1);
+         case "Right": return A2(renderLength,_p6._0,_p6._1);
+         case "Bottom": return A2(renderLength,_p6._0,_p6._1);
+         case "Padding": return A2(renderLength,_p6._0,_p6._1);
+         case "PaddingLeft": return A2(renderLength,_p6._0,_p6._1);
+         case "PaddingRight": return A2(renderLength,_p6._0,_p6._1);
+         case "PaddingTop": return A2(renderLength,_p6._0,_p6._1);
+         case "PaddingBottom": return A2(renderLength,_p6._0,_p6._1);
+         case "Margin": return A2(renderLength,_p6._0,_p6._1);
+         case "MarginLeft": return A2(renderLength,_p6._0,_p6._1);
+         case "MarginRight": return A2(renderLength,_p6._0,_p6._1);
+         case "MarginTop": return A2(renderLength,_p6._0,_p6._1);
+         case "MarginBottom": return A2(renderLength,_p6._0,_p6._1);
+         case "Color": var _p7 = _p6._1;
+           return A2($Basics._op["++"],colorUnit(_p6._0),renderList(_U.list([_p7,_p6._2,_p7])));
+         case "BackgroundColor": var _p8 = _p6._1;
+           return A2($Basics._op["++"],colorUnit(_p6._0),renderList(_U.list([_p8,_p6._2,_p8])));
+         case "ColorA": var _p9 = _p6._1;
+           return A2($Basics._op["++"],colorAUnit(_p6._0),renderList(_U.list([_p9,_p6._2,_p9,_p6._4])));
+         case "BackgroundColorA": var _p10 = _p6._1;
+           return A2($Basics._op["++"],colorAUnit(_p6._0),renderList(_U.list([_p10,_p6._2,_p10,_p6._4])));
+         case "Translate": var _p11 = _p6._0;
            return A2($Basics._op["++"],
            "translate(",
-           A2($Basics._op["++"],A2(renderLength,_p5,_p4._1),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderLength,_p5,_p4._2),")"))));
-         case "Translate3d": var _p6 = _p4._0;
+           A2($Basics._op["++"],A2(renderLength,_p11,_p6._1),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderLength,_p11,_p6._2),")"))));
+         case "Translate3d": var _p12 = _p6._0;
            return A2($Basics._op["++"],
            "translate3d(",
            A2($Basics._op["++"],
-           A2(renderLength,_p6,_p4._1),
+           A2(renderLength,_p12,_p6._1),
            A2($Basics._op["++"],
            ",",
-           A2($Basics._op["++"],A2(renderLength,_p6,_p4._2),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderLength,_p6,_p4._3),")"))))));
-         case "TranslateX": return A2($Basics._op["++"],"translateX(",A2($Basics._op["++"],A2(renderLength,_p4._0,_p4._1),")"));
-         case "TranslateY": return A2($Basics._op["++"],"translateY(",A2($Basics._op["++"],A2(renderLength,_p4._0,_p4._1),")"));
-         case "Scale": return A2($Basics._op["++"],"scale(",A2($Basics._op["++"],val(_p4._0),")"));
+           A2($Basics._op["++"],A2(renderLength,_p12,_p6._2),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderLength,_p12,_p6._3),")"))))));
+         case "TranslateX": return A2($Basics._op["++"],"translateX(",A2($Basics._op["++"],A2(renderLength,_p6._0,_p6._1),")"));
+         case "TranslateY": return A2($Basics._op["++"],"translateY(",A2($Basics._op["++"],A2(renderLength,_p6._0,_p6._1),")"));
+         case "Scale": return A2($Basics._op["++"],"scale(",A2($Basics._op["++"],val(_p6._0),")"));
          case "Scale3d": return A2($Basics._op["++"],
            "scale3d(",
            A2($Basics._op["++"],
-           val(_p4._0),
-           A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p4._1),A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p4._2),")"))))));
-         case "ScaleX": return A2($Basics._op["++"],"scaleX(",A2($Basics._op["++"],val(_p4._0),")"));
-         case "ScaleY": return A2($Basics._op["++"],"scaleY(",A2($Basics._op["++"],val(_p4._0),")"));
-         case "ScaleZ": return A2($Basics._op["++"],"scaleZ(",A2($Basics._op["++"],val(_p4._0),")"));
-         case "Rotate": return A2($Basics._op["++"],"rotate(",A2($Basics._op["++"],A2(renderAngle,_p4._0,_p4._1),")"));
+           val(_p6._0),
+           A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p6._1),A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p6._2),")"))))));
+         case "ScaleX": return A2($Basics._op["++"],"scaleX(",A2($Basics._op["++"],val(_p6._0),")"));
+         case "ScaleY": return A2($Basics._op["++"],"scaleY(",A2($Basics._op["++"],val(_p6._0),")"));
+         case "ScaleZ": return A2($Basics._op["++"],"scaleZ(",A2($Basics._op["++"],val(_p6._0),")"));
+         case "Rotate": return A2($Basics._op["++"],"rotate(",A2($Basics._op["++"],A2(renderAngle,_p6._0,_p6._1),")"));
          case "Rotate3d": return A2($Basics._op["++"],
            "rotate3d(",
            A2($Basics._op["++"],
-           val(_p4._1),
+           val(_p6._1),
            A2($Basics._op["++"],
            ",",
            A2($Basics._op["++"],
-           val(_p4._2),
-           A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p4._3),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderAngle,_p4._0,_p4._4),")"))))))));
-         case "RotateX": return A2($Basics._op["++"],"rotateX(",A2($Basics._op["++"],A2(renderAngle,_p4._0,_p4._1),")"));
-         case "RotateY": return A2($Basics._op["++"],"rotateY(",A2($Basics._op["++"],A2(renderAngle,_p4._0,_p4._1),")"));
-         case "Skew": var _p7 = _p4._0;
+           val(_p6._2),
+           A2($Basics._op["++"],",",A2($Basics._op["++"],val(_p6._3),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderAngle,_p6._0,_p6._4),")"))))))));
+         case "RotateX": return A2($Basics._op["++"],"rotateX(",A2($Basics._op["++"],A2(renderAngle,_p6._0,_p6._1),")"));
+         case "RotateY": return A2($Basics._op["++"],"rotateY(",A2($Basics._op["++"],A2(renderAngle,_p6._0,_p6._1),")"));
+         case "Skew": var _p13 = _p6._0;
            return A2($Basics._op["++"],
            "skew(",
-           A2($Basics._op["++"],A2(renderAngle,_p7,_p4._1),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderAngle,_p7,_p4._2),")"))));
-         case "SkewX": return A2($Basics._op["++"],"skewX(",A2($Basics._op["++"],A2(renderAngle,_p4._0,_p4._1),")"));
-         case "SkewY": return A2($Basics._op["++"],"skewY(",A2($Basics._op["++"],A2(renderAngle,_p4._0,_p4._1),")"));
-         case "Perspective": return A2($Basics._op["++"],"perspective(",A2($Basics._op["++"],val(_p4._0),")"));
-         case "Matrix": return A2($Basics._op["++"],"matrix(",A2($Basics._op["++"],renderList(_U.list([_p4._0,_p4._1,_p4._2,_p4._3,_p4._4,_p4._5])),")"));
+           A2($Basics._op["++"],A2(renderAngle,_p13,_p6._1),A2($Basics._op["++"],",",A2($Basics._op["++"],A2(renderAngle,_p13,_p6._2),")"))));
+         case "SkewX": return A2($Basics._op["++"],"skewX(",A2($Basics._op["++"],A2(renderAngle,_p6._0,_p6._1),")"));
+         case "SkewY": return A2($Basics._op["++"],"skewY(",A2($Basics._op["++"],A2(renderAngle,_p6._0,_p6._1),")"));
+         case "Perspective": return A2($Basics._op["++"],"perspective(",A2($Basics._op["++"],val(_p6._0),")"));
+         case "Matrix": return A2($Basics._op["++"],"matrix",renderList(_U.list([_p6._0,_p6._1,_p6._2,_p6._3,_p6._4,_p6._5])));
          default: return A2($Basics._op["++"],
-           "matrix3d(",
-           A2($Basics._op["++"],
-           renderList(_U.list([_p4._0,_p4._1,_p4._2,_p4._3,_p4._4,_p4._5,_p4._6,_p4._7,_p4._8,_p4._9,_p4._10,_p4._11,_p4._12,_p4._13,_p4._14,_p4._15])),
-           ")"));}
+           "matrix3d",
+           renderList(_U.list([_p6._0,_p6._1,_p6._2,_p6._3,_p6._4,_p6._5,_p6._6,_p6._7,_p6._8,_p6._9,_p6._10,_p6._11,_p6._12,_p6._13,_p6._14,_p6._15])));}
    };
    var renderName = function (styleProp) {
-      var _p8 = styleProp;
-      switch (_p8.ctor)
-      {case "Prop": return _p8._0;
+      var _p14 = styleProp;
+      switch (_p14.ctor)
+      {case "Prop": return _p14._0;
          case "Opacity": return "opacity";
          case "Height": return "height";
          case "Width": return "width";
@@ -11023,6 +11037,10 @@ Elm.ElmUI.make = function (_elm) {
          case "MarginRight": return "margin-right";
          case "MarginTop": return "margin-top";
          case "MarginBottom": return "margin-bottom";
+         case "Color": return "color";
+         case "BackgroundColor": return "background-color";
+         case "ColorA": return "color";
+         case "BackgroundColorA": return "background-color";
          case "Matrix": return "transform";
          case "Matrix3d": return "transform";
          case "Translate": return "transform";
@@ -11051,6 +11069,10 @@ Elm.ElmUI.make = function (_elm) {
    });
    var Tick = function (a) {    return {ctor: "Tick",_0: a};};
    var Begin = function (a) {    return {ctor: "Begin",_0: a};};
+   var HSLA = {ctor: "HSLA"};
+   var RGBA = {ctor: "RGBA"};
+   var HSL = {ctor: "HSL"};
+   var RGB = {ctor: "RGB"};
    var Turn = {ctor: "Turn"};
    var Rad = {ctor: "Rad"};
    var Grad = {ctor: "Grad"};
@@ -11137,6 +11159,10 @@ Elm.ElmUI.make = function (_elm) {
       };
    };
    var Matrix = F6(function (a,b,c,d,e,f) {    return {ctor: "Matrix",_0: a,_1: b,_2: c,_3: d,_4: e,_5: f};});
+   var BackgroundColorA = F5(function (a,b,c,d,e) {    return {ctor: "BackgroundColorA",_0: a,_1: b,_2: c,_3: d,_4: e};});
+   var ColorA = F5(function (a,b,c,d,e) {    return {ctor: "ColorA",_0: a,_1: b,_2: c,_3: d,_4: e};});
+   var BackgroundColor = F4(function (a,b,c,d) {    return {ctor: "BackgroundColor",_0: a,_1: b,_2: c,_3: d};});
+   var Color = F4(function (a,b,c,d) {    return {ctor: "Color",_0: a,_1: b,_2: c,_3: d};});
    var MarginBottom = F2(function (a,b) {    return {ctor: "MarginBottom",_0: a,_1: b};});
    var MarginTop = F2(function (a,b) {    return {ctor: "MarginTop",_0: a,_1: b};});
    var MarginRight = F2(function (a,b) {    return {ctor: "MarginRight",_0: a,_1: b};});
@@ -11156,534 +11182,606 @@ Elm.ElmUI.make = function (_elm) {
    var Opacity = function (a) {    return {ctor: "Opacity",_0: a};};
    var Prop = F3(function (a,b,c) {    return {ctor: "Prop",_0: a,_1: b,_2: c};});
    var bakeProp = F3(function (prop,prev,val) {
-      var _p9 = prop;
-      switch (_p9.ctor)
+      var _p15 = prop;
+      switch (_p15.ctor)
       {case "Prop": var from = function () {
-              var _p10 = prev;
-              if (_p10.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p10._0.ctor === "Prop") {
-                          return _p10._0._2;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A3(Prop,_p9._0,_p9._1,A2(val,from,_p9._2));
-         case "Opacity": var from = function () {
-              var _p11 = prev;
-              if (_p11.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p11._0.ctor === "Opacity") {
-                          return _p11._0._0;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return Opacity(A2(val,from,_p9._0));
-         case "Height": var from = function () {
-              var _p12 = prev;
-              if (_p12.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p12._0.ctor === "Height") {
-                          return _p12._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(Height,_p9._0,A2(val,from,_p9._1));
-         case "Width": var from = function () {
-              var _p13 = prev;
-              if (_p13.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p13._0.ctor === "Width") {
-                          return _p13._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(Width,_p9._0,A2(val,from,_p9._1));
-         case "Left": var from = function () {
-              var _p14 = prev;
-              if (_p14.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p14._0.ctor === "Left") {
-                          return _p14._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(Left,_p9._0,A2(val,from,_p9._1));
-         case "Top": var from = function () {
-              var _p15 = prev;
-              if (_p15.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p15._0.ctor === "Top") {
-                          return _p15._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(Top,_p9._0,A2(val,from,_p9._1));
-         case "Right": var from = function () {
               var _p16 = prev;
               if (_p16.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p16._0.ctor === "Right") {
-                          return _p16._0._1;
+                    if (_p16._0.ctor === "Prop") {
+                          return _p16._0._2;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(Right,_p9._0,A2(val,from,_p9._1));
-         case "Bottom": var from = function () {
+           return A3(Prop,_p15._0,_p15._1,A2(val,from,_p15._2));
+         case "Opacity": var from = function () {
               var _p17 = prev;
               if (_p17.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p17._0.ctor === "Bottom") {
-                          return _p17._0._1;
+                    if (_p17._0.ctor === "Opacity") {
+                          return _p17._0._0;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(Bottom,_p9._0,A2(val,from,_p9._1));
-         case "Padding": var from = function () {
+           return Opacity(A2(val,from,_p15._0));
+         case "Height": var from = function () {
               var _p18 = prev;
               if (_p18.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p18._0.ctor === "Padding") {
+                    if (_p18._0.ctor === "Height") {
                           return _p18._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(Padding,_p9._0,A2(val,from,_p9._1));
-         case "PaddingLeft": var from = function () {
+           return A2(Height,_p15._0,A2(val,from,_p15._1));
+         case "Width": var from = function () {
               var _p19 = prev;
               if (_p19.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p19._0.ctor === "PaddingLeft") {
+                    if (_p19._0.ctor === "Width") {
                           return _p19._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(PaddingLeft,_p9._0,A2(val,from,_p9._1));
-         case "PaddingRight": var from = function () {
+           return A2(Width,_p15._0,A2(val,from,_p15._1));
+         case "Left": var from = function () {
               var _p20 = prev;
               if (_p20.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p20._0.ctor === "PaddingRight") {
+                    if (_p20._0.ctor === "Left") {
                           return _p20._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(PaddingRight,_p9._0,A2(val,from,_p9._1));
-         case "PaddingTop": var from = function () {
+           return A2(Left,_p15._0,A2(val,from,_p15._1));
+         case "Top": var from = function () {
               var _p21 = prev;
               if (_p21.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p21._0.ctor === "PaddingTop") {
+                    if (_p21._0.ctor === "Top") {
                           return _p21._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(PaddingTop,_p9._0,A2(val,from,_p9._1));
-         case "PaddingBottom": var from = function () {
+           return A2(Top,_p15._0,A2(val,from,_p15._1));
+         case "Right": var from = function () {
               var _p22 = prev;
               if (_p22.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p22._0.ctor === "PaddingBottom") {
+                    if (_p22._0.ctor === "Right") {
                           return _p22._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(PaddingBottom,_p9._0,A2(val,from,_p9._1));
-         case "Margin": var from = function () {
+           return A2(Right,_p15._0,A2(val,from,_p15._1));
+         case "Bottom": var from = function () {
               var _p23 = prev;
               if (_p23.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p23._0.ctor === "Margin") {
+                    if (_p23._0.ctor === "Bottom") {
                           return _p23._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(Margin,_p9._0,A2(val,from,_p9._1));
-         case "MarginLeft": var from = function () {
+           return A2(Bottom,_p15._0,A2(val,from,_p15._1));
+         case "Padding": var from = function () {
               var _p24 = prev;
               if (_p24.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p24._0.ctor === "MarginLeft") {
+                    if (_p24._0.ctor === "Padding") {
                           return _p24._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(MarginLeft,_p9._0,A2(val,from,_p9._1));
-         case "MarginRight": var from = function () {
+           return A2(Padding,_p15._0,A2(val,from,_p15._1));
+         case "PaddingLeft": var from = function () {
               var _p25 = prev;
               if (_p25.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p25._0.ctor === "MarginRight") {
+                    if (_p25._0.ctor === "PaddingLeft") {
                           return _p25._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(MarginRight,_p9._0,A2(val,from,_p9._1));
-         case "MarginTop": var from = function () {
+           return A2(PaddingLeft,_p15._0,A2(val,from,_p15._1));
+         case "PaddingRight": var from = function () {
               var _p26 = prev;
               if (_p26.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p26._0.ctor === "MarginTop") {
+                    if (_p26._0.ctor === "PaddingRight") {
                           return _p26._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(MarginTop,_p9._0,A2(val,from,_p9._1));
-         case "MarginBottom": var from = function () {
+           return A2(PaddingRight,_p15._0,A2(val,from,_p15._1));
+         case "PaddingTop": var from = function () {
               var _p27 = prev;
               if (_p27.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p27._0.ctor === "MarginBottom") {
+                    if (_p27._0.ctor === "PaddingTop") {
                           return _p27._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(MarginBottom,_p9._0,A2(val,from,_p9._1));
-         case "Translate": var _p28 = function () {
+           return A2(PaddingTop,_p15._0,A2(val,from,_p15._1));
+         case "PaddingBottom": var from = function () {
+              var _p28 = prev;
+              if (_p28.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p28._0.ctor === "PaddingBottom") {
+                          return _p28._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(PaddingBottom,_p15._0,A2(val,from,_p15._1));
+         case "Margin": var from = function () {
               var _p29 = prev;
               if (_p29.ctor === "Nothing") {
-                    return {ctor: "_Tuple2",_0: 0.0,_1: 0.0};
+                    return 0.0;
                  } else {
-                    if (_p29._0.ctor === "Translate") {
-                          return {ctor: "_Tuple2",_0: _p29._0._1,_1: _p29._0._2};
+                    if (_p29._0.ctor === "Margin") {
+                          return _p29._0._1;
                        } else {
-                          return {ctor: "_Tuple2",_0: 0.0,_1: 0.0};
+                          return 0.0;
                        }
                  }
            }();
-           var xFrom = _p28._0;
-           var yFrom = _p28._1;
-           return A3(Translate,_p9._0,A2(val,xFrom,_p9._1),A2(val,yFrom,_p9._2));
-         case "Translate3d": var _p30 = function () {
+           return A2(Margin,_p15._0,A2(val,from,_p15._1));
+         case "MarginLeft": var from = function () {
+              var _p30 = prev;
+              if (_p30.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p30._0.ctor === "MarginLeft") {
+                          return _p30._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(MarginLeft,_p15._0,A2(val,from,_p15._1));
+         case "MarginRight": var from = function () {
               var _p31 = prev;
               if (_p31.ctor === "Nothing") {
-                    return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
+                    return 0.0;
                  } else {
-                    if (_p31._0.ctor === "Translate3d") {
-                          return {ctor: "_Tuple3",_0: _p31._0._1,_1: _p31._0._2,_2: _p31._0._3};
+                    if (_p31._0.ctor === "MarginRight") {
+                          return _p31._0._1;
                        } else {
-                          return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
+                          return 0.0;
                        }
                  }
            }();
-           var xFrom = _p30._0;
-           var yFrom = _p30._1;
-           var zFrom = _p30._2;
-           return A4(Translate3d,_p9._0,A2(val,xFrom,_p9._1),A2(val,yFrom,_p9._2),A2(val,zFrom,_p9._3));
-         case "TranslateX": var from = function () {
+           return A2(MarginRight,_p15._0,A2(val,from,_p15._1));
+         case "MarginTop": var from = function () {
               var _p32 = prev;
               if (_p32.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p32._0.ctor === "TranslateX") {
+                    if (_p32._0.ctor === "MarginTop") {
                           return _p32._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(TranslateX,_p9._0,A2(val,from,_p9._1));
-         case "TranslateY": var from = function () {
+           return A2(MarginTop,_p15._0,A2(val,from,_p15._1));
+         case "MarginBottom": var from = function () {
               var _p33 = prev;
               if (_p33.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p33._0.ctor === "TranslateY") {
+                    if (_p33._0.ctor === "MarginBottom") {
                           return _p33._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(TranslateY,_p9._0,A2(val,from,_p9._1));
-         case "Scale": var from = function () {
-              var _p34 = prev;
-              if (_p34.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p34._0.ctor === "Scale") {
-                          return _p34._0._0;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return Scale(A2(val,from,_p9._0));
-         case "Scale3d": var _p35 = function () {
-              var _p36 = prev;
-              if (_p36.ctor === "Nothing") {
+           return A2(MarginBottom,_p15._0,A2(val,from,_p15._1));
+         case "Color": var _p34 = function () {
+              var _p35 = prev;
+              if (_p35.ctor === "Nothing") {
                     return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
                  } else {
-                    if (_p36._0.ctor === "Scale3d") {
-                          return {ctor: "_Tuple3",_0: _p36._0._0,_1: _p36._0._1,_2: _p36._0._2};
+                    if (_p35._0.ctor === "Color") {
+                          return {ctor: "_Tuple3",_0: _p35._0._1,_1: _p35._0._2,_2: _p35._0._3};
                        } else {
                           return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
                        }
                  }
            }();
-           var xFrom = _p35._0;
-           var yFrom = _p35._1;
-           var zFrom = _p35._2;
-           return A3(Scale3d,A2(val,xFrom,_p9._0),A2(val,yFrom,_p9._1),A2(val,zFrom,_p9._2));
-         case "ScaleX": var from = function () {
+           var xFrom = _p34._0;
+           var yFrom = _p34._1;
+           var zFrom = _p34._2;
+           return A4(Color,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2),A2(val,zFrom,_p15._3));
+         case "BackgroundColor": var _p36 = function () {
               var _p37 = prev;
               if (_p37.ctor === "Nothing") {
-                    return 0.0;
+                    return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
                  } else {
-                    if (_p37._0.ctor === "ScaleX") {
-                          return _p37._0._0;
+                    if (_p37._0.ctor === "BackgroundColor") {
+                          return {ctor: "_Tuple3",_0: _p37._0._1,_1: _p37._0._2,_2: _p37._0._3};
                        } else {
-                          return 0.0;
+                          return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
                        }
                  }
            }();
-           return ScaleX(A2(val,from,_p9._0));
-         case "ScaleY": var from = function () {
-              var _p38 = prev;
-              if (_p38.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p38._0.ctor === "ScaleY") {
-                          return _p38._0._0;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return ScaleY(A2(val,from,_p9._0));
-         case "ScaleZ": var from = function () {
+           var xFrom = _p36._0;
+           var yFrom = _p36._1;
+           var zFrom = _p36._2;
+           return A4(BackgroundColor,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2),A2(val,zFrom,_p15._3));
+         case "ColorA": var _p38 = function () {
               var _p39 = prev;
               if (_p39.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p39._0.ctor === "ScaleZ") {
-                          return _p39._0._0;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return ScaleZ(A2(val,from,_p9._0));
-         case "Rotate": var from = function () {
-              var _p40 = prev;
-              if (_p40.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p40._0.ctor === "Rotate") {
-                          return _p40._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(Rotate,_p9._0,A2(val,from,_p9._1));
-         case "Rotate3d": var _p41 = function () {
-              var _p42 = prev;
-              if (_p42.ctor === "Nothing") {
                     return {ctor: "_Tuple4",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0};
                  } else {
-                    if (_p42._0.ctor === "Rotate3d") {
-                          return {ctor: "_Tuple4",_0: _p42._0._1,_1: _p42._0._2,_2: _p42._0._3,_3: _p42._0._4};
+                    if (_p39._0.ctor === "ColorA") {
+                          return {ctor: "_Tuple4",_0: _p39._0._1,_1: _p39._0._2,_2: _p39._0._3,_3: _p39._0._4};
                        } else {
                           return {ctor: "_Tuple4",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0};
                        }
                  }
            }();
-           var xFrom = _p41._0;
-           var yFrom = _p41._1;
-           var zFrom = _p41._2;
-           var aFrom = _p41._3;
-           return A5(Rotate3d,_p9._0,A2(val,xFrom,_p9._1),A2(val,yFrom,_p9._2),A2(val,zFrom,_p9._3),A2(val,aFrom,_p9._4));
-         case "RotateX": var from = function () {
+           var xFrom = _p38._0;
+           var yFrom = _p38._1;
+           var zFrom = _p38._2;
+           var aFrom = _p38._3;
+           return A5(ColorA,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2),A2(val,zFrom,_p15._3),A2(val,aFrom,_p15._4));
+         case "BackgroundColorA": var _p40 = function () {
+              var _p41 = prev;
+              if (_p41.ctor === "Nothing") {
+                    return {ctor: "_Tuple4",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0};
+                 } else {
+                    if (_p41._0.ctor === "BackgroundColorA") {
+                          return {ctor: "_Tuple4",_0: _p41._0._1,_1: _p41._0._2,_2: _p41._0._3,_3: _p41._0._4};
+                       } else {
+                          return {ctor: "_Tuple4",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0};
+                       }
+                 }
+           }();
+           var xFrom = _p40._0;
+           var yFrom = _p40._1;
+           var zFrom = _p40._2;
+           var aFrom = _p40._3;
+           return A5(BackgroundColorA,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2),A2(val,zFrom,_p15._3),A2(val,aFrom,_p15._4));
+         case "Translate": var _p42 = function () {
               var _p43 = prev;
               if (_p43.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p43._0.ctor === "RotateX") {
-                          return _p43._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(RotateX,_p9._0,A2(val,from,_p9._1));
-         case "RotateY": var from = function () {
-              var _p44 = prev;
-              if (_p44.ctor === "Nothing") {
-                    return 0.0;
-                 } else {
-                    if (_p44._0.ctor === "RotateY") {
-                          return _p44._0._1;
-                       } else {
-                          return 0.0;
-                       }
-                 }
-           }();
-           return A2(RotateY,_p9._0,A2(val,from,_p9._1));
-         case "Skew": var _p45 = function () {
-              var _p46 = prev;
-              if (_p46.ctor === "Nothing") {
                     return {ctor: "_Tuple2",_0: 0.0,_1: 0.0};
                  } else {
-                    if (_p46._0.ctor === "Skew") {
-                          return {ctor: "_Tuple2",_0: _p46._0._1,_1: _p46._0._2};
+                    if (_p43._0.ctor === "Translate") {
+                          return {ctor: "_Tuple2",_0: _p43._0._1,_1: _p43._0._2};
                        } else {
                           return {ctor: "_Tuple2",_0: 0.0,_1: 0.0};
                        }
                  }
            }();
-           var xFrom = _p45._0;
-           var yFrom = _p45._1;
-           return A3(Skew,_p9._0,A2(val,xFrom,_p9._1),A2(val,yFrom,_p9._2));
-         case "SkewX": var from = function () {
+           var xFrom = _p42._0;
+           var yFrom = _p42._1;
+           return A3(Translate,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2));
+         case "Translate3d": var _p44 = function () {
+              var _p45 = prev;
+              if (_p45.ctor === "Nothing") {
+                    return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
+                 } else {
+                    if (_p45._0.ctor === "Translate3d") {
+                          return {ctor: "_Tuple3",_0: _p45._0._1,_1: _p45._0._2,_2: _p45._0._3};
+                       } else {
+                          return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
+                       }
+                 }
+           }();
+           var xFrom = _p44._0;
+           var yFrom = _p44._1;
+           var zFrom = _p44._2;
+           return A4(Translate3d,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2),A2(val,zFrom,_p15._3));
+         case "TranslateX": var from = function () {
+              var _p46 = prev;
+              if (_p46.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p46._0.ctor === "TranslateX") {
+                          return _p46._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(TranslateX,_p15._0,A2(val,from,_p15._1));
+         case "TranslateY": var from = function () {
               var _p47 = prev;
               if (_p47.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p47._0.ctor === "SkewX") {
+                    if (_p47._0.ctor === "TranslateY") {
                           return _p47._0._1;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(SkewX,_p9._0,A2(val,from,_p9._1));
-         case "SkewY": var from = function () {
+           return A2(TranslateY,_p15._0,A2(val,from,_p15._1));
+         case "Scale": var from = function () {
               var _p48 = prev;
               if (_p48.ctor === "Nothing") {
                     return 0.0;
                  } else {
-                    if (_p48._0.ctor === "SkewY") {
-                          return _p48._0._1;
+                    if (_p48._0.ctor === "Scale") {
+                          return _p48._0._0;
                        } else {
                           return 0.0;
                        }
                  }
            }();
-           return A2(SkewY,_p9._0,A2(val,from,_p9._1));
-         case "Perspective": var from = function () {
-              var _p49 = prev;
-              if (_p49.ctor === "Nothing") {
-                    return 0.0;
+           return Scale(A2(val,from,_p15._0));
+         case "Scale3d": var _p49 = function () {
+              var _p50 = prev;
+              if (_p50.ctor === "Nothing") {
+                    return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
                  } else {
-                    if (_p49._0.ctor === "SkewY") {
-                          return _p49._0._1;
+                    if (_p50._0.ctor === "Scale3d") {
+                          return {ctor: "_Tuple3",_0: _p50._0._0,_1: _p50._0._1,_2: _p50._0._2};
                        } else {
-                          return 0.0;
+                          return {ctor: "_Tuple3",_0: 0.0,_1: 0.0,_2: 0.0};
                        }
                  }
            }();
-           return Perspective(A2(val,from,_p9._0));
-         case "Matrix": var _p50 = function () {
+           var xFrom = _p49._0;
+           var yFrom = _p49._1;
+           var zFrom = _p49._2;
+           return A3(Scale3d,A2(val,xFrom,_p15._0),A2(val,yFrom,_p15._1),A2(val,zFrom,_p15._2));
+         case "ScaleX": var from = function () {
               var _p51 = prev;
               if (_p51.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p51._0.ctor === "ScaleX") {
+                          return _p51._0._0;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return ScaleX(A2(val,from,_p15._0));
+         case "ScaleY": var from = function () {
+              var _p52 = prev;
+              if (_p52.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p52._0.ctor === "ScaleY") {
+                          return _p52._0._0;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return ScaleY(A2(val,from,_p15._0));
+         case "ScaleZ": var from = function () {
+              var _p53 = prev;
+              if (_p53.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p53._0.ctor === "ScaleZ") {
+                          return _p53._0._0;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return ScaleZ(A2(val,from,_p15._0));
+         case "Rotate": var from = function () {
+              var _p54 = prev;
+              if (_p54.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p54._0.ctor === "Rotate") {
+                          return _p54._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(Rotate,_p15._0,A2(val,from,_p15._1));
+         case "Rotate3d": var _p55 = function () {
+              var _p56 = prev;
+              if (_p56.ctor === "Nothing") {
+                    return {ctor: "_Tuple4",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0};
+                 } else {
+                    if (_p56._0.ctor === "Rotate3d") {
+                          return {ctor: "_Tuple4",_0: _p56._0._1,_1: _p56._0._2,_2: _p56._0._3,_3: _p56._0._4};
+                       } else {
+                          return {ctor: "_Tuple4",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0};
+                       }
+                 }
+           }();
+           var xFrom = _p55._0;
+           var yFrom = _p55._1;
+           var zFrom = _p55._2;
+           var aFrom = _p55._3;
+           return A5(Rotate3d,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2),A2(val,zFrom,_p15._3),A2(val,aFrom,_p15._4));
+         case "RotateX": var from = function () {
+              var _p57 = prev;
+              if (_p57.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p57._0.ctor === "RotateX") {
+                          return _p57._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(RotateX,_p15._0,A2(val,from,_p15._1));
+         case "RotateY": var from = function () {
+              var _p58 = prev;
+              if (_p58.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p58._0.ctor === "RotateY") {
+                          return _p58._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(RotateY,_p15._0,A2(val,from,_p15._1));
+         case "Skew": var _p59 = function () {
+              var _p60 = prev;
+              if (_p60.ctor === "Nothing") {
+                    return {ctor: "_Tuple2",_0: 0.0,_1: 0.0};
+                 } else {
+                    if (_p60._0.ctor === "Skew") {
+                          return {ctor: "_Tuple2",_0: _p60._0._1,_1: _p60._0._2};
+                       } else {
+                          return {ctor: "_Tuple2",_0: 0.0,_1: 0.0};
+                       }
+                 }
+           }();
+           var xFrom = _p59._0;
+           var yFrom = _p59._1;
+           return A3(Skew,_p15._0,A2(val,xFrom,_p15._1),A2(val,yFrom,_p15._2));
+         case "SkewX": var from = function () {
+              var _p61 = prev;
+              if (_p61.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p61._0.ctor === "SkewX") {
+                          return _p61._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(SkewX,_p15._0,A2(val,from,_p15._1));
+         case "SkewY": var from = function () {
+              var _p62 = prev;
+              if (_p62.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p62._0.ctor === "SkewY") {
+                          return _p62._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return A2(SkewY,_p15._0,A2(val,from,_p15._1));
+         case "Perspective": var from = function () {
+              var _p63 = prev;
+              if (_p63.ctor === "Nothing") {
+                    return 0.0;
+                 } else {
+                    if (_p63._0.ctor === "SkewY") {
+                          return _p63._0._1;
+                       } else {
+                          return 0.0;
+                       }
+                 }
+           }();
+           return Perspective(A2(val,from,_p15._0));
+         case "Matrix": var _p64 = function () {
+              var _p65 = prev;
+              if (_p65.ctor === "Nothing") {
                     return {ctor: "_Tuple6",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0,_4: 0.0,_5: 0.0};
                  } else {
-                    if (_p51._0.ctor === "Matrix") {
-                          return {ctor: "_Tuple6",_0: _p51._0._0,_1: _p51._0._1,_2: _p51._0._2,_3: _p51._0._3,_4: _p51._0._4,_5: _p51._0._5};
+                    if (_p65._0.ctor === "Matrix") {
+                          return {ctor: "_Tuple6",_0: _p65._0._0,_1: _p65._0._1,_2: _p65._0._2,_3: _p65._0._3,_4: _p65._0._4,_5: _p65._0._5};
                        } else {
                           return {ctor: "_Tuple6",_0: 0.0,_1: 0.0,_2: 0.0,_3: 0.0,_4: 0.0,_5: 0.0};
                        }
                  }
            }();
-           var aFrom = _p50._0;
-           var bFrom = _p50._1;
-           var cFrom = _p50._2;
-           var xFrom = _p50._3;
-           var yFrom = _p50._4;
-           var zFrom = _p50._5;
-           return A6(Matrix,A2(val,aFrom,_p9._0),A2(val,bFrom,_p9._1),A2(val,cFrom,_p9._2),A2(val,xFrom,_p9._3),A2(val,yFrom,_p9._4),A2(val,zFrom,_p9._5));
-         default: var _p68 = _p9._15;
-           var _p67 = _p9._14;
-           var _p66 = _p9._13;
-           var _p65 = _p9._12;
-           var _p64 = _p9._11;
-           var _p63 = _p9._10;
-           var _p62 = _p9._9;
-           var _p61 = _p9._8;
-           var _p60 = _p9._7;
-           var _p59 = _p9._6;
-           var _p58 = _p9._5;
-           var _p57 = _p9._4;
-           var _p56 = _p9._3;
-           var _p55 = _p9._2;
-           var _p54 = _p9._1;
-           var _p53 = _p9._0;
-           var _p52 = prev;
-           if (_p52.ctor === "Nothing") {
-                 return Matrix3d(A2(val,0.0,_p53))(A2(val,0.0,_p54))(A2(val,0.0,_p55))(A2(val,0.0,_p56))(A2(val,0.0,_p57))(A2(val,0.0,_p58))(A2(val,
+           var aFrom = _p64._0;
+           var bFrom = _p64._1;
+           var cFrom = _p64._2;
+           var xFrom = _p64._3;
+           var yFrom = _p64._4;
+           var zFrom = _p64._5;
+           return A6(Matrix,
+           A2(val,aFrom,_p15._0),
+           A2(val,bFrom,_p15._1),
+           A2(val,cFrom,_p15._2),
+           A2(val,xFrom,_p15._3),
+           A2(val,yFrom,_p15._4),
+           A2(val,zFrom,_p15._5));
+         default: var _p82 = _p15._15;
+           var _p81 = _p15._14;
+           var _p80 = _p15._13;
+           var _p79 = _p15._12;
+           var _p78 = _p15._11;
+           var _p77 = _p15._10;
+           var _p76 = _p15._9;
+           var _p75 = _p15._8;
+           var _p74 = _p15._7;
+           var _p73 = _p15._6;
+           var _p72 = _p15._5;
+           var _p71 = _p15._4;
+           var _p70 = _p15._3;
+           var _p69 = _p15._2;
+           var _p68 = _p15._1;
+           var _p67 = _p15._0;
+           var _p66 = prev;
+           if (_p66.ctor === "Nothing") {
+                 return Matrix3d(A2(val,0.0,_p67))(A2(val,0.0,_p68))(A2(val,0.0,_p69))(A2(val,0.0,_p70))(A2(val,0.0,_p71))(A2(val,0.0,_p72))(A2(val,
                  0.0,
-                 _p59))(A2(val,0.0,_p60))(A2(val,0.0,_p61))(A2(val,0.0,_p62))(A2(val,0.0,_p63))(A2(val,0.0,_p64))(A2(val,0.0,_p65))(A2(val,0.0,_p66))(A2(val,
+                 _p73))(A2(val,0.0,_p74))(A2(val,0.0,_p75))(A2(val,0.0,_p76))(A2(val,0.0,_p77))(A2(val,0.0,_p78))(A2(val,0.0,_p79))(A2(val,0.0,_p80))(A2(val,
                  0.0,
-                 _p67))(A2(val,0.0,_p68));
+                 _p81))(A2(val,0.0,_p82));
               } else {
-                 if (_p52._0.ctor === "Matrix3d") {
-                       return Matrix3d(A2(val,_p52._0._0,_p53))(A2(val,_p52._0._1,_p54))(A2(val,_p52._0._2,_p55))(A2(val,_p52._0._3,_p56))(A2(val,
-                       _p52._0._4,
-                       _p57))(A2(val,_p52._0._5,_p58))(A2(val,_p52._0._6,_p59))(A2(val,_p52._0._7,_p60))(A2(val,_p52._0._8,_p61))(A2(val,
-                       _p52._0._9,
-                       _p62))(A2(val,_p52._0._10,_p63))(A2(val,_p52._0._11,_p64))(A2(val,_p52._0._12,_p65))(A2(val,_p52._0._13,_p66))(A2(val,
-                       _p52._0._14,
-                       _p67))(A2(val,_p52._0._15,_p68));
+                 if (_p66._0.ctor === "Matrix3d") {
+                       return Matrix3d(A2(val,_p66._0._0,_p67))(A2(val,_p66._0._1,_p68))(A2(val,_p66._0._2,_p69))(A2(val,_p66._0._3,_p70))(A2(val,
+                       _p66._0._4,
+                       _p71))(A2(val,_p66._0._5,_p72))(A2(val,_p66._0._6,_p73))(A2(val,_p66._0._7,_p74))(A2(val,_p66._0._8,_p75))(A2(val,
+                       _p66._0._9,
+                       _p76))(A2(val,_p66._0._10,_p77))(A2(val,_p66._0._11,_p78))(A2(val,_p66._0._12,_p79))(A2(val,_p66._0._13,_p80))(A2(val,
+                       _p66._0._14,
+                       _p81))(A2(val,_p66._0._15,_p82));
                     } else {
-                       return Matrix3d(A2(val,0.0,_p53))(A2(val,0.0,_p54))(A2(val,0.0,_p55))(A2(val,0.0,_p56))(A2(val,0.0,_p57))(A2(val,0.0,_p58))(A2(val,
+                       return Matrix3d(A2(val,0.0,_p67))(A2(val,0.0,_p68))(A2(val,0.0,_p69))(A2(val,0.0,_p70))(A2(val,0.0,_p71))(A2(val,0.0,_p72))(A2(val,
                        0.0,
-                       _p59))(A2(val,0.0,_p60))(A2(val,0.0,_p61))(A2(val,0.0,_p62))(A2(val,0.0,_p63))(A2(val,0.0,_p64))(A2(val,0.0,_p65))(A2(val,
+                       _p73))(A2(val,0.0,_p74))(A2(val,0.0,_p75))(A2(val,0.0,_p76))(A2(val,0.0,_p77))(A2(val,0.0,_p78))(A2(val,0.0,_p79))(A2(val,
                        0.0,
-                       _p66))(A2(val,0.0,_p67))(A2(val,0.0,_p68));
+                       _p80))(A2(val,0.0,_p81))(A2(val,0.0,_p82));
                     }
               }}
    });
@@ -11700,42 +11798,42 @@ Elm.ElmUI.make = function (_elm) {
       return A2($List.map,function (p) {    return A3(bakeProp,p,from(p),fn);},anim.target);
    });
    var update = F2(function (action,model) {
-      var _p69 = action;
-      if (_p69.ctor === "Begin") {
+      var _p83 = action;
+      if (_p83.ctor === "Begin") {
             var previous = function () {
-               var _p70 = model.anim;
-               if (_p70.ctor === "Nothing") {
+               var _p84 = model.anim;
+               if (_p84.ctor === "Nothing") {
                      return model.previous;
                   } else {
-                     return A3(bake,model.elapsed,_p70._0,model.previous);
+                     return A3(bake,model.elapsed,_p84._0,model.previous);
                   }
             }();
-            var anims = A2(makeStatic,_p69._0,model.previous);
+            var anims = A2(makeStatic,_p83._0,model.previous);
             return {ctor: "_Tuple2"
                    ,_0: _U.update(model,{anim: $Maybe.Just(anims),elapsed: 0.0,start: $Maybe.Nothing,previous: previous})
                    ,_1: $Effects.tick(Tick)};
          } else {
-            var _p76 = _p69._0;
-            var start = function () {    var _p71 = model.start;if (_p71.ctor === "Nothing") {    return _p76;} else {    return _p71._0;}}();
-            var newElapsed = _p76 - start;
-            var _p72 = function () {
-               var _p73 = model.anim;
-               if (_p73.ctor === "Nothing") {
+            var _p90 = _p83._0;
+            var start = function () {    var _p85 = model.start;if (_p85.ctor === "Nothing") {    return _p90;} else {    return _p85._0;}}();
+            var newElapsed = _p90 - start;
+            var _p86 = function () {
+               var _p87 = model.anim;
+               if (_p87.ctor === "Nothing") {
                      return {ctor: "_Tuple2",_0: false,_1: newElapsed};
                   } else {
-                     var _p74 = _p73._0;
-                     return _U.cmp(newElapsed,_p74.duration) > -1 ? {ctor: "_Tuple2",_0: true,_1: _p74.duration} : {ctor: "_Tuple2",_0: false,_1: newElapsed};
+                     var _p88 = _p87._0;
+                     return _U.cmp(newElapsed,_p88.duration) > -1 ? {ctor: "_Tuple2",_0: true,_1: _p88.duration} : {ctor: "_Tuple2",_0: false,_1: newElapsed};
                   }
             }();
-            var done = _p72._0;
-            var finalElapsed = _p72._1;
+            var done = _p86._0;
+            var finalElapsed = _p86._1;
             if (done) {
                   var previous = function () {
-                     var _p75 = model.anim;
-                     if (_p75.ctor === "Nothing") {
+                     var _p89 = model.anim;
+                     if (_p89.ctor === "Nothing") {
                            return model.previous;
                         } else {
-                           return A3(bake,finalElapsed,_p75._0,model.previous);
+                           return A3(bake,finalElapsed,_p89._0,model.previous);
                         }
                   }();
                   return {ctor: "_Tuple2"
@@ -11746,8 +11844,8 @@ Elm.ElmUI.make = function (_elm) {
    });
    var animate = F2(function (anims,model) {    return A2(update,Begin(anims),model);});
    var render = function (model) {
-      var _p77 = model.anim;
-      if (_p77.ctor === "Nothing") {
+      var _p91 = model.anim;
+      if (_p91.ctor === "Nothing") {
             var rendered = A2($List.map,renderProp,model.previous);
             var transformsNprops = A2($List.partition,function (s) {    return _U.eq($Basics.fst(s),"transform");},rendered);
             var combinedTransforms = {ctor: "_Tuple2"
@@ -11755,7 +11853,7 @@ Elm.ElmUI.make = function (_elm) {
                                      ,_1: $String.concat(A2($List.intersperse," ",A2($List.map,$Basics.snd,$Basics.fst(transformsNprops))))};
             return A2($Basics._op["++"],$Basics.snd(transformsNprops),_U.list([combinedTransforms]));
          } else {
-            var baked = A3(bake,model.elapsed,_p77._0,model.previous);
+            var baked = A3(bake,model.elapsed,_p91._0,model.previous);
             var rendered = A2($List.map,renderProp,baked);
             var transformsNprops = A2($List.partition,function (s) {    return _U.eq($Basics.fst(s),"transform");},rendered);
             var combinedTransforms = {ctor: "_Tuple2"
@@ -11764,6 +11862,9 @@ Elm.ElmUI.make = function (_elm) {
             return A2($Basics._op["++"],$Basics.snd(transformsNprops),_U.list([combinedTransforms]));
          }
    };
+   _op["-="] = F2(function (mod,prev) {    return prev + mod;});
+   _op["+="] = F2(function (mod,prev) {    return prev + mod;});
+   _op[":="] = F2(function (t,f) {    return t;});
    var minus = F2(function (mod,existing) {    return existing - mod;});
    var add = F2(function (mod,existing) {    return existing + mod;});
    var to = F2(function (t,f) {    return t;});
@@ -11806,6 +11907,10 @@ Elm.ElmUI.make = function (_elm) {
                               ,MarginRight: MarginRight
                               ,MarginTop: MarginTop
                               ,MarginBottom: MarginBottom
+                              ,Color: Color
+                              ,BackgroundColor: BackgroundColor
+                              ,ColorA: ColorA
+                              ,BackgroundColorA: BackgroundColorA
                               ,Matrix: Matrix
                               ,Matrix3d: Matrix3d
                               ,Translate: Translate
@@ -11844,6 +11949,10 @@ Elm.ElmUI.make = function (_elm) {
                               ,Grad: Grad
                               ,Rad: Rad
                               ,Turn: Turn
+                              ,RGB: RGB
+                              ,HSL: HSL
+                              ,RGBA: RGBA
+                              ,HSLA: HSLA
                               ,Begin: Begin
                               ,Tick: Tick
                               ,animate: animate
@@ -11859,6 +11968,8 @@ Elm.ElmUI.make = function (_elm) {
                               ,renderValue: renderValue
                               ,done: done
                               ,propId: propId
+                              ,colorUnit: colorUnit
+                              ,colorAUnit: colorAUnit
                               ,lenUnit: lenUnit
                               ,angleUnit: angleUnit};
 };

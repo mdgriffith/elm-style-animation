@@ -72,14 +72,14 @@ minus : Float -> Float -> Float
 minus mod existing = existing - mod
 
 
---(:=) : Float -> Float
---(:=) f = f
+(:=) : Float -> Float -> Float
+(:=) t f = t
 
---(+=) : Float -> Float -> Float
---(+=) mod prev = prev + mod
+(+=) : Float -> Float -> Float
+(+=) mod prev = prev + mod
 
---(-=) : Float -> Float -> Float
---(-=) mod prev = prev + mod
+(-=) : Float -> Float -> Float
+(-=) mod prev = prev + mod
 
 
 
@@ -114,7 +114,14 @@ type StyleProperty a
         | MarginRight Length a
         | MarginTop Length a
         | MarginBottom Length a
-        
+
+
+        -- Color
+        | Color ColorType a a a
+        | BackgroundColor ColorType a a a
+
+        | ColorA ColorAlphaType a a a a
+        | BackgroundColorA ColorAlphaType a a a a
 
         -- Transformations
         | Matrix a a a a a a 
@@ -162,6 +169,14 @@ type Angle
       | Rad
       | Turn
 
+
+type ColorType
+      = RGB
+      | HSL
+
+type ColorAlphaType
+        = RGBA
+        | HSLA
 
 --type MatrixAnimation = MatrixAnimation
 
@@ -323,6 +338,13 @@ renderName styleProp =
               MarginRight _ _  -> "margin-right"
               MarginTop _ _    -> "margin-top"
               MarginBottom _ _ -> "margin-bottom"
+
+              Color _ _ _ _    -> "color"
+              BackgroundColor _ _ _ _ -> "background-color"
+
+              ColorA _ _ _ _ _ -> "color"
+              BackgroundColorA _ _ _ _ _ -> "background-color"
+
 
               Matrix _ _ _ _ _ _ -> "transform"
               Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "transform"
@@ -581,6 +603,51 @@ bakeProp prop prev val =
                     MarginBottom unit (val from to)
 
 
+                Color unit x y z    -> 
+                  let
+                    (xFrom, yFrom, zFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0)
+                        Just (Color _ x1 y1 z1) -> (x1, y1, z1)
+                        _ -> (0.0, 0.0, 0.0)
+                  in
+                    Color unit (val xFrom x) (val yFrom y) (val zFrom z)
+
+
+                BackgroundColor unit x y z -> 
+                  let
+                    (xFrom, yFrom, zFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0)
+                        Just (BackgroundColor _ x1 y1 z1) -> (x1, y1, z1)
+                        _ -> (0.0, 0.0, 0.0)
+                  in
+                    BackgroundColor unit (val xFrom x) (val yFrom y) (val zFrom z)
+
+
+                ColorA unit x y z a -> 
+                  let
+                    (xFrom, yFrom, zFrom, aFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0, 0.0)
+                        Just (ColorA _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
+                        _ -> (0.0, 0.0, 0.0, 0.0)
+                  in
+                    ColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+
+
+                BackgroundColorA unit x y z a -> 
+                  let
+                    (xFrom, yFrom, zFrom, aFrom) =
+                      case prev of
+                        Nothing -> (0.0, 0.0, 0.0, 0.0)
+                        Just (BackgroundColorA _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
+                        _ -> (0.0, 0.0, 0.0, 0.0)
+                  in
+                    BackgroundColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+
+
+
                 Translate unit x y -> 
                   let
                     (xFrom, yFrom) =
@@ -812,10 +879,9 @@ renderValue prop  =
               val a = toString a
               renderLength unit a = (val a) ++ lenUnit unit
               renderAngle unit a =  (val a) ++ angleUnit unit
-
-              renderList xs = String.concat 
+              renderList xs = "(" ++ (String.concat 
                               <| List.intersperse "," 
-                              <| List.map toString xs
+                              <| List.map toString xs) ++ ")"
             in
               case prop of
                 Prop _ u a -> (val a) ++ u
@@ -839,6 +905,20 @@ renderValue prop  =
                 MarginRight unit a  -> renderLength unit a 
                 MarginTop unit a    -> renderLength unit a 
                 MarginBottom unit a -> renderLength unit a 
+
+                Color unit x y z    -> 
+                      (colorUnit unit) ++  renderList [x,y,x]
+
+                BackgroundColor unit x y z -> 
+                      (colorUnit unit) ++ renderList [x,y,x]
+
+                ColorA unit x y z a -> 
+                      (colorAUnit unit) ++ renderList [x,y,x,a]
+
+                BackgroundColorA unit x y z a -> 
+                      (colorAUnit unit) ++ renderList [x,y,x,a]
+
+
 
                 Translate unit a1 a2 -> 
                         "translate(" ++ (renderLength unit a1) 
@@ -880,14 +960,14 @@ renderValue prop  =
                 Perspective a -> "perspective(" ++ (val a) ++ ")"
 
                 Matrix a b c x y z -> 
-                        "matrix(" ++ 
+                        "matrix" ++ 
                           (renderList [a,b,c,x,y,z])
-                            ++ ")"
+                        
                 
                 Matrix3d a b c d e f g h i j k l m n o p -> 
-                        "matrix3d(" ++ 
+                        "matrix3d" ++ 
                           (renderList [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
-                            ++ ")"
+                           
 
 
 done : Model -> Time -> Bool
@@ -922,6 +1002,11 @@ propId prop =
           MarginTop unit _   -> "margin-top" ++ (lenUnit unit)
           MarginBottom unit _-> "margin-bottom" ++ (lenUnit unit)
 
+          Color unit _ _ _    -> "color" ++ (colorUnit unit)
+          BackgroundColor unit _ _ _ -> "background-color" ++ (colorUnit unit)
+
+          ColorA unit _ _ _ _ -> "color" ++ (colorAUnit unit)
+          BackgroundColorA unit _ _ _ _ -> "background-color" ++ (colorAUnit unit)
 
           Matrix _ _ _ _ _ _ -> "matrix"
           Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "matrix3d"
@@ -943,6 +1028,20 @@ propId prop =
           SkewY unit _     -> "skewy" ++ (angleUnit unit)
           Perspective _ -> "perspective"
 
+
+
+
+colorUnit : ColorType -> String
+colorUnit color =
+            case color of
+              RGB -> "rgb"
+              HSL -> "hsl"
+
+colorAUnit : ColorAlphaType -> String
+colorAUnit color =
+            case color of
+              RGBA -> "rgba"
+              HSLA -> "hsla"
 
 
 lenUnit : Length -> String
