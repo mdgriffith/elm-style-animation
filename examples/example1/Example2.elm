@@ -89,9 +89,9 @@ view address model =
 viewMenu : Address Action -> Model -> Html
 viewMenu address model =
                 let
-                  menuStyle = [ ("opacity", "1")
-                                , ("position", "absolute")
-                                , ("left", "-350px")
+                  menuStyle = [ --("opacity", "1")
+                                ("position", "absolute")
+                                --, ("left", "-350px")
                                 , ("top", "0px")
                                 , ("padding", "25px")
                                 , ("width", "300px")
@@ -112,7 +112,7 @@ viewMenu address model =
 
 init : ( Model, Effects Action )
 init = 
-        ( { menuAnimation = UI.init [ UI.Left UI.Px 0.0 ]
+        ( { menuAnimation = UI.init [ UI.Left UI.Px -350.0 ]
 
           }
         , Effects.none )

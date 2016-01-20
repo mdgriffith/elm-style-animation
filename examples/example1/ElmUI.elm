@@ -106,8 +106,6 @@ type StyleProperty
         | Perspective Float
 
 
-
-
 type Length
       = Px
       | Percent
@@ -154,7 +152,6 @@ type Action
 
 animate : StyleAnimation -> Model -> ( Model, Effects Action )
 animate anims model = update (Begin anims) model
-
 
 
 start : List StyleProperty -> StyleAnimation
@@ -295,21 +292,6 @@ start props = { emptyAnimation | target = props}
 --                            [retarget current a b]
 
 
---resetElapsed : Time -> (Maybe PropAnimation, Maybe PropAnimation) -> Bool
---resetElapsed current anims = 
---                  case anims of
---                    (Nothing, Nothing) -> True
-
---                    (Just a, Nothing) -> True
-
---                    (Nothing, Just b) -> True
-
---                    (Just a, Just b) -> 
---                      if isDone current a then
---                        True
---                      else
---                        False
-
                    
 
 
@@ -383,124 +365,32 @@ findFrom state prop =
             in 
               findBy (matchPropID prop) state
 
-
-
-
---bake : StyleAnimation -> Style Static -> BakedStyleAnimation
---bake animation previousStyle  =
---          let
---            target = List.map toStatic animation.target
-
-
---            toStatic transition = 
---              let
---                from = findFrom previousStyle transition
---              in
---                case transition of
---                  Prop name unit to ->  
---                    let
---                      fromVal = 
---                        case from of
---                          Nothing -> 0.0
---                          Just (Prop _ _ x) -> x
---                          _ -> 0.0
---                    in
---                      Prop name unit (to from)
-
---                  Opacity to -> 
---                    let
---                      fromVal = 
---                        case from of
---                          Nothing -> 0.0
---                          Just (Opacity x) -> x
---                          _ -> 0.0
---                    in
---                      Opacity (to from)
-
---                  Height unit to -> 
---                    let
---                      fromVal = 
---                        case from of
---                          Nothing -> 0.0
---                          Just (Height _ x) -> x
---                          _ -> 0.0
---                    in
---                      Height unit (to fromVal)
-
---                  Width unit to  -> 
---                    let
---                      fromVal = 
---                        case from of
---                          Nothing -> 0.0
---                          Just (Width _ x) -> x
---                          _ -> 0.0
---                    in
---                      Width unit (to fromVal)
-
---                  Left unit to   -> 
---                      let
---                        fromVal = 
---                          case from of
---                            Nothing -> 0.0
---                            Just (Left _ x) -> x
---                            _ -> 0.0
---                      in
---                        Left unit (to fromVal)
-
---                  Right unit to  -> 6
---                  Bottom unit to -> 7
---                  Top unit to    -> 8
-
---                  Padding unit to       -> 9
---                  PaddingLeft unit to   -> 10
---                  PaddingRight unit to  -> 11
---                  PaddingTop unit to    -> 12
---                  PaddingBottom unit to -> 13
-
---                  Margin unit to       -> 14
---                  MarginLeft unit to   -> 15
---                  MarginRight unit to  -> 16
---                  MarginTop unit to    -> 17
---                  MarginBottom unit to -> 18
-
---                  Translate unit x y -> 19
---                  Translate3d unit x y z -> 20
---                  TranslateX unit to -> 21
---                  TranslateY unit to -> 22
---                  Scale to        -> 23 
---                  Scale3d x y z  -> 24
---                  ScaleX to      -> 25
---                  ScaleY to      -> 26
---                  ScaleZ to      -> 27
---                  Rotate unit to -> 28
---                  Rotate3d unit x y z angle -> 29
---                  RotateX unit to           -> 30
---                  RotateY unit to           -> 31
---                  Skew unit x y             -> 32 
---                  SkewX unit to             -> 33
---                  SkewY unit to             -> 34
---                  Perspective to            -> 35
-
-
---          in
---            { duration = animation.duration
---            , ease = animation.ease
---            , target = target
---            }
-
-
-
-
-
 render : Model -> List (String, String)
 render model = 
         case model.anim of
-          Nothing -> []
+          Nothing -> 
+            let
+              rendered = 
+                  List.map renderProp model.previous
+
+              transformsNprops = 
+                  List.partition (\s -> fst s == "transform") rendered
+
+              combinedTransforms = ("transform", 
+                    String.concat (List.intersperse " " 
+                    (List.map (snd) (fst transformsNprops))))
+            in
+              snd transformsNprops ++ [combinedTransforms]
+
+
           Just anim ->
             -- Combine all transform properties
             let
+
+              baked = bake model.elapsed anim model.previous
+
               rendered = 
-                  List.map (renderProp model anim) anim.target
+                  List.map renderProp baked
 
               transformsNprops = 
                   List.partition (\s -> fst s == "transform") rendered
@@ -513,17 +403,9 @@ render model =
                
 
 
-
-
-renderProp : Model -> StyleAnimation -> StyleProperty -> (String, String)
-renderProp model anim prop =
-                let
-                  percentComplete = model.elapsed / anim.duration
-                  eased = anim.ease percentComplete
-                  from = findFrom model.previous prop
-                in
-                  ( renderName prop 
-                  , renderValue prop eased from
+renderProp : StyleProperty -> (String, String)
+renderProp prop = ( renderName prop 
+                  , renderValue prop
                   )
 
 
@@ -580,26 +462,24 @@ bake elapsed anim prev =
           let
             percentComplete = elapsed / anim.duration
             eased = anim.ease percentComplete
+            from prop = findFrom prev prop
           in
+            List.map (\p -> bakeProp p eased (from p)) anim.target
 
 
 
 
 
-renderValue : StyleProperty -> Float -> Maybe StyleProperty -> String
-renderValue prop percentComplete prev =
+bakeProp : StyleProperty -> Float -> Maybe StyleProperty -> StyleProperty
+bakeProp prop percentComplete prev =
             let
+              val from to = ((to-from) * percentComplete) + from
+              --renderLength unit from to = addLengthUnits unit (val from to)
 
-              value from to = ((to-from)*percentComplete) + from
-
-              val from to = toString <| value from to
-
-              renderLength unit from to = addLengthUnits unit (val from to)
-
-              renderAngle unit from to = addAngleUnits unit (val from to)
+              --renderAngle unit from to = addAngleUnits unit (val from to)
             in
               case prop of
-                Prop _ unit to -> 
+                Prop name unit to -> 
                   let
                     from =
                       case prev of
@@ -607,7 +487,7 @@ renderValue prop percentComplete prev =
                         Just (Prop _ _ x) -> x
                         _ -> 0.0
                   in
-                    (val from to) ++ unit
+                    Prop name unit (val from to)
 
 
                 Opacity to -> 
@@ -618,7 +498,7 @@ renderValue prop percentComplete prev =
                         Just (Opacity x) -> x
                         _ -> 0.0
                   in
-                    val from to
+                    Opacity (val from to)
 
 
                 Height unit to -> 
@@ -629,7 +509,7 @@ renderValue prop percentComplete prev =
                         Just (Height _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Height unit (val from to)
 
 
                 Width unit to -> 
@@ -640,7 +520,7 @@ renderValue prop percentComplete prev =
                         Just (Width _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Width unit (val from to)
 
 
                 Left unit to -> 
@@ -651,7 +531,7 @@ renderValue prop percentComplete prev =
                         Just (Left _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Left unit (val from to)
 
 
                 Top unit to -> 
@@ -662,7 +542,7 @@ renderValue prop percentComplete prev =
                         Just (Top _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Top unit (val from to)
 
 
                 Right unit to ->  
@@ -673,7 +553,7 @@ renderValue prop percentComplete prev =
                         Just (Right _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Right unit (val from to)
 
 
                 Bottom unit to -> 
@@ -684,7 +564,7 @@ renderValue prop percentComplete prev =
                         Just (Bottom _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Bottom unit (val from to)
 
 
                 Padding unit to -> 
@@ -695,7 +575,7 @@ renderValue prop percentComplete prev =
                         Just (Padding _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    Padding unit (val from to)
 
 
                 PaddingLeft unit to -> 
@@ -706,7 +586,7 @@ renderValue prop percentComplete prev =
                         Just (PaddingLeft _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    PaddingLeft unit (val from to)
 
 
                 PaddingRight unit to  -> 
@@ -717,7 +597,7 @@ renderValue prop percentComplete prev =
                         Just (PaddingRight _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    PaddingRight unit (val from to)
 
 
                 PaddingTop unit to -> 
@@ -728,7 +608,7 @@ renderValue prop percentComplete prev =
                         Just (PaddingTop _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    PaddingTop unit (val from to)
 
 
                 PaddingBottom unit to -> 
@@ -739,7 +619,7 @@ renderValue prop percentComplete prev =
                         Just (PaddingBottom _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    PaddingBottom unit (val from to)
 
 
                 Margin unit to ->
@@ -750,7 +630,7 @@ renderValue prop percentComplete prev =
                         Just (Margin _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to 
+                    Margin unit (val from to)
 
 
                 MarginLeft unit to   -> 
@@ -761,7 +641,7 @@ renderValue prop percentComplete prev =
                         Just (MarginLeft _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    MarginLeft unit (val from to)
 
 
                 MarginRight unit to  -> 
@@ -772,7 +652,8 @@ renderValue prop percentComplete prev =
                         Just (MarginRight _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    MarginRight unit (val from to)
+
 
                 MarginTop unit to -> 
                   let
@@ -782,7 +663,8 @@ renderValue prop percentComplete prev =
                         Just (MarginTop _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to 
+                    MarginTop unit (val from to) 
+
 
                 MarginBottom unit to ->  
                   let
@@ -792,7 +674,8 @@ renderValue prop percentComplete prev =
                         Just (MarginBottom _ x) -> x
                         _ -> 0.0
                   in
-                    renderLength unit from to
+                    MarginBottom unit (val from to)
+
 
                 Translate unit x y -> 
                   let
@@ -802,9 +685,8 @@ renderValue prop percentComplete prev =
                         Just (Translate _ x1 y1) -> (x1, y1)
                         _ -> (0.0, 0.0)
                   in
-                    "translate(" ++ (renderLength unit xFrom x) 
-                          ++ "," ++ (renderLength unit yFrom y) 
-                          ++ ")"
+                    Translate unit (val xFrom x) (val yFrom y)
+                    
 
                 Translate3d unit x y z -> 
                   let
@@ -814,11 +696,8 @@ renderValue prop percentComplete prev =
                         Just (Translate3d _ x1 y1 z1) -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
-                    "translate3d(" ++ (renderLength unit xFrom x) 
-                            ++ "," ++ (renderLength unit yFrom y) 
-                            ++ "," ++ (renderLength unit zFrom z) 
-                            ++ ")"
-
+                    Translate3d unit (val xFrom x) (val yFrom y) (val zFrom z)
+                  
 
                 TranslateX unit to -> 
                   let
@@ -828,7 +707,7 @@ renderValue prop percentComplete prev =
                         Just (TranslateX _ x) -> x
                         _ -> 0.0
                   in
-                    "translateX(" ++ renderLength unit from to ++ ")"
+                    TranslateX unit (val from to)
 
 
                 TranslateY unit to -> 
@@ -839,7 +718,7 @@ renderValue prop percentComplete prev =
                         Just (TranslateY _ x) -> x
                         _ -> 0.0
                   in
-                    "translateY(" ++ renderLength unit from to ++ ")"
+                    TranslateY unit (val from to)
 
 
                 Scale to -> 
@@ -850,7 +729,7 @@ renderValue prop percentComplete prev =
                         Just (Scale x) -> x
                         _ -> 0.0
                   in
-                    "scale(" ++ (val from to)  ++ ")"
+                     Scale (val from to)
 
 
                 Scale3d x y z -> 
@@ -861,11 +740,8 @@ renderValue prop percentComplete prev =
                         Just (Scale3d x1 y1 z1) -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
-                    "scale3d(" ++ (val xFrom x) 
-                          ++ "," ++ (val yFrom y) 
-                          ++ "," ++ (val zFrom z) 
-                          ++ ")"
-
+                    Scale3d (val xFrom x) (val yFrom y) (val zFrom z)
+                   
 
                 ScaleX to -> 
                   let
@@ -875,7 +751,7 @@ renderValue prop percentComplete prev =
                         Just (ScaleX x) -> x
                         _ -> 0.0
                   in
-                    "scaleX(" ++ (val from to)  ++ ")"
+                    ScaleX (val from to)
 
 
                 ScaleY to -> 
@@ -886,7 +762,7 @@ renderValue prop percentComplete prev =
                         Just (ScaleY x) -> x
                         _ -> 0.0
                   in
-                    "scaleY(" ++ (val from to)  ++ ")"
+                    ScaleY (val from to)
 
 
                 ScaleZ to -> 
@@ -897,7 +773,7 @@ renderValue prop percentComplete prev =
                         Just (ScaleZ x) -> x
                         _ -> 0.0
                   in
-                    "scaleZ(" ++ (val from to)  ++ ")"
+                    ScaleZ (val from to)
 
 
                 Rotate unit to -> 
@@ -908,7 +784,7 @@ renderValue prop percentComplete prev =
                         Just (Rotate _ x) -> x
                         _ -> 0.0
                   in
-                    "rotate(" ++ renderAngle unit from to ++ ")"
+                    Rotate unit (val from to)
 
 
                 Rotate3d unit x y z a ->
@@ -919,11 +795,8 @@ renderValue prop percentComplete prev =
                         Just (Rotate3d _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in 
-                    "scale3d(" ++ (val xFrom x) 
-                        ++ "," ++ (val yFrom y) 
-                        ++ "," ++ (val zFrom z) 
-                        ++ "," ++ (renderAngle unit aFrom a) 
-                        ++ ")"
+                    Rotate3d unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                   
 
                 RotateX unit to -> 
                   let
@@ -933,7 +806,7 @@ renderValue prop percentComplete prev =
                         Just (RotateX _ x) -> x
                         _ -> 0.0
                   in
-                    "rotateX(" ++ renderAngle unit from to ++ ")"
+                    RotateX unit (val from to)
 
                 RotateY unit to -> 
                   let
@@ -943,7 +816,7 @@ renderValue prop percentComplete prev =
                         Just (RotateY _ x) -> x
                         _ -> 0.0
                   in
-                    "rotateY(" ++ renderAngle unit from to ++ ")"
+                    RotateY unit (val from to)
 
 
                 Skew unit x y ->
@@ -954,9 +827,8 @@ renderValue prop percentComplete prev =
                         Just (Skew _ x y) -> (x, y)
                         _ -> (0.0, 0.0)
                   in
-                    "skew(" ++ (renderAngle unit xFrom x) 
-                     ++ "," ++ (renderAngle unit yFrom y) 
-                     ++ ")"
+                    Skew unit (val xFrom x) (val yFrom y)
+                    
 
                 SkewX unit to -> 
                   let
@@ -966,7 +838,7 @@ renderValue prop percentComplete prev =
                         Just (SkewX _ x) -> x
                         _ -> 0.0
                   in
-                    "skewX(" ++ renderAngle unit from to ++ ")"
+                    SkewX unit (val from to)
 
                 SkewY unit to -> 
                   let
@@ -976,7 +848,7 @@ renderValue prop percentComplete prev =
                         Just (SkewY _ x) -> x
                         _ -> 0.0
                   in
-                    "skewY(" ++ renderAngle unit from to ++ ")"
+                    SkewY unit (val from to)
 
                 Perspective to -> 
                   let
@@ -986,7 +858,7 @@ renderValue prop percentComplete prev =
                         Just (SkewY _ x) -> x
                         _ -> 0.0
                   in
-                    "perspective(" ++ (val from to) ++ ")"
+                    Perspective (val from to)
 
 
 
@@ -1044,7 +916,7 @@ renderValue prop  =
                 ScaleZ a -> "scaleZ(" ++ val a ++ ")"
                 Rotate unit a -> "rotate(" ++ renderAngle unit a ++ ")"
                 Rotate3d unit a1 a2 a3 a4 -> 
-                                          "scale3d(" ++ (val a1) 
+                                          "rotate3d(" ++ (val a1) 
                                               ++ "," ++ (val a2) 
                                               ++ "," ++ (val a3) 
                                               ++ "," ++ (renderAngle unit a4) 

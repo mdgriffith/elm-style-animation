@@ -39,14 +39,11 @@ update action model =
   case action of
     Rotate i ->
       let 
-        (anim, fx) = Multi.animate i
-                                [ (UI.Rotate UI.Turn 
-                                          (animation 0 
-                                            |> from 0 
-                                            |> to 1
-                                            |> duration (3.0*second)))
-
-                                ] model.animations
+        (anim, fx) = Multi.animate i 
+                            (UI.start 
+                                [ UI.Rotate UI.Turn (UI.to 1) ]
+                            )
+                            model.animations
       in
         ( { model | animations = anim }
         , Effects.map Animate fx )
@@ -54,12 +51,10 @@ update action model =
     Blink ->
       let 
         (anim, fx) = Multi.animate 2 
-                            [ (UI.Scale  
-                                    (animation 0 
-                                      |> from 1 
-                                      |> to 2
-                                      |> duration (3.0*second)))
-                            ] model.animations
+                            (UI.start 
+                                [ UI.Scale (UI.to 2) ]
+                            )
+                            model.animations
       in
         ( { model | animations = anim }
         , Effects.map Animate fx )
@@ -121,9 +116,9 @@ box address model action animI =
 
 init : ( Model, Effects Action )
 init = ( { animations = [
-            (1, UI.empty)
-          , (2, UI.empty)
-          , (3, UI.empty)
+            (1, UI.init [ UI.Rotate UI.Turn 0.0 ] )
+          , (2, UI.init [ UI.Scale 1.0 ])
+          , (3, UI.init [ UI.Rotate UI.Turn 0.0 ] )
           ]
         }
        , Effects.none )
