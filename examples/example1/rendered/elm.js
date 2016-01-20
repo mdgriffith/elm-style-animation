@@ -10852,73 +10852,73 @@ Elm.ElmUI.make = function (_elm) {
    $String = Elm.String.make(_elm),
    $Time = Elm.Time.make(_elm);
    var _op = {};
-   var addAngleUnits = F2(function (unit,num) {
+   var angleUnit = function (unit) {
       var _p0 = unit;
       switch (_p0.ctor)
-      {case "Deg": return A2($Basics._op["++"],num,"deg");
-         case "Grad": return A2($Basics._op["++"],num,"grad");
-         case "Rad": return A2($Basics._op["++"],num,"rad");
-         default: return A2($Basics._op["++"],num,"turn");}
-   });
-   var addLengthUnits = F2(function (unit,num) {
+      {case "Deg": return "deg";
+         case "Grad": return "grad";
+         case "Rad": return "rad";
+         default: return "turn";}
+   };
+   var lenUnit = function (unit) {
       var _p1 = unit;
       switch (_p1.ctor)
-      {case "Px": return A2($Basics._op["++"],num,"px");
-         case "Percent": return A2($Basics._op["++"],num,"%");
-         case "Rem": return A2($Basics._op["++"],num,"rem");
-         case "Em": return A2($Basics._op["++"],num,"em");
-         case "Ex": return A2($Basics._op["++"],num,"ex");
-         case "Ch": return A2($Basics._op["++"],num,"ch");
-         case "Vh": return A2($Basics._op["++"],num,"vh");
-         case "Vw": return A2($Basics._op["++"],num,"vw");
-         case "Vmin": return A2($Basics._op["++"],num,"vmin");
-         case "Vmax": return A2($Basics._op["++"],num,"vmax");
-         case "Mm": return A2($Basics._op["++"],num,"mm");
-         case "Cm": return A2($Basics._op["++"],num,"cm");
-         case "In": return A2($Basics._op["++"],num,"in");
-         case "Pt": return A2($Basics._op["++"],num,"pt");
-         default: return A2($Basics._op["++"],num,"pc");}
-   });
+      {case "Px": return "px";
+         case "Percent": return "%";
+         case "Rem": return "rem";
+         case "Em": return "em";
+         case "Ex": return "ex";
+         case "Ch": return "ch";
+         case "Vh": return "vh";
+         case "Vw": return "vw";
+         case "Vmin": return "vmin";
+         case "Vmax": return "vmax";
+         case "Mm": return "mm";
+         case "Cm": return "cm";
+         case "In": return "in";
+         case "Pt": return "pt";
+         default: return "pc";}
+   };
    var propId = function (prop) {
       var _p2 = prop;
       switch (_p2.ctor)
-      {case "Prop": return 1;
-         case "Opacity": return 2;
-         case "Height": return 3;
-         case "Width": return 4;
-         case "Left": return 5;
-         case "Right": return 6;
-         case "Bottom": return 7;
-         case "Top": return 8;
-         case "Padding": return 9;
-         case "PaddingLeft": return 10;
-         case "PaddingRight": return 11;
-         case "PaddingTop": return 12;
-         case "PaddingBottom": return 13;
-         case "Margin": return 14;
-         case "MarginLeft": return 15;
-         case "MarginRight": return 16;
-         case "MarginTop": return 17;
-         case "MarginBottom": return 18;
-         case "Matrix": return 36;
-         case "Matrix3d": return 37;
-         case "Translate": return 19;
-         case "Translate3d": return 20;
-         case "TranslateX": return 21;
-         case "TranslateY": return 22;
-         case "Scale": return 23;
-         case "Scale3d": return 24;
-         case "ScaleX": return 25;
-         case "ScaleY": return 26;
-         case "ScaleZ": return 27;
-         case "Rotate": return 28;
-         case "Rotate3d": return 29;
-         case "RotateX": return 30;
-         case "RotateY": return 31;
-         case "Skew": return 32;
-         case "SkewX": return 33;
-         case "SkewY": return 34;
-         default: return 35;}
+      {case "Prop": return A2($Basics._op["++"],_p2._0,_p2._1);
+         case "Opacity": return "opacity";
+         case "Height": return A2($Basics._op["++"],"height",lenUnit(_p2._0));
+         case "Width": return A2($Basics._op["++"],"width",lenUnit(_p2._0));
+         case "Left": return A2($Basics._op["++"],"left",lenUnit(_p2._0));
+         case "Right": return A2($Basics._op["++"],"right",lenUnit(_p2._0));
+         case "Bottom": return A2($Basics._op["++"],"bottom",lenUnit(_p2._0));
+         case "Top": return A2($Basics._op["++"],"top",lenUnit(_p2._0));
+         case "Padding": return A2($Basics._op["++"],"padding",lenUnit(_p2._0));
+         case "PaddingLeft": return A2($Basics._op["++"],"padding-left",lenUnit(_p2._0));
+         case "PaddingRight": return A2($Basics._op["++"],"padding-right",lenUnit(_p2._0));
+         case "PaddingTop": return A2($Basics._op["++"],"padding-top",lenUnit(_p2._0));
+         case "PaddingBottom": return A2($Basics._op["++"],"padding-bottom",lenUnit(_p2._0));
+         case "Margin": return A2($Basics._op["++"],"margin",lenUnit(_p2._0));
+         case "MarginLeft": return A2($Basics._op["++"],"margin-left",lenUnit(_p2._0));
+         case "MarginRight": return A2($Basics._op["++"],"margin-right",lenUnit(_p2._0));
+         case "MarginTop": return A2($Basics._op["++"],"margin-top",lenUnit(_p2._0));
+         case "MarginBottom": return A2($Basics._op["++"],"margin-bottom",lenUnit(_p2._0));
+         case "Matrix": return "matrix";
+         case "Matrix3d": return "matrix3d";
+         case "Translate": return A2($Basics._op["++"],"translate",lenUnit(_p2._0));
+         case "Translate3d": return A2($Basics._op["++"],"translate3d",lenUnit(_p2._0));
+         case "TranslateX": return A2($Basics._op["++"],"translatex",lenUnit(_p2._0));
+         case "TranslateY": return A2($Basics._op["++"],"translatey",lenUnit(_p2._0));
+         case "Scale": return "scale";
+         case "Scale3d": return "scale3d";
+         case "ScaleX": return "scalex";
+         case "ScaleY": return "scaley";
+         case "ScaleZ": return "scalez";
+         case "Rotate": return A2($Basics._op["++"],"rotate",angleUnit(_p2._0));
+         case "Rotate3d": return A2($Basics._op["++"],"rotate3d",angleUnit(_p2._0));
+         case "RotateX": return A2($Basics._op["++"],"rotatex",angleUnit(_p2._0));
+         case "RotateY": return A2($Basics._op["++"],"rotatey",angleUnit(_p2._0));
+         case "Skew": return A2($Basics._op["++"],"skew",angleUnit(_p2._0));
+         case "SkewX": return A2($Basics._op["++"],"skewx",angleUnit(_p2._0));
+         case "SkewY": return A2($Basics._op["++"],"skewy",angleUnit(_p2._0));
+         default: return "perspective";}
    };
    var done = F2(function (model,elapsed) {
       var _p3 = model.anim;
@@ -10931,8 +10931,8 @@ Elm.ElmUI.make = function (_elm) {
    var renderValue = function (prop) {
       var renderList = function (xs) {    return $String.concat(A2($List.intersperse,",",A2($List.map,$Basics.toString,xs)));};
       var val = function (a) {    return $Basics.toString(a);};
-      var renderLength = F2(function (unit,a) {    return A2(addLengthUnits,unit,val(a));});
-      var renderAngle = F2(function (unit,a) {    return A2(addAngleUnits,unit,val(a));});
+      var renderLength = F2(function (unit,a) {    return A2($Basics._op["++"],val(a),lenUnit(unit));});
+      var renderAngle = F2(function (unit,a) {    return A2($Basics._op["++"],val(a),angleUnit(unit));});
       var _p4 = prop;
       switch (_p4.ctor)
       {case "Prop": return A2($Basics._op["++"],val(_p4._2),_p4._1);
@@ -11859,8 +11859,8 @@ Elm.ElmUI.make = function (_elm) {
                               ,renderValue: renderValue
                               ,done: done
                               ,propId: propId
-                              ,addLengthUnits: addLengthUnits
-                              ,addAngleUnits: addAngleUnits};
+                              ,lenUnit: lenUnit
+                              ,angleUnit: angleUnit};
 };
 Elm.Multi = Elm.Multi || {};
 Elm.Multi.make = function (_elm) {

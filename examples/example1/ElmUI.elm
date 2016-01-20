@@ -299,7 +299,7 @@ renderProp prop = ( renderName prop
                   )
 
 
-renderName : StyleProperty Static -> String
+renderName : StyleProperty a -> String
 renderName styleProp = 
             case styleProp of
               Prop str _ _-> str
@@ -810,8 +810,8 @@ renderValue : StyleProperty Static -> String
 renderValue prop  =
             let
               val a = toString a
-              renderLength unit a = addLengthUnits unit (val a)
-              renderAngle unit a = addAngleUnits unit (val a)
+              renderLength unit a = (val a) ++ lenUnit unit
+              renderAngle unit a =  (val a) ++ angleUnit unit
 
               renderList xs = String.concat 
                               <| List.intersperse "," 
@@ -890,8 +890,6 @@ renderValue prop  =
                             ++ ")"
 
 
-
-
 done : Model -> Time -> Bool
 done model elapsed =
         case model.anim of
@@ -900,87 +898,81 @@ done model elapsed =
             elapsed >= a.duration
 
 
-propId : StyleProperty a-> Int
+propId : StyleProperty a -> String
 propId prop =
         case prop of
-          Prop _ _ _ -> 1
-          Opacity _  -> 2
-          Height _ _ -> 3
-          Width _ _  -> 4
-          Left _ _   -> 5
-          Right _ _  -> 6
-          Bottom _ _ -> 7
-          Top _ _    -> 8
+          Prop name unit _ -> name ++ unit
+          Opacity _  -> "opacity"
+          Height unit _ -> "height" ++ (lenUnit unit)
+          Width unit _  -> "width" ++ (lenUnit unit)
+          Left unit _   -> "left" ++ (lenUnit unit)
+          Right unit _  -> "right" ++ (lenUnit unit)
+          Bottom unit _ -> "bottom" ++ (lenUnit unit)
+          Top unit _    -> "top" ++ (lenUnit unit)
 
-          Padding _ _      -> 9
-          PaddingLeft _ _  -> 10
-          PaddingRight _ _ -> 11
-          PaddingTop _ _   -> 12
-          PaddingBottom _ _-> 13
+          Padding unit _      -> "padding" ++ (lenUnit unit)
+          PaddingLeft unit _  -> "padding-left" ++ (lenUnit unit)
+          PaddingRight unit _ -> "padding-right" ++ (lenUnit unit)
+          PaddingTop unit _   -> "padding-top" ++ (lenUnit unit)
+          PaddingBottom unit _-> "padding-bottom" ++ (lenUnit unit)
 
-          Margin _ _      -> 14
-          MarginLeft _ _  -> 15
-          MarginRight _ _ -> 16
-          MarginTop _ _   -> 17
-          MarginBottom _ _-> 18
-
-
-          Matrix _ _ _ _ _ _ -> 36
-          Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> 37
-          Translate _ _ _ -> 19
-          Translate3d _ _ _ _ -> 20
-          TranslateX _ _ -> 21
-          TranslateY _ _ -> 22
-          Scale _        -> 23 
-          Scale3d _ _ _  -> 24
-          ScaleX _   -> 25
-          ScaleY _   -> 26
-          ScaleZ _   -> 27
-          Rotate _ _ -> 28
-          Rotate3d _ _ _ _ _ -> 29
-          RotateX _ _   -> 30
-          RotateY _ _   -> 31
-          Skew _ _ _    -> 32 
-          SkewX _ _     -> 33
-          SkewY _ _     -> 34
-          Perspective _ -> 35
+          Margin unit _      -> "margin" ++ (lenUnit unit)
+          MarginLeft unit _  -> "margin-left" ++ (lenUnit unit)
+          MarginRight unit _ -> "margin-right" ++ (lenUnit unit)
+          MarginTop unit _   -> "margin-top" ++ (lenUnit unit)
+          MarginBottom unit _-> "margin-bottom" ++ (lenUnit unit)
 
 
+          Matrix _ _ _ _ _ _ -> "matrix"
+          Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "matrix3d"
+          Translate unit _ _ -> "translate" ++ (lenUnit unit)
+          Translate3d unit _ _ _ -> "translate3d"  ++ (lenUnit unit)
+          TranslateX unit _ -> "translatex" ++ (lenUnit unit)
+          TranslateY unit _ -> "translatey" ++ (lenUnit unit)
+          Scale _        -> "scale"
+          Scale3d _ _ _  -> "scale3d"
+          ScaleX _   -> "scalex"
+          ScaleY _   -> "scaley"
+          ScaleZ _   -> "scalez"
+          Rotate unit _ -> "rotate" ++ (angleUnit unit)
+          Rotate3d unit _ _ _ _ -> "rotate3d" ++ (angleUnit unit)
+          RotateX unit _   -> "rotatex" ++ (angleUnit unit)
+          RotateY unit _   -> "rotatey" ++ (angleUnit unit)
+          Skew unit _ _    -> "skew" ++ (angleUnit unit)
+          SkewX unit _     -> "skewx" ++ (angleUnit unit)
+          SkewY unit _     -> "skewy" ++ (angleUnit unit)
+          Perspective _ -> "perspective"
 
-addLengthUnits : Length -> String -> String
-addLengthUnits unit num = 
+
+
+lenUnit : Length -> String
+lenUnit unit = 
           case unit of
-            Px -> num ++ "px"
-
-            Percent -> num ++ "%"
-
-            Rem -> num ++ "rem"
-
-            Em -> num ++ "em"
-            Ex -> num ++ "ex"
-            Ch -> num ++ "ch"
-            Vh -> num ++ "vh"
-            Vw -> num ++ "vw"
-            Vmin -> num ++ "vmin"
-            Vmax -> num ++ "vmax"
-            Mm -> num ++ "mm"
-            Cm -> num ++ "cm"
-            In -> num ++ "in"
-            Pt -> num ++ "pt"
-            Pc -> num ++ "pc"
+            Px -> "px"
+            Percent -> "%"
+            Rem -> "rem"
+            Em -> "em"
+            Ex -> "ex"
+            Ch -> "ch"
+            Vh -> "vh"
+            Vw -> "vw"
+            Vmin -> "vmin"
+            Vmax -> "vmax"
+            Mm -> "mm"
+            Cm -> "cm"
+            In -> "in"
+            Pt -> "pt"
+            Pc -> "pc"
 
 
-
-addAngleUnits : Angle -> String -> String
-addAngleUnits unit num =
+angleUnit : Angle -> String
+angleUnit unit = 
           case unit of
-            Deg -> num ++ "deg"
+            Deg -> "deg"
+            Grad -> "grad"
+            Rad -> "rad"
+            Turn -> "turn"
 
-            Grad -> num ++ "grad"
-
-            Rad -> num ++ "rad"
-
-            Turn -> num ++ "turn"
 
 
 
