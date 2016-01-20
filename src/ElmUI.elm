@@ -1,17 +1,14 @@
 module ElmUI where
 
-
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Time exposing (Time, second)
 import Effects exposing (Effects)
-
 import Signal exposing (Address)
+
+import Time exposing (Time, second)
+
 import String
-
-import Animation as A
-
 import List
 
 
@@ -81,9 +78,6 @@ minus mod existing = existing - mod
 (-=) : Float -> Float -> Float
 (-=) mod prev = prev + mod
 
-
-
-
 type alias Style a
         = List (StyleProperty a)
 
@@ -91,7 +85,6 @@ type alias Static = Float
 
 type alias Transition = (Float -> Float)
 
---type Dynamic = Dynamic (Float -> Float) StyleProperty
 
 type StyleProperty a
         = Prop String String a
@@ -178,27 +171,9 @@ type ColorAlphaType
         = RGBA
         | HSLA
 
---type MatrixAnimation = MatrixAnimation
-
---type Matrix3dAnimation = Matrix3dAnimation
-
---matrix(n,n,n,n,n,n) Defines a 2D transformation, using a matrix of six values Play it »
---matrix3d(n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n) Defines a 3D transformation, using a 4x4 matrix of 16 values  
-
-
-
 type Action 
         = Begin DynamicStyleAnimation
         | Tick Time
-
-
-
-animate : DynamicStyleAnimation -> Model -> ( Model, Effects Action )
-animate anims model = update (Begin anims) model
-
-
-start : List (StyleProperty Transition) -> DynamicStyleAnimation
-start props = { emptyAnimation | target = props} 
 
 
 
@@ -259,6 +234,16 @@ update action model =
                 ( { model | elapsed = finalElapsed 
                           , start = Just start }
                 , Effects.tick Tick )
+
+-- Convenience Functions
+animate : DynamicStyleAnimation -> Model -> ( Model, Effects Action )
+animate anims model = update (Begin anims) model
+
+
+start : List (StyleProperty Transition) -> DynamicStyleAnimation
+start props = { emptyAnimation | target = props} 
+
+
 
 
 findFrom : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)
