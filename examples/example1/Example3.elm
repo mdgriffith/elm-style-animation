@@ -41,7 +41,7 @@ update action model =
       let 
         (anim, fx) = Multi.animate i 
                             (UI.start 
-                                [ UI.Rotate UI.Turn (UI.to 1) ]
+                                [ UI.Rotate UI.Turn (UI.add 1) ]
                             )
                             model.animations
       in

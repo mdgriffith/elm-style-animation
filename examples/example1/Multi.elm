@@ -19,7 +19,7 @@ render i model =
                     else [] ) model
 
 
-animate : Int -> ElmUI.StyleAnimation -> Model -> ( Model, Effects Action )
+animate : Int -> ElmUI.DynamicStyleAnimation -> Model -> ( Model, Effects Action )
 animate id anims model = update (Dispatch id (ElmUI.Begin anims)) model
 
 

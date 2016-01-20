@@ -20,10 +20,10 @@ type alias Model =
             { start : Maybe Time
             , elapsed : Time
             , anim : Maybe StyleAnimation
-            , previous : Style
+            , previous : Style Static
             }
 
-init : Style -> Model
+init : Style Static -> Model
 init style = { empty | previous = style }
 
 
@@ -49,61 +49,93 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 
 type alias StyleAnimation =
-            { target : Style
+            { target : Style Static
             , duration : Time
             , ease : (Float -> Float)
             }
 
-to : Float -> Float
-to f = f
+type alias DynamicStyleAnimation = 
+            { target : Style Transition
+            , duration : Time
+            , ease : (Float -> Float)
+            }
 
-type alias Style 
-             = List StyleProperty
 
 
-type StyleProperty
-        = Prop String String Float
-        | Opacity Float
-        | Height Length Float
-        | Width Length Float
-        | Left Length Float
-        | Top Length Float
-        | Right Length Float
-        | Bottom Length Float
+to : Float -> Float -> Float
+to t f = t
 
-        | Padding Length Float
-        | PaddingLeft Length Float
-        | PaddingRight Length Float
-        | PaddingTop Length Float
-        | PaddingBottom Length Float
+add : Float -> Float -> Float
+add mod existing = existing + mod
 
-        | Margin Length Float
-        | MarginLeft Length Float
-        | MarginRight Length Float
-        | MarginTop Length Float
-        | MarginBottom Length Float
+minus : Float -> Float -> Float
+minus mod existing = existing - mod
+
+
+--(:=) : Float -> Float
+--(:=) f = f
+
+--(+=) : Float -> Float -> Float
+--(+=) mod prev = prev + mod
+
+--(-=) : Float -> Float -> Float
+--(-=) mod prev = prev + mod
+
+
+
+
+type alias Style a
+        = List (StyleProperty a)
+
+type alias Static = Float
+
+type alias Transition = (Float -> Float)
+
+--type Dynamic = Dynamic (Float -> Float) StyleProperty
+
+type StyleProperty a
+        = Prop String String a
+        | Opacity a
+        | Height Length a
+        | Width Length a
+        | Left Length a
+        | Top Length a
+        | Right Length a
+        | Bottom Length a
+
+        | Padding Length a
+        | PaddingLeft Length a
+        | PaddingRight Length a
+        | PaddingTop Length a
+        | PaddingBottom Length a
+
+        | Margin Length a
+        | MarginLeft Length a
+        | MarginRight Length a
+        | MarginTop Length a
+        | MarginBottom Length a
         
 
         -- Transformations
---        --| Matrix --Float Float Float Float Float Float 
---        --| Matrix3d -- Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float Float 
-        | Translate Length Float Float
-        | Translate3d Length Float Float Float
-        | TranslateX Length Float
-        | TranslateY Length Float
-        | Scale Float
-        | Scale3d Float Float Float
-        | ScaleX Float
-        | ScaleY Float
-        | ScaleZ Float
-        | Rotate Angle Float
-        | Rotate3d Angle Float Float Float Float
-        | RotateX Angle Float
-        | RotateY Angle Float
-        | Skew Angle Float Float
-        | SkewX Angle Float 
-        | SkewY Angle Float
-        | Perspective Float
+        | Matrix a a a a a a 
+        | Matrix3d a a a a a a a a a a a a a a a a 
+        | Translate Length a a
+        | Translate3d Length a a a
+        | TranslateX Length a
+        | TranslateY Length a
+        | Scale a
+        | Scale3d a a a
+        | ScaleX a
+        | ScaleY a
+        | ScaleZ a
+        | Rotate Angle a
+        | Rotate3d Angle a a a a
+        | RotateX Angle a
+        | RotateY Angle a
+        | Skew Angle a a
+        | SkewX Angle a 
+        | SkewY Angle a
+        | Perspective a
 
 
 type Length
@@ -140,161 +172,18 @@ type Angle
 
 
 
-
-
-
 type Action 
-        = Begin StyleAnimation
-        --| Continue Style
+        = Begin DynamicStyleAnimation
         | Tick Time
 
 
 
-animate : StyleAnimation -> Model -> ( Model, Effects Action )
+animate : DynamicStyleAnimation -> Model -> ( Model, Effects Action )
 animate anims model = update (Begin anims) model
 
 
-start : List StyleProperty -> StyleAnimation
+start : List (StyleProperty Transition) -> DynamicStyleAnimation
 start props = { emptyAnimation | target = props} 
-
---zipMatching : List PropAnimation -> List PropAnimation -> List (Maybe PropAnimation, Maybe PropAnimation)
---zipMatching anim1 anim2 = 
---                  let
---                    findBy fn xs = List.head (List.filter fn xs)
---                    matchPropID a b = propId a == propId b
-
---                    matching = 
---                      List.map
---                          (\a  ->
---                            (Just a, findBy (matchPropID a)  anim2)
---                          ) anim1
-
---                    remaining = 
---                      List.concatMap
---                          (\a  ->
---                            let
---                              found = findBy (matchPropID a) anim1
---                            in
---                              case found of
---                                Nothing ->
---                                  [(Nothing, Just a)]
---                                Just _ ->
---                                  []
---                          ) anim2
---                  in
---                    matching ++ remaining
-
-
-
---retarget : Time -> PropAnimation -> PropAnimation -> PropAnimation
---retarget current anim1 anim2 = 
---            let
---              default = anim1
---            in
---              case anim1 of
---                Prop name unit a -> 
---                  case anim2 of
---                    Prop _ _ a2 ->
---                       Prop name unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                Opacity a -> 
---                  case anim2 of
---                    Opacity a2 ->
---                       Opacity (A.retarget current (A.getTo a2) a)
---                    _ -> default
-
---                Height unit a -> 
---                  case anim2 of
---                    Height _ a2 ->
---                       Height unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                Width unit a -> 
---                  case anim2 of
---                    Width _ a2 ->
---                       Width unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                Left unit a -> 
---                  case anim2 of
---                    Left _ a2 ->
---                      Left unit (A.retarget current (A.getTo a2) a)
---                    _ -> default
-
---                Right unit a -> 
---                  case anim2 of
---                    Right _ a2 ->
---                       Right unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                Bottom unit a -> 
---                  case anim2 of
---                    Bottom _ a2 ->
---                       Bottom unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                Top unit a -> 
---                  case anim2 of
---                    Right _ a2 ->
---                       Right unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                Padding unit a       -> 
---                  case anim2 of
---                    Padding _ a2 ->
---                       Padding unit (A.retarget 0 (A.getTo a2) a)
---                    _ -> default
-
---                PaddingLeft _ a   -> default 
---                PaddingRight _ a  -> default
---                PaddingTop _ a    -> default 
---                PaddingBottom _ a -> default 
-
---                Margin _ a       -> default 
---                MarginLeft _ a   -> default 
---                MarginRight _ a  -> default 
---                MarginTop _ a    -> default 
---                MarginBottom _ a -> default 
-
---                Translate _ a1 a2 -> default
---                Translate3d _ a1 a2 a3 -> default
---                TranslateX _ a -> default
---                TranslateY _ a -> default
---                Scale a1 -> default
---                Scale3d a1 a2 a3 -> default
---                ScaleX a -> default
---                ScaleY a -> default
---                ScaleZ a -> default
---                Rotate _ a -> default
---                Rotate3d _ a1 a2 a3 a4 -> default
---                RotateX _ a -> default
---                RotateY _ a -> default
---                Skew _ a1 a2 -> default 
---                SkewX _ a -> default
---                SkewY _ a -> default
---                Perspective a -> default
-
-
---resolveRetarget : Time -> (Maybe PropAnimation, Maybe PropAnimation) -> List PropAnimation
---resolveRetarget current anims = 
---                      case anims of
---                        (Nothing, Nothing) -> []
-
---                        (Just a, Nothing) -> [a]
-
---                        (Nothing, Just b) -> [b]
-
---                        (Just a, Just b) -> 
---                          if isDone current a then
---                            [b]
---                          else
---                            [retarget current a b]
-
-
-                   
-
-
 
 
 
@@ -302,8 +191,12 @@ update : Action -> Model -> ( Model, Effects Action )
 update action model = 
         case action of
 
-          Begin anims ->
+          Begin dynamicAnims ->
+
               let
+                -- Convert dynamic to static
+                anims = makeStatic dynamicAnims model.previous
+
                 previous = 
                   case model.anim of
                     Nothing -> model.previous
@@ -316,29 +209,6 @@ update action model =
                           , previous = previous }
                 , Effects.tick Tick )
 
-          --Continue anims ->
-          --  case model.anim of
-          --    Nothing ->
-          --      ( { model | anim = Just anims
-          --                , elapsed = 0.0
-          --                , start = Nothing }
-          --      , Effects.tick Tick )
-
-          --    Just modelAnim ->
-          --      let
-          --        zipped = zipMatching modelAnim anims
-          --        resolved = List.concatMap (resolveRetarget model.elapsed) zipped
-          --        (start, elapsed) = 
-          --              if List.all (resetElapsed model.elapsed) zipped then
-          --                (Nothing, 0.0)
-          --              else
-          --                (model.start, model.elapsed)
-          --      in
-          --        ( { model | anim = Just resolved 
-          --                  , elapsed = elapsed
-          --                  , start = start }
-          --        , Effects.tick Tick )
-
           Tick now ->
             let
               start = 
@@ -347,23 +217,43 @@ update action model =
                   Just t -> t
               newElapsed = now - start
 
+              (done, finalElapsed) =
+                 case model.anim of
+                    Nothing -> (False, newElapsed)
+                    Just a ->
+                      if newElapsed >= a.duration then
+                        (True, a.duration)
+                      else
+                        (False, newElapsed)
+
             in
-              if done model then
-                ( { model | elapsed = newElapsed }
-                , Effects.none )
+              if done then
+                let
+                   previous = 
+                    case model.anim of
+                      Nothing -> model.previous
+                      Just a -> 
+                        bake finalElapsed a model.previous
+                in
+                  ( { model | elapsed = finalElapsed
+                            , previous = previous 
+                            , start = Nothing 
+                            , anim = Nothing }
+                  , Effects.none )
               else
-                ( { model | elapsed = newElapsed 
+                ( { model | elapsed = finalElapsed 
                           , start = Just start }
                 , Effects.tick Tick )
 
 
-findFrom : Style -> StyleProperty -> Maybe StyleProperty
+findFrom : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)
 findFrom state prop =
             let
               findBy fn xs = List.head (List.filter fn xs)
               matchPropID a b = propId a == propId b
             in 
               findBy (matchPropID prop) state
+
 
 render : Model -> List (String, String)
 render model = 
@@ -403,13 +293,13 @@ render model =
                
 
 
-renderProp : StyleProperty -> (String, String)
+renderProp : StyleProperty Static -> (String, String)
 renderProp prop = ( renderName prop 
                   , renderValue prop
                   )
 
 
-renderName : StyleProperty -> String
+renderName : StyleProperty Static -> String
 renderName styleProp = 
             case styleProp of
               Prop str _ _-> str
@@ -434,6 +324,8 @@ renderName styleProp =
               MarginTop _ _    -> "margin-top"
               MarginBottom _ _ -> "margin-bottom"
 
+              Matrix _ _ _ _ _ _ -> "transform"
+              Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "transform"
               Translate _ _ _ -> "transform"
               Translate3d _ _ _ _ ->"transform"
               TranslateX _ _-> "transform"
@@ -454,30 +346,42 @@ renderName styleProp =
 
 
 
---bake model.elapsed a model.previous
 
 
-bake : Time -> StyleAnimation -> Style -> Style
+makeStatic : DynamicStyleAnimation -> Style Static -> StyleAnimation
+makeStatic dynamic previous = 
+                let
+                  from prop = findFrom previous prop 
+                  fn fr dynamicTo = dynamicTo fr
+                in
+                  { duration = dynamic.duration
+                  , ease = dynamic.ease
+                  , target = List.map (\p -> bakeProp p (from p) fn) dynamic.target
+                  }
+
+
+
+
+
+bake : Time -> StyleAnimation -> Style Static -> Style Static
 bake elapsed anim prev = 
           let
             percentComplete = elapsed / anim.duration
             eased = anim.ease percentComplete
-            from prop = findFrom prev prop
+            from prop = findFrom prev prop 
+            fn fr to = ((to-fr) * eased) + fr
           in
-            List.map (\p -> bakeProp p eased (from p)) anim.target
+            List.map (\p -> bakeProp p (from p) fn) anim.target
 
 
 
 
 
-bakeProp : StyleProperty -> Float -> Maybe StyleProperty -> StyleProperty
-bakeProp prop percentComplete prev =
-            let
-              val from to = ((to-from) * percentComplete) + from
-              --renderLength unit from to = addLengthUnits unit (val from to)
-
-              --renderAngle unit from to = addAngleUnits unit (val from to)
-            in
+bakeProp : StyleProperty a ->  Maybe (StyleProperty Static) -> (Float -> a -> c) -> StyleProperty c
+bakeProp prop prev val =
+            --let
+            --  val from to = ((to-from) * percentComplete) + from
+            --in
               case prop of
                 Prop name unit to -> 
                   let
@@ -860,19 +764,58 @@ bakeProp prop percentComplete prev =
                   in
                     Perspective (val from to)
 
+                Matrix a b c x y z -> 
+                  let
+                    (aFrom, bFrom, cFrom, xFrom, yFrom, zFrom) =
+                      case prev of
+                        Nothing -> 
+                            (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+                        Just (Matrix a2 b2 c2 x2 y2 z2) -> 
+                            (a2, b2, c2, x2, y2, z2)
+
+                        _ -> 
+                            (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                  in 
+                    Matrix (val aFrom a) (val bFrom b) (val cFrom c) (val xFrom x) (val yFrom y) (val zFrom z)
+                
+
+
+                Matrix3d a b c d e f g h i j k l m n o p -> 
+                      case prev of
+                        Nothing -> 
+                            Matrix3d (val 0.0 a) (val 0.0 b) (val 0.0 c) (val 0.0 d) 
+                                     (val 0.0 e) (val 0.0 f) (val 0.0 g) (val 0.0 h) 
+                                     (val 0.0 i) (val 0.0 j) (val 0.0 k) (val 0.0 l) 
+                                     (val 0.0 m) (val 0.0 n) (val 0.0 o) (val 0.0 p)
+
+                        Just (Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2) -> 
+                             Matrix3d (val a2 a) (val b2 b) (val c2 c) (val d2 d) 
+                                      (val e2 e) (val f2 f) (val g2 g) (val h2 h) 
+                                      (val i2 i) (val j2 j) (val k2 k) (val l2 l) 
+                                      (val m2 m) (val n2 n) (val o2 o) (val p2 p)
+
+                        _ -> 
+                             Matrix3d (val 0.0 a) (val 0.0 b) (val 0.0 c) (val 0.0 d) 
+                                      (val 0.0 e) (val 0.0 f) (val 0.0 g) (val 0.0 h) 
+                                      (val 0.0 i) (val 0.0 j) (val 0.0 k) (val 0.0 l) 
+                                      (val 0.0 m) (val 0.0 n) (val 0.0 o) (val 0.0 p)
+
+                   
 
 
 
 
-
-
-
-renderValue : StyleProperty -> String
+renderValue : StyleProperty Static -> String
 renderValue prop  =
             let
               val a = toString a
               renderLength unit a = addLengthUnits unit (val a)
               renderAngle unit a = addAngleUnits unit (val a)
+
+              renderList xs = String.concat 
+                              <| List.intersperse "," 
+                              <| List.map toString xs
             in
               case prop of
                 Prop _ u a -> (val a) ++ u
@@ -897,13 +840,17 @@ renderValue prop  =
                 MarginTop unit a    -> renderLength unit a 
                 MarginBottom unit a -> renderLength unit a 
 
-                Translate unit a1 a2 -> "translate(" ++ (renderLength unit a1) 
-                                              ++ "," ++ (renderLength unit a2) 
-                                              ++ ")"
-                Translate3d unit a1 a2 a3 -> "translate3d(" ++ (renderLength unit a1) 
-                                                     ++ "," ++ (renderLength unit a2) 
-                                                     ++  "," ++ (renderLength unit a3) 
-                                                     ++ ")"
+                Translate unit a1 a2 -> 
+                        "translate(" ++ (renderLength unit a1) 
+                              ++ "," ++ (renderLength unit a2) 
+                              ++ ")"
+
+                Translate3d unit a1 a2 a3 -> 
+                          "translate3d(" ++ (renderLength unit a1) 
+                                 ++ "," ++ (renderLength unit a2) 
+                                 ++  "," ++ (renderLength unit a3) 
+                                 ++ ")"
+
                 TranslateX unit a -> "translateX(" ++ renderLength unit a ++ ")"
                 TranslateY unit a -> "translateY(" ++ renderLength unit a ++ ")"
                 Scale a1 -> "scale(" ++ (val a1)  ++ ")"
@@ -932,63 +879,28 @@ renderValue prop  =
                 SkewY unit a -> "skewY(" ++ renderAngle unit a ++ ")"
                 Perspective a -> "perspective(" ++ (val a) ++ ")"
 
+                Matrix a b c x y z -> 
+                        "matrix(" ++ 
+                          (renderList [a,b,c,x,y,z])
+                            ++ ")"
+                
+                Matrix3d a b c d e f g h i j k l m n o p -> 
+                        "matrix3d(" ++ 
+                          (renderList [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
+                            ++ ")"
 
 
 
-done : Model -> Bool
-done model =
+
+done : Model -> Time -> Bool
+done model elapsed =
         case model.anim of
           Nothing -> True
           Just a ->
-            model.elapsed >= a.duration
-
---isDone : Time -> PropAnimation -> Bool
---isDone elapsed propAnim = 
---              let
---                done a = A.isDone elapsed a
---              in 
---                case propAnim of
---                    Prop _ _ a  -> done a
---                    Opacity a   -> done a
---                    Height _ a  -> done a
---                    Width _ a   -> done a
---                    Left _ a    -> done a
---                    Right _ a   -> done a
---                    Bottom _ a  -> done a
---                    Top _ a     -> done a
-
---                    Padding _ a       -> done a 
---                    PaddingLeft _ a   -> done a 
---                    PaddingRight _ a  -> done a
---                    PaddingTop _ a    -> done a 
---                    PaddingBottom _ a -> done a 
-
---                    Margin _ a       -> done a 
---                    MarginLeft _ a   -> done a 
---                    MarginRight _ a  -> done a 
---                    MarginTop _ a    -> done a 
---                    MarginBottom _ a -> done a 
-
---                    Translate _ a1 a2      -> done a1 && done a2
---                    Translate3d _ a1 a2 a3 -> done a1 && done a2 && done a3
---                    TranslateX _ a -> done a
---                    TranslateY _ a -> done a
---                    Scale a1       -> done a1 
---                    Scale3d a1 a2 a3 -> done a1 && done a2 && done a3
---                    ScaleX a   -> done a
---                    ScaleY a   -> done a
---                    ScaleZ a   -> done a
---                    Rotate _ a -> done a
---                    Rotate3d _ a1 a2 a3 a4 -> done a1 && done a2 && done a3 && done a4
---                    RotateX _ a -> done a
---                    RotateY _ a -> done a
---                    Skew _ a1 a2 -> done a1 && done a2 
---                    SkewX _ a -> done a
---                    SkewY _ a -> done a
---                    Perspective a -> done a
+            elapsed >= a.duration
 
 
-propId : StyleProperty -> Int
+propId : StyleProperty a-> Int
 propId prop =
         case prop of
           Prop _ _ _ -> 1
@@ -1012,6 +924,9 @@ propId prop =
           MarginTop _ _   -> 17
           MarginBottom _ _-> 18
 
+
+          Matrix _ _ _ _ _ _ -> 36
+          Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> 37
           Translate _ _ _ -> 19
           Translate3d _ _ _ _ -> 20
           TranslateX _ _ -> 21
