@@ -20,8 +20,8 @@ type alias Model =
             , previous : Style Static
             }
 
-init : Style Static -> Model
-init style = { empty | previous = style }
+style : Style Static -> Model
+style sty = { empty | previous = sty }
 
 
 empty : Model
@@ -177,6 +177,8 @@ type Action
 
 
 
+--backFill 
+
 update : Action -> Model -> ( Model, Effects Action )
 update action model = 
         case action of
@@ -236,14 +238,20 @@ update action model =
                 , Effects.tick Tick )
 
 -- Convenience Functions
-animate : DynamicStyleAnimation -> Model -> ( Model, Effects Action )
-animate anims model = update (Begin anims) model
+
+animate : Model -> DynamicStyleAnimation -> ( Model, Effects Action )
+animate model anims = update (Begin anims) model
 
 
-start : List (StyleProperty Transition) -> DynamicStyleAnimation
-start props = { emptyAnimation | target = props} 
+props : List (StyleProperty Transition) -> DynamicStyleAnimation
+props p  = { emptyAnimation | target = p} 
 
 
+duration : Time -> DynamicStyleAnimation -> DynamicStyleAnimation
+duration dur anim = { anim | duration = dur }
+
+easing : (Float -> Float) -> DynamicStyleAnimation -> DynamicStyleAnimation
+easing ease anim = { anim | ease = ease }
 
 
 findFrom : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)

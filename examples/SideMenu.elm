@@ -1,27 +1,23 @@
 
 
-module ElmUIExampleTwo where
-
 import StartApp exposing (start)
 
 import Effects exposing (Effects, Never)
-import Task
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Task
 
-import Time exposing (Time, second)
+import Time exposing (second)
 import Signal exposing (Address)
 
 import ElmUI as UI
-import Animation exposing (..)
-
---import Multi
 
 
--- MODEL
 
-type alias Model = { menuAnimation : UI.Model }
+type alias Model = 
+            { menuAnimation : UI.Model 
+            }
 
 -- UPDATE
 
@@ -36,24 +32,27 @@ update action model =
   case action of
     Show ->
       let 
-        (anim, fx) = UI.animate 
-                          ( UI.start 
-                                [ UI.Left UI.Px (UI.to 0) ]
-                          )
-                                model.menuAnimation
+        (anim, fx) = UI.animate model.menuAnimation
+                           <| UI.duration (0.4*second)
+                           <| UI.props [ UI.Left UI.Px (UI.to 0) 
+                                       , UI.Opacity (UI.to 1)
+                                       ]
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )
 
+
     Hide ->
-        let 
-          (anim, fx) = UI.animate  
-                          ( UI.start 
-                                [ UI.Left UI.Px (UI.to -350) ]
-                          ) model.menuAnimation  
-        in
-          ( { model | menuAnimation = anim }
-          , Effects.map Animate fx )
+      let 
+        (anim, fx) = UI.animate model.menuAnimation
+                           <| UI.duration (0.4*second)
+                           <| UI.props [ UI.Left UI.Px (UI.to -350) 
+                                       , UI.Opacity (UI.to 0)
+                                       ]
+      in
+        ( { model | menuAnimation = anim }
+        , Effects.map Animate fx )
+
 
     Animate action ->
       let
@@ -61,7 +60,6 @@ update action model =
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )
-
 
 
 
@@ -89,9 +87,7 @@ view address model =
 viewMenu : Address Action -> Model -> Html
 viewMenu address model =
                 let
-                  menuStyle = [ --("opacity", "1")
-                                ("position", "absolute")
-                                --, ("left", "-350px")
+                  menuStyle = [ ("position", "absolute")
                                 , ("top", "0px")
                                 , ("padding", "25px")
                                 , ("width", "300px")
@@ -111,11 +107,9 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = 
-        ( { menuAnimation = UI.init [ UI.Left UI.Px -350.0 ]
-
-          }
-        , Effects.none )
+init = ( { menuAnimation = UI.style [ UI.Left UI.Px -350.0 ]
+         }
+       , Effects.none )
 
 app =
   StartApp.start
