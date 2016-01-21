@@ -384,19 +384,31 @@ bake elapsed anim prev =
             percentComplete = elapsed / anim.duration
             eased = anim.ease percentComplete
             from prop = findFrom prev prop 
+
             fn fr to = ((to-fr) * eased) + fr
+               
+            style = List.map (\p -> bakeProp p (from p) fn) anim.target
           in
-            List.map (\p -> bakeProp p (from p) fn) anim.target
+            -- If properties are in previous, but not in the current animation
+            --, copy them over as is
+            fill style prev
+            
 
 
+fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
+fill new existing =
+           List.foldl
+                    (\x acc ->
+                      case findFrom acc x of
+                        Nothing -> x::acc 
+                        Just _ -> acc
+
+                    ) new existing
 
 
 
 bakeProp : StyleProperty a ->  Maybe (StyleProperty Static) -> (Float -> a -> c) -> StyleProperty c
 bakeProp prop prev val =
-            --let
-            --  val from to = ((to-from) * percentComplete) + from
-            --in
               case prop of
                 Prop name unit to -> 
                   let
