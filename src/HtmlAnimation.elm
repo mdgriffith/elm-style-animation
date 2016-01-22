@@ -1,16 +1,65 @@
-module HtmlAnimation where
+module HtmlAnimation 
+    ( Model
+    , Action
+    , Style
+    , StyleAnimation
+    , StyleProperty (..)
+    , Length (..), Angle (..) 
+    , ColorFormat (..), ColorAlphaFormat (..)
+    , initStyle
+    , update
+    , render
+    , animate, animateOn
+    , queue, queueOn
+    , props, duration, easing
+    , andThen, forwardTo
+    , to, add, minus
+    , (:=), (+=), (-=)
+    ) 
+  where
 
 import Effects exposing (Effects)
 import Time exposing (Time, second)
 import String exposing (concat)
 import List 
 
+{-| This library is for animating css properties(and works well with elm-html).
+
+# Definition
+@docs Model, Style, StyleAnimation
+
+# Style Properties and Units
+@docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
+
+# Interrupting an animation with a new one
+@docs animate, animateOn
+
+# Queueing an Animation
+@docs queue, queueOn
+
+# Creating a starting style
+@docs initStyle
+
+# Creating an animation
+@docs props, duration, easing
+
+# Animating Properties
+@docs to, add, minus, (:=), (+=), (-=)
+
+# Chaining animations together
+@doc andThen
+
+# Managing a list of styled widgets
+@docs forwardTo
+
+-}
+
 
 type alias Model =
             { start : Maybe Time
             , elapsed : Time
-            , anim : List (StyleAnimation Dynamic)
-            , previous : Style Static
+            , anim : List (StyleAnimation)
+            , previous : Style
             }
 
 
@@ -21,17 +70,20 @@ type alias Dynamic
          = (Float -> Float -> Float)
 
 
-type alias Style a
-         = List (StyleProperty a)
+type alias Style 
+         = List (StyleProperty Static)
 
 
-type alias StyleAnimation a =
-            { target : Style a
+type alias StyleAnimation =
+            { target : List (StyleProperty Dynamic)
             , duration : Time
             , ease : (Float -> Float)
             }
 
+{-| All currently animatable properties.
+The type variable 'a' is used so that static properties can be created
 
+-}
 type StyleProperty a
         = Prop String String a
         | Opacity a
@@ -56,11 +108,11 @@ type StyleProperty a
 
 
         -- Color
-        | Color ColorType a a a
-        | BackgroundColor ColorType a a a
+        | Color ColorFormat a a a
+        | BackgroundColor ColorFormat a a a
 
-        | ColorA ColorAlphaType a a a a
-        | BackgroundColorA ColorAlphaType a a a a
+        | ColorA ColorAlphaFormat a a a a
+        | BackgroundColorA ColorAlphaFormat a a a a
 
         -- Transformations
         | Matrix a a a a a a 
@@ -84,7 +136,8 @@ type StyleProperty a
         | Perspective a
 
 
--- Units
+{-| Units representing length.
+-}
 type Length
       = Px
       | Percent
@@ -102,25 +155,34 @@ type Length
       | Pt
       | Pc
 
-
+{-| Units representing angles.
+-}
 type Angle
       = Deg
       | Grad
       | Rad
       | Turn
 
-
-type ColorType
+{-| Units representing color.  Hex codes aren't currently supported, but may be in the future if they're wanted.
+-}
+type ColorFormat
       = RGB
       | HSL
 
-type ColorAlphaType
+
+{-| Units representing color that has an alpha channel.
+-}
+type ColorAlphaFormat
         = RGBA
         | HSLA
 
+{-| Actions to be run on an animation. 
+Queue will add a list of animations to the queue.
+Interrupt will stop all animations and start the one that is provided.
+-}
 type Action 
-        = Queue (List (StyleAnimation Dynamic))
-        | Interrupt (List (StyleAnimation Dynamic))
+        = Queue (List StyleAnimation)
+        | Interrupt (List StyleAnimation)
         | Tick Time
 
 
@@ -132,22 +194,19 @@ empty = { elapsed = 0.0
         }
 
 
-initStyle : Style Static -> Model
-initStyle sty = { empty | previous = sty }
-
-
-emptyAnimation : StyleAnimation Static
-emptyAnimation = { target = []
-                 , duration = defaultDuration
-                 , ease = defaultEasing 
-                 }
-
-emptyAnim : StyleAnimation Dynamic
-emptyAnim =
+emptyAnimation : StyleAnimation
+emptyAnimation =
                  { target = []
                  , duration = defaultDuration
                  , ease = defaultEasing 
                  }
+
+{-| Used to create an initial style state
+-}
+initStyle : Style -> Model
+initStyle sty = { empty | previous = sty }
+
+
 
 defaultDuration : Float
 defaultDuration = 0.4 * second
@@ -162,6 +221,7 @@ defaultEasing x = (1 - cos (pi*x))/2
 update : Action -> Model -> ( Model, Effects Action )
 update action model = 
         case action of
+
 
           Queue anims ->
                 ( { model | anim = model.anim ++ anims }
@@ -182,7 +242,6 @@ update action model =
                           , start = Nothing 
                           , previous = previous }
                 , Effects.tick Tick )
-
 
 
           Tick now ->
@@ -234,41 +293,68 @@ update action model =
 
 
 
--- Convenience Functions
-animateOn : Model -> List (StyleAnimation Dynamic) -> ( Model, Effects Action )
-animateOn model anims = animate anims model
-
-animate : List (StyleAnimation Dynamic) -> Model -> ( Model, Effects Action )
+{-| Syntactic sugar for running an Interrupt update.
+-}
+animate : List (StyleAnimation) -> Model -> ( Model, Effects Action )
 animate anims model = update (Interrupt anims) model
 
 
-queueOn : Model -> List (StyleAnimation Dynamic) -> ( Model, Effects Action )
-queueOn model anims = animate anims model
+{-| Same as animate, except with the arguments flipped.  This is useful only animating only a single style.
 
-queue : List (StyleAnimation Dynamic) -> Model -> ( Model, Effects Action )
+     UI.animateOn model.menuStyle
+                 <| UI.duration (0.4*second)
+                 <| UI.props 
+                     [ UI.Left UI.Px (UI.to 0) 
+                     , UI.Opacity (UI.to 1)
+                     ] [] -- every animation has to be 'started' with an empty list
+instead of 
+
+      UI.animate 
+             (  UI.duration (0.4*second)
+             <| UI.props 
+                 [ UI.Left UI.Px (UI.to 0) 
+                 , UI.Opacity (UI.to 1)
+                 ] [] -- every animation has to be 'started' with an empty list
+             ) 
+            model.menuStyle
+
+-}
+animateOn : Model -> List (StyleAnimation) -> ( Model, Effects Action )
+animateOn model anims = animate anims model
+
+
+{-| Syntactic sugar for running a Queue update.
+-}
+queue : List (StyleAnimation) -> Model -> ( Model, Effects Action )
 queue anims model = update (Queue anims) model
 
+{-| Same as queue, except with the arguments flipped.  This is useful when only animating only a single style. See animateOn for an example.
 
-props : List (StyleProperty Dynamic) -> List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+-}
+queueOn : Model -> List (StyleAnimation) -> ( Model, Effects Action )
+queueOn model anims = animate anims model
+
+
+props : List (StyleProperty Dynamic) -> List (StyleAnimation) -> List (StyleAnimation)
 props p anim = updateOrCreate anim (\anim -> { anim | target = p})
 
 
-duration : Time -> List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+duration : Time -> List (StyleAnimation) -> List (StyleAnimation)
 duration dur anim = updateOrCreate anim (\anim -> { anim | duration = dur })
       
 
-easing : (Float -> Float) -> List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+easing : (Float -> Float) -> List (StyleAnimation) -> List (StyleAnimation)
 easing ease anim = updateOrCreate anim (\anim -> { anim | ease = ease })
 
 
-andThen : List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
-andThen x = emptyAnim :: x
+andThen : List (StyleAnimation) -> List (StyleAnimation)
+andThen x = emptyAnimation :: x
 
 
-updateOrCreate : List (StyleAnimation Dynamic) -> (StyleAnimation Dynamic -> StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+updateOrCreate : List (StyleAnimation) -> (StyleAnimation -> StyleAnimation) -> List (StyleAnimation)
 updateOrCreate styles fn =
                  case styles of
-                    [] -> [fn emptyAnim] 
+                    [] -> [fn emptyAnimation] 
                     cur::rem -> (fn cur)::rem
 
 
@@ -345,7 +431,7 @@ minus mod from current =
 
 
 
-findProp : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)
+findProp : Style -> StyleProperty a -> Maybe (StyleProperty Static)
 findProp state prop =
             let
               findBy fn xs = List.head (List.filter fn xs)
@@ -464,7 +550,7 @@ fill new existing =
                     ) new existing
 
 
-bake : Time -> StyleAnimation Dynamic -> Style Static -> Style Static
+bake : Time -> StyleAnimation -> Style -> Style
 bake elapsed anim prev = 
           let
             percentComplete = 
@@ -1119,14 +1205,14 @@ propId prop =
 
 
 
-colorUnit : ColorType -> String
+colorUnit : ColorFormat -> String
 colorUnit color =
             case color of
               RGB -> "rgb"
               HSL -> "hsl"
 
 
-colorAUnit : ColorAlphaType -> String
+colorAUnit : ColorAlphaFormat -> String
 colorAUnit color =
             case color of
               RGBA -> "rgba"
