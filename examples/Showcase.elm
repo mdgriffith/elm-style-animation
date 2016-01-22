@@ -13,7 +13,7 @@ import Time exposing (Time, second)
 import Signal exposing (Address)
 
 import HtmlAnimation as UI
-import Easing exposing (easeOutBounce)
+import Easing exposing (easeInBounce)
 
 
 -- MODEL
@@ -79,7 +79,7 @@ update action model =
             forwardToWidget i model.widgets 
                   <| UI.animate
                   <| UI.duration (2*second)
-                  <| UI.easing easeOutBounce
+                  <| UI.easing easeInBounce
                   <| UI.props 
                       [ UI.Rotate UI.Turn (UI.add 1)
                       ] 

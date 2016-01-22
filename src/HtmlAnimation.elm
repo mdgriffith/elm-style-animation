@@ -345,8 +345,8 @@ minus mod from current =
 
 
 
-findFrom : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)
-findFrom state prop =
+findProp : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)
+findProp state prop =
             let
               findBy fn xs = List.head (List.filter fn xs)
               matchPropID a b = propId a == propId b
@@ -458,7 +458,7 @@ fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (Style
 fill new existing =
            List.foldl
                     (\x acc ->
-                      case findFrom acc x of
+                      case findProp acc x of
                         Nothing -> x::acc 
                         Just _ -> acc
                     ) new existing
@@ -467,15 +467,15 @@ fill new existing =
 bake : Time -> StyleAnimation Dynamic -> Style Static -> Style Static
 bake elapsed anim prev = 
           let
-            percentComplete =
+            percentComplete = 
                  elapsed / anim.duration
 
             eased = 
-                anim.ease percentComplete
+                 anim.ease percentComplete
 
             style = 
                 List.map 
-                  (\p -> bakeProp p (findFrom prev p) eased) 
+                  (\p -> bakeProp p (findProp prev p) eased) 
                     anim.target
           in
             -- If properties are in previous
