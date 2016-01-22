@@ -36,9 +36,10 @@ update action model =
               UI.animateOn model.menuStyle
                  <| UI.duration (0.4*second)
                  <| UI.props 
-                     [ UI.Left UI.Px (UI.to 0) 
+                     [ UI.Left (UI.to 0) UI.Px
                      , UI.Opacity (UI.to 1)
-                     ] [] -- every animation has to be 'started' with an empty list
+                     ] [] -- every animation has 
+                          -- to be 'started' with an empty list
 
       in
         ( { model | menuStyle = anim }
@@ -51,9 +52,10 @@ update action model =
             UI.animateOn model.menuStyle
                <| UI.duration (0.4*second)
                <| UI.props 
-                      [ UI.Left UI.Px (UI.to -350) 
+                      [ UI.Left (UI.to -350) UI.Px
                       , UI.Opacity (UI.to 0)
-                      ] [] -- every animation has to be 'started' with an empty list
+                      ] [] -- every animation has 
+                           -- to be 'started' with an empty list
       in
         ( { model | menuStyle = anim }
         , Effects.map Animate fx )
@@ -112,9 +114,9 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { menuStyle = UI.initStyle [ UI.Left UI.Px -350.0
-                                        , UI.Opacity 0.0 
-                                        ]
+init = ( { menuStyle = UI.initStyle [ UI.Left -350.0 UI.Px
+                                    , UI.Opacity 0.0 
+                                    ]
          }
        , Effects.none )
 

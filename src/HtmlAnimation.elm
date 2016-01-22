@@ -93,26 +93,26 @@ type alias StyleAnimation =
 {-| All currently animatable properties.
 -}
 type StyleProperty a
-        = Prop String String a
+        = Prop String a String
         | Opacity a
-        | Height Length a
-        | Width Length a
-        | Left Length a
-        | Top Length a
-        | Right Length a
-        | Bottom Length a
+        | Height a Length
+        | Width a Length
+        | Left a Length
+        | Top a Length
+        | Right a Length
+        | Bottom a Length
 
-        | Padding Length a
-        | PaddingLeft Length a
-        | PaddingRight Length a
-        | PaddingTop Length a
-        | PaddingBottom Length a
+        | Padding a Length
+        | PaddingLeft a Length
+        | PaddingRight a Length
+        | PaddingTop a Length
+        | PaddingBottom a Length
 
-        | Margin Length a
-        | MarginLeft Length a
-        | MarginRight Length a
-        | MarginTop Length a
-        | MarginBottom Length a
+        | Margin a Length
+        | MarginLeft a Length
+        | MarginRight a Length
+        | MarginTop a Length
+        | MarginBottom a Length
 
         -- Color
         | Color ColorFormat a a a
@@ -124,22 +124,22 @@ type StyleProperty a
         -- Transformations
         | Matrix a a a a a a 
         | Matrix3d a a a a a a a a a a a a a a a a 
-        | Translate Length a a
-        | Translate3d Length a a a
-        | TranslateX Length a
-        | TranslateY Length a
+        | Translate a a Length
+        | Translate3d a a a Length
+        | TranslateX a Length
+        | TranslateY a Length
         | Scale a
         | Scale3d a a a
         | ScaleX a
         | ScaleY a
         | ScaleZ a
-        | Rotate Angle a
-        | Rotate3d Angle a a a a
-        | RotateX Angle a
-        | RotateY Angle a
-        | Skew Angle a a
-        | SkewX Angle a 
-        | SkewY Angle a
+        | Rotate a Angle
+        | Rotate3d a a a a Angle
+        | RotateX a Angle
+        | RotateY a Angle
+        | Skew a a Angle
+        | SkewX a Angle 
+        | SkewY a Angle
         | Perspective a
 
 
@@ -310,21 +310,21 @@ animate anims model = update (Interrupt anims) model
 {-| Same as animate, except with the arguments flipped.  This is useful only animating only a single style.
 
      UI.animateOn model.menuStyle
-                 <| UI.duration (0.4*second)
-                 <| UI.props 
-                     [ UI.Left UI.Px (UI.to 0) 
-                     , UI.Opacity (UI.to 1)
-                     ] [] -- every animation has to be 'started' with an empty list
+         <| UI.duration (0.4*second)
+         <| UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
+             ] [] 
 instead of 
 
       UI.animate 
-             (  UI.duration (0.4*second)
-             <| UI.props 
-                 [ UI.Left UI.Px (UI.to 0) 
-                 , UI.Opacity (UI.to 1)
-                 ] [] -- every animation has to be 'started' with an empty list
-             ) 
-            model.menuStyle
+         (  UI.duration (0.4*second)
+         <| UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
+             ] [] 
+         ) 
+        model.menuStyle
 
 -}
 animateOn : Model -> List (StyleAnimation) -> ( Model, Effects Action )
@@ -617,14 +617,14 @@ bakeProp prop prev current =
               val from fn = fn from current
             in
               case prop of
-                Prop name unit to -> 
+                Prop name to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Prop _ _ x) -> x
+                        Just (Prop _ x _) -> x
                         _ -> 0.0
                   in
-                    Prop name unit (val from to)
+                    Prop name (val from to) unit
 
 
                 Opacity to -> 
@@ -637,164 +637,164 @@ bakeProp prop prev current =
                     Opacity (val from to)
 
 
-                Height unit to -> 
+                Height to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Height _ x) -> x
+                        Just (Height x _) -> x
                         _ -> 0.0
                   in
-                    Height unit (val from to)
+                    Height (val from to) unit
 
 
-                Width unit to -> 
+                Width to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Width _ x) -> x
+                        Just (Width x _) -> x
                         _ -> 0.0
                   in
-                    Width unit (val from to)
+                    Width (val from to) unit
 
 
-                Left unit to -> 
+                Left to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Left _ x) -> x
+                        Just (Left x _) -> x
                         _ -> 0.0
                   in
-                    Left unit (val from to)
+                    Left (val from to) unit
 
 
-                Top unit to -> 
+                Top to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Top _ x) -> x
+                        Just (Top x _) -> x
                         _ -> 0.0
                   in
-                    Top unit (val from to)
+                    Top (val from to) unit
 
 
-                Right unit to ->  
+                Right to unit ->  
                   let
                     from =
                       case prev of
-                        Just (Right _ x) -> x
+                        Just (Right x _) -> x
                         _ -> 0.0
                   in
-                    Right unit (val from to)
+                    Right (val from to) unit
 
 
-                Bottom unit to -> 
+                Bottom to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Bottom _ x) -> x
+                        Just (Bottom x _) -> x
                         _ -> 0.0
                   in
-                    Bottom unit (val from to)
+                    Bottom (val from to) unit
 
 
-                Padding unit to -> 
+                Padding to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Padding _ x) -> x
+                        Just (Padding x _) -> x
                         _ -> 0.0
                   in
-                    Padding unit (val from to)
+                    Padding (val from to) unit
 
 
-                PaddingLeft unit to -> 
+                PaddingLeft to unit -> 
                   let
                     from =
                       case prev of
-                        Just (PaddingLeft _ x) -> x
+                        Just (PaddingLeft x _) -> x
                         _ -> 0.0
                   in
-                    PaddingLeft unit (val from to)
+                    PaddingLeft (val from to) unit
 
 
-                PaddingRight unit to  -> 
+                PaddingRight to unit  -> 
                   let
                     from =
                       case prev of
-                        Just (PaddingRight _ x) -> x
+                        Just (PaddingRight x _) -> x
                         _ -> 0.0
                   in
-                    PaddingRight unit (val from to)
+                    PaddingRight (val from to) unit
 
 
-                PaddingTop unit to -> 
+                PaddingTop to unit -> 
                   let
                     from =
                       case prev of
-                        Just (PaddingTop _ x) -> x
+                        Just (PaddingTop x _) -> x
                         _ -> 0.0
                   in
-                    PaddingTop unit (val from to)
+                    PaddingTop (val from to) unit
 
 
-                PaddingBottom unit to -> 
+                PaddingBottom to unit -> 
                   let
                     from =
                       case prev of
-                        Just (PaddingBottom _ x) -> x
+                        Just (PaddingBottom x _) -> x
                         _ -> 0.0
                   in
-                    PaddingBottom unit (val from to)
+                    PaddingBottom (val from to) unit
 
 
-                Margin unit to ->
+                Margin to unit ->
                   let
                     from =
                       case prev of
-                        Just (Margin _ x) -> x
+                        Just (Margin x _) -> x
                         _ -> 0.0
                   in
-                    Margin unit (val from to)
+                    Margin (val from to) unit
 
 
-                MarginLeft unit to   -> 
+                MarginLeft to unit   -> 
                   let
                     from =
                       case prev of
-                        Just (MarginLeft _ x) -> x
+                        Just (MarginLeft x _) -> x
                         _ -> 0.0
                   in
-                    MarginLeft unit (val from to)
+                    MarginLeft (val from to) unit
 
 
-                MarginRight unit to  -> 
+                MarginRight to unit  -> 
                   let
                     from =
                       case prev of
-                        Just (MarginRight _ x) -> x
+                        Just (MarginRight x _) -> x
                         _ -> 0.0
                   in
-                    MarginRight unit (val from to)
+                    MarginRight (val from to) unit
 
 
-                MarginTop unit to -> 
+                MarginTop to unit -> 
                   let
                     from =
                       case prev of
-                        Just (MarginTop _ x) -> x
+                        Just (MarginTop x _) -> x
                         _ -> 0.0
                   in
-                    MarginTop unit (val from to) 
+                    MarginTop (val from to) unit 
 
 
-                MarginBottom unit to ->  
+                MarginBottom to unit ->  
                   let
                     from =
                       case prev of
-                        Just (MarginBottom _ x) -> x
+                        Just (MarginBottom x _) -> x
                         _ -> 0.0
                   in
-                    MarginBottom unit (val from to)
+                    MarginBottom (val from to) unit
 
 
                 Color unit x y z    -> 
@@ -838,44 +838,44 @@ bakeProp prop prev current =
 
 
 
-                Translate unit x y -> 
+                Translate x y unit -> 
                   let
                     (xFrom, yFrom) =
                       case prev of
-                        Just (Translate _ x1 y1) -> (x1, y1)
+                        Just (Translate x1 y1 _) -> (x1, y1)
                         _ -> (0.0, 0.0)
                   in
-                    Translate unit (val xFrom x) (val yFrom y)
+                    Translate (val xFrom x) (val yFrom y) unit
                     
 
-                Translate3d unit x y z -> 
+                Translate3d x y z unit -> 
                   let
                     (xFrom, yFrom, zFrom) =
                       case prev of
-                        Just (Translate3d _ x1 y1 z1) -> (x1, y1, z1)
+                        Just (Translate3d x1 y1 z1 _) -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
-                    Translate3d unit (val xFrom x) (val yFrom y) (val zFrom z)
+                    Translate3d (val xFrom x) (val yFrom y) (val zFrom z) unit
                   
 
-                TranslateX unit to -> 
+                TranslateX to unit -> 
                   let
                     from =
                       case prev of
-                        Just (TranslateX _ x) -> x
+                        Just (TranslateX x _) -> x
                         _ -> 0.0
                   in
-                    TranslateX unit (val from to)
+                    TranslateX (val from to) unit
 
 
-                TranslateY unit to -> 
+                TranslateY to unit -> 
                   let
                     from =
                       case prev of
-                        Just (TranslateY _ x) -> x
+                        Just (TranslateY x _) -> x
                         _ -> 0.0
                   in
-                    TranslateY unit (val from to)
+                    TranslateY (val from to) unit
 
 
                 Scale to -> 
@@ -928,78 +928,78 @@ bakeProp prop prev current =
                     ScaleZ (val from to)
 
 
-                Rotate unit to -> 
+                Rotate to unit -> 
                   let
                     from =
                       case prev of
-                        Just (Rotate _ x) -> x
+                        Just (Rotate x _) -> x
                         _ -> 0.0
                   in
-                    Rotate unit (val from to)
+                    Rotate (val from to) unit
 
 
-                Rotate3d unit x y z a ->
+                Rotate3d x y z a unit ->
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        Just (Rotate3d _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
+                        Just (Rotate3d x1 y1 z1 a1 _) -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in 
-                    Rotate3d unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    Rotate3d (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a) unit
                    
 
-                RotateX unit to -> 
+                RotateX to unit -> 
                   let
                     from =
                       case prev of
-                        Just (RotateX _ x) -> x
+                        Just (RotateX x _) -> x
                         _ -> 0.0
                   in
-                    RotateX unit (val from to)
+                    RotateX (val from to) unit
 
-                RotateY unit to -> 
+                RotateY to unit -> 
                   let
                     from =
                       case prev of
-                        Just (RotateY _ x) -> x
+                        Just (RotateY x _) -> x
                         _ -> 0.0
                   in
-                    RotateY unit (val from to)
+                    RotateY (val from to) unit
 
 
-                Skew unit x y ->
+                Skew x y unit ->
                   let
                     (xFrom, yFrom) =
                       case prev of
-                        Just (Skew _ x y) -> (x, y)
+                        Just (Skew x y _) -> (x, y)
                         _ -> (0.0, 0.0)
                   in
-                    Skew unit (val xFrom x) (val yFrom y)
+                    Skew (val xFrom x) (val yFrom y) unit 
                     
 
-                SkewX unit to -> 
+                SkewX to unit -> 
                   let
                      from =
                       case prev of
-                        Just (SkewX _ x) -> x
+                        Just (SkewX x _) -> x
                         _ -> 0.0
                   in
-                    SkewX unit (val from to)
+                    SkewX (val from to) unit
 
-                SkewY unit to -> 
+                SkewY to unit -> 
                   let
                      from =
                       case prev of
-                        Just (SkewY _ x) -> x
+                        Just (SkewY x _) -> x
                         _ -> 0.0
                   in
-                    SkewY unit (val from to)
+                    SkewY (val from to) unit
 
                 Perspective to -> 
                   let
                      from =
                       case prev of
-                        Just (SkewY _ x) -> x
+                        Just (SkewY x _) -> x
                         _ -> 0.0
                   in
                     Perspective (val from to)
@@ -1038,8 +1038,8 @@ renderValue : StyleProperty Static -> String
 renderValue prop  =
             let
               val a = toString a
-              renderLength unit a = (val a) ++ lenUnit unit
-              renderAngle unit a =  (val a) ++ angleUnit unit
+              renderLength a unit = (val a) ++ lenUnit unit
+              renderAngle a unit =  (val a) ++ angleUnit unit
               renderList xs = "(" ++ (String.concat 
                               <| List.intersperse "," 
                               <| List.map toString xs) ++ ")"
@@ -1059,27 +1059,27 @@ renderValue prop  =
 
             in
               case prop of
-                Prop _ u a -> (val a) ++ u
+                Prop _ a u -> (val a) ++ u
 
                 Opacity a -> val a
-                Height unit a -> renderLength unit a
-                Width unit a -> renderLength unit a
-                Left unit a -> renderLength unit a
-                Top unit a -> renderLength unit a
-                Right unit a -> renderLength unit a
-                Bottom unit a -> renderLength unit a
+                Height a unit -> renderLength a unit
+                Width a unit -> renderLength a unit
+                Left a unit -> renderLength a unit
+                Top a unit -> renderLength a unit
+                Right a unit -> renderLength a unit
+                Bottom a unit -> renderLength a unit
 
-                Padding unit a       -> renderLength unit a 
-                PaddingLeft unit a   -> renderLength unit a 
-                PaddingRight unit a  -> renderLength unit a
-                PaddingTop unit a    -> renderLength unit a 
-                PaddingBottom unit a -> renderLength unit a 
+                Padding a unit       -> renderLength a unit 
+                PaddingLeft a unit   -> renderLength a unit 
+                PaddingRight a unit  -> renderLength a unit
+                PaddingTop a unit    -> renderLength a unit 
+                PaddingBottom a unit -> renderLength a unit 
 
-                Margin unit a       -> renderLength unit a 
-                MarginLeft unit a   -> renderLength unit a 
-                MarginRight unit a  -> renderLength unit a 
-                MarginTop unit a    -> renderLength unit a 
-                MarginBottom unit a -> renderLength unit a 
+                Margin a unit       -> renderLength a unit 
+                MarginLeft a unit   -> renderLength a unit 
+                MarginRight a unit  -> renderLength a unit 
+                MarginTop a unit    -> renderLength a unit 
+                MarginBottom a unit -> renderLength a unit 
 
                 Color unit x y z    -> 
                       (colorUnit unit) ++ renderIntList [x,y,z]
@@ -1094,19 +1094,19 @@ renderValue prop  =
                       (colorAUnit unit) ++ renderColorA (x,y,z,a)
 
 
-                Translate unit a1 a2 -> 
-                        "translate(" ++ (renderLength unit a1) 
-                              ++ "," ++ (renderLength unit a2) 
+                Translate a1 a2 unit -> 
+                        "translate(" ++ (renderLength a1 unit) 
+                              ++ "," ++ (renderLength a2 unit) 
                               ++ ")"
 
-                Translate3d unit a1 a2 a3 -> 
-                          "translate3d(" ++ (renderLength unit a1) 
-                                 ++ "," ++ (renderLength unit a2) 
-                                 ++  "," ++ (renderLength unit a3) 
+                Translate3d a1 a2 a3 unit -> 
+                          "translate3d(" ++ (renderLength a1 unit) 
+                                 ++ "," ++ (renderLength a2 unit) 
+                                 ++  "," ++ (renderLength a3 unit) 
                                  ++ ")"
 
-                TranslateX unit a -> "translateX(" ++ renderLength unit a ++ ")"
-                TranslateY unit a -> "translateY(" ++ renderLength unit a ++ ")"
+                TranslateX a unit -> "translateX(" ++ renderLength a unit ++ ")"
+                TranslateY a unit -> "translateY(" ++ renderLength a unit ++ ")"
                 Scale a1 -> "scale(" ++ (val a1)  ++ ")"
                 Scale3d a1 a2 a3 -> "scale3d(" ++ (val a1) 
                                         ++ "," ++ (val a2) 
@@ -1115,22 +1115,22 @@ renderValue prop  =
                 ScaleX a -> "scaleX(" ++ val a ++ ")"
                 ScaleY a -> "scaleY(" ++ val a ++ ")"
                 ScaleZ a -> "scaleZ(" ++ val a ++ ")"
-                Rotate unit a -> "rotate(" ++ renderAngle unit a ++ ")"
-                Rotate3d unit a1 a2 a3 a4 -> 
+                Rotate a unit -> "rotate(" ++ renderAngle a unit ++ ")"
+                Rotate3d a1 a2 a3 a4 unit -> 
                                           "rotate3d(" ++ (val a1) 
                                               ++ "," ++ (val a2) 
                                               ++ "," ++ (val a3) 
-                                              ++ "," ++ (renderAngle unit a4) 
+                                              ++ "," ++ (renderAngle a4 unit) 
                                               ++ ")"
 
-                RotateX unit a -> "rotateX(" ++ renderAngle unit a ++ ")"
-                RotateY unit a -> "rotateY(" ++renderAngle unit a ++ ")"
-                Skew unit a1 a2 -> 
-                              "skew(" ++ (renderAngle unit a1) 
-                               ++ "," ++ (renderAngle unit a2) 
+                RotateX a unit -> "rotateX(" ++ renderAngle a unit ++ ")"
+                RotateY a unit -> "rotateY(" ++renderAngle a unit ++ ")"
+                Skew a1 a2 unit -> 
+                              "skew(" ++ (renderAngle a1 unit) 
+                               ++ "," ++ (renderAngle a2 unit) 
                                ++ ")"
-                SkewX unit a -> "skewX(" ++ renderAngle unit a ++ ")"
-                SkewY unit a -> "skewY(" ++ renderAngle unit a ++ ")"
+                SkewX a unit -> "skewX(" ++ renderAngle a unit ++ ")"
+                SkewY a unit -> "skewY(" ++ renderAngle a unit ++ ")"
                 Perspective a -> "perspective(" ++ (val a) ++ ")"
 
                 Matrix a b c x y z -> 
@@ -1149,26 +1149,26 @@ renderValue prop  =
 propId : StyleProperty a -> String
 propId prop =
         case prop of
-          Prop name unit _ -> name ++ unit
-          Opacity _  -> "opacity"
-          Height unit _ -> "height" ++ (lenUnit unit)
-          Width unit _  -> "width" ++ (lenUnit unit)
-          Left unit _   -> "left" ++ (lenUnit unit)
-          Right unit _  -> "right" ++ (lenUnit unit)
-          Bottom unit _ -> "bottom" ++ (lenUnit unit)
-          Top unit _    -> "top" ++ (lenUnit unit)
+          Prop name _ unit -> name ++ unit
+          Opacity _ -> "opacity"
+          Height _ unit -> "height" ++ (lenUnit unit)
+          Width _ unit  -> "width" ++ (lenUnit unit)
+          Left _ unit   -> "left" ++ (lenUnit unit)
+          Right _ unit  -> "right" ++ (lenUnit unit)
+          Bottom _ unit -> "bottom" ++ (lenUnit unit)
+          Top _ unit    -> "top" ++ (lenUnit unit)
 
-          Padding unit _      -> "padding" ++ (lenUnit unit)
-          PaddingLeft unit _  -> "padding-left" ++ (lenUnit unit)
-          PaddingRight unit _ -> "padding-right" ++ (lenUnit unit)
-          PaddingTop unit _   -> "padding-top" ++ (lenUnit unit)
-          PaddingBottom unit _-> "padding-bottom" ++ (lenUnit unit)
+          Padding _ unit      -> "padding" ++ (lenUnit unit)
+          PaddingLeft _ unit  -> "padding-left" ++ (lenUnit unit)
+          PaddingRight _ unit -> "padding-right" ++ (lenUnit unit)
+          PaddingTop _ unit   -> "padding-top" ++ (lenUnit unit)
+          PaddingBottom _ unit-> "padding-bottom" ++ (lenUnit unit)
 
-          Margin unit _      -> "margin" ++ (lenUnit unit)
-          MarginLeft unit _  -> "margin-left" ++ (lenUnit unit)
-          MarginRight unit _ -> "margin-right" ++ (lenUnit unit)
-          MarginTop unit _   -> "margin-top" ++ (lenUnit unit)
-          MarginBottom unit _-> "margin-bottom" ++ (lenUnit unit)
+          Margin _ unit      -> "margin" ++ (lenUnit unit)
+          MarginLeft _ unit  -> "margin-left" ++ (lenUnit unit)
+          MarginRight _ unit -> "margin-right" ++ (lenUnit unit)
+          MarginTop _ unit   -> "margin-top" ++ (lenUnit unit)
+          MarginBottom _ unit-> "margin-bottom" ++ (lenUnit unit)
 
           Color unit _ _ _    -> "color" ++ (colorUnit unit)
           BackgroundColor unit _ _ _ -> "background-color" ++ (colorUnit unit)
@@ -1178,22 +1178,22 @@ propId prop =
 
           Matrix _ _ _ _ _ _ -> "matrix"
           Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "matrix3d"
-          Translate unit _ _ -> "translate" ++ (lenUnit unit)
-          Translate3d unit _ _ _ -> "translate3d"  ++ (lenUnit unit)
-          TranslateX unit _ -> "translatex" ++ (lenUnit unit)
-          TranslateY unit _ -> "translatey" ++ (lenUnit unit)
+          Translate _ _ unit -> "translate" ++ (lenUnit unit)
+          Translate3d _ _ _ unit -> "translate3d"  ++ (lenUnit unit)
+          TranslateX _ unit -> "translatex" ++ (lenUnit unit)
+          TranslateY _ unit -> "translatey" ++ (lenUnit unit)
           Scale _        -> "scale"
           Scale3d _ _ _  -> "scale3d"
           ScaleX _   -> "scalex"
           ScaleY _   -> "scaley"
           ScaleZ _   -> "scalez"
-          Rotate unit _ -> "rotate" ++ (angleUnit unit)
-          Rotate3d unit _ _ _ _ -> "rotate3d" ++ (angleUnit unit)
-          RotateX unit _   -> "rotatex" ++ (angleUnit unit)
-          RotateY unit _   -> "rotatey" ++ (angleUnit unit)
-          Skew unit _ _    -> "skew" ++ (angleUnit unit)
-          SkewX unit _     -> "skewx" ++ (angleUnit unit)
-          SkewY unit _     -> "skewy" ++ (angleUnit unit)
+          Rotate _ unit -> "rotate" ++ (angleUnit unit)
+          Rotate3d _ _ _ _ unit -> "rotate3d" ++ (angleUnit unit)
+          RotateX _ unit   -> "rotatex" ++ (angleUnit unit)
+          RotateY _ unit   -> "rotatey" ++ (angleUnit unit)
+          Skew _ _ unit   -> "skew" ++ (angleUnit unit)
+          SkewX _ unit     -> "skewx" ++ (angleUnit unit)
+          SkewY _ unit     -> "skewy" ++ (angleUnit unit)
           Perspective _ -> "perspective"
 
 

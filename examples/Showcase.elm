@@ -50,7 +50,7 @@ update action model =
                               -- as opposed to interrupting
                   <| UI.duration (2*second)
                   <| UI.props 
-                      [ UI.Rotate UI.Turn (UI.add 1)
+                      [ UI.Rotate (UI.add 1) UI.Turn 
                       ] 
                   <| [] -- every animation has to be 'started' with an empty list
       in
@@ -65,9 +65,9 @@ update action model =
                               -- as opposed to interrupting
                   <| UI.duration (2*second)
                   <| UI.props 
-                      [ UI.RotateX UI.Turn (UI.add 1)
-                      , UI.RotateY UI.Turn (UI.add 1)
-                      , UI.Rotate UI.Turn (UI.add 1)
+                      [ UI.RotateX (UI.add 1) UI.Turn
+                      , UI.RotateY (UI.add 1) UI.Turn
+                      , UI.Rotate (UI.add 1) UI.Turn
                       ] 
                   <| [] -- every animation has to be 'started' with an empty list
       in
@@ -85,7 +85,7 @@ update action model =
                   <| UI.duration (2*second)
                   <| UI.easing easeInBounce
                   <| UI.props 
-                      [ UI.Rotate UI.Turn (UI.add 1)
+                      [ UI.Rotate (UI.add 1) UI.Turn 
                       ] 
                   <| [] -- every animation has to be 'started' with an empty list
       in
@@ -199,10 +199,10 @@ box address i widget =
 
 
 initialWidgetStyle = UI.initStyle 
-                        [ UI.Rotate UI.Turn 0.0
-                        , UI.RotateX UI.Turn 0.0
-                        , UI.RotateY UI.Turn 0.0
-                        , UI.Rotate UI.Turn 0.0
+                        [ UI.Rotate 0.0 UI.Turn
+                        , UI.RotateX 0.0 UI.Turn
+                        , UI.RotateY 0.0 UI.Turn
+                        , UI.Rotate 0.0 UI.Turn
                         , UI.Opacity 1
                         , UI.BackgroundColorA UI.RGBA 58 40 69 1.0
                         , UI.ColorA UI.RGBA 255 255 255 1.0
