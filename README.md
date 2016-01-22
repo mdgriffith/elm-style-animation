@@ -18,7 +18,7 @@ My focus was to create something I could use as a UI designer to prototype anima
 
 ElmHtmlAnimations supports __Declarative animations__, which tend to be very intuitive. State what the style should be, and it will animate to that style. 
 
-__Animations can be smoothely interrupted.  Or chained together.__   Its up to you.  
+__Animations can be smoothly interrupted.  Or chained together.__   Its up to you.  
 
 __Relative animation__ such as using `+=` and `-=` to animate a property based on its previous value is also available.  Though, be aware mixing this and animation interruption can lead to unanticipated results.
 
