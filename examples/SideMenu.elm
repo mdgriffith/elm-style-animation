@@ -38,7 +38,8 @@ update action model =
                  <| UI.props 
                      [ UI.Left UI.Px (UI.to 0) 
                      , UI.Opacity (UI.to 1)
-                     ]
+                     ] []
+
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )
@@ -52,7 +53,7 @@ update action model =
                <| UI.props 
                       [ UI.Left UI.Px (UI.to -350) 
                       , UI.Opacity (UI.to 0)
-                      ]
+                      ] []
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )

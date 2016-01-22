@@ -5,11 +5,12 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List 
 
+import Debug
 
 type alias Model =
             { start : Maybe Time
             , elapsed : Time
-            , anim : Maybe (StyleAnimation Dynamic)
+            , anim : List (StyleAnimation Dynamic)
             , previous : Style Static
             }
 
@@ -18,11 +19,11 @@ type alias Static = Float
 
 
 type alias Dynamic 
-        = (Float -> Float -> Float)
+         = (Float -> Float -> Float)
 
 
 type alias Style a
-        = List (StyleProperty a)
+         = List (StyleProperty a)
 
 
 type alias StyleAnimation a =
@@ -30,6 +31,9 @@ type alias StyleAnimation a =
             , duration : Time
             , ease : (Float -> Float)
             }
+
+
+--type alias Queue a = List a 
 
 
 type StyleProperty a
@@ -119,7 +123,8 @@ type ColorAlphaType
         | HSLA
 
 type Action 
-        = Begin (StyleAnimation Dynamic)
+        = Queue (List (StyleAnimation Dynamic))
+        | Interrupt (List (StyleAnimation Dynamic))
         | Tick Time
 
 
@@ -127,7 +132,7 @@ type Action
 empty : Model
 empty = { elapsed = 0.0
         , start = Nothing
-        , anim = Nothing
+        , anim = []
         , previous = []
         }
 
@@ -163,19 +168,26 @@ update : Action -> Model -> ( Model, Effects Action )
 update action model = 
         case action of
 
-          Begin dynamicAnims ->
-              let
+          Queue anims ->
+                ( { model | anim = model.anim ++ anims }
+                , Effects.tick Tick )
+
+
+          Interrupt anims ->
+             let
+                currentAnim = List.head model.anim
                 previous = 
-                  case model.anim of
+                  case currentAnim of
                     Nothing -> model.previous
                     Just a -> 
                       bake model.elapsed a model.previous
               in
-                ( { model | anim = Just dynamicAnims
+                ( { model | anim = anims
                           , elapsed = 0.0
                           , start = Nothing 
                           , previous = previous }
                 , Effects.tick Tick )
+
 
 
           Tick now ->
@@ -186,53 +198,83 @@ update action model =
                   Just t -> t
               newElapsed = now - start
 
-              (done, finalElapsed) =
-                 case model.anim of
-                    Nothing -> (False, newElapsed)
-                    Just a ->
-                      if newElapsed >= a.duration then
-                        (True, a.duration)
-                      else
-                        (False, newElapsed)
+              currentAnim = List.head model.anim
+              remaining = List.tail model.anim
             in
-              if done then
-                let
-                   previous = 
-                    case model.anim of
-                      Nothing -> model.previous
-                      Just a -> 
-                        bake finalElapsed a model.previous
-                in
-                  ( { model | elapsed = finalElapsed
-                            , previous = previous 
-                            , start = Nothing 
-                            , anim = Nothing }
-                  , Effects.none )
-              else
-                ( { model | elapsed = finalElapsed 
-                          , start = Just start }
-                , Effects.tick Tick )
+              case currentAnim of
+                Nothing ->
+                   ( { model | elapsed = 0.0 
+                             , start = Nothing
+                             , previous = model.previous
+                             , anim = model.anim }
+                   , Effects.none )
+
+                Just current ->
+                  if newElapsed >= current.duration then
+                    let
+                      anims = 
+                        case remaining of
+                          Nothing -> []
+                          Just a -> a
+
+                      previous = 
+                          bake current.duration current model.previous
+
+                      resetElapsed = 
+                          newElapsed - current.duration
+                              
+                    in
+                      ( { model | elapsed = resetElapsed
+                                , start = Just (now - resetElapsed)
+                                , previous = previous
+                                , anim = anims }
+                      , Effects.tick Tick )
+
+                  else
+                     ( { model | elapsed = newElapsed 
+                               , start = Just start
+                               }
+                     , Effects.tick Tick )
+
+
 
 
 -- Convenience Functions
-animateOn : Model -> StyleAnimation Dynamic -> ( Model, Effects Action )
+animateOn : Model -> List (StyleAnimation Dynamic) -> ( Model, Effects Action )
 animateOn model anims = animate anims model
 
-animate : StyleAnimation Dynamic -> Model -> ( Model, Effects Action )
-animate anims model = update (Begin anims) model
+animate : List (StyleAnimation Dynamic) -> Model -> ( Model, Effects Action )
+animate anims model = update (Interrupt anims) model
 
 
-props : List (StyleProperty Dynamic) -> StyleAnimation Dynamic
-props p = { emptyAnim | target = p} 
+queueOn : Model -> List (StyleAnimation Dynamic) -> ( Model, Effects Action )
+queueOn model anims = animate anims model
+
+queue : List (StyleAnimation Dynamic) -> Model -> ( Model, Effects Action )
+queue anims model = update (Queue anims) model
 
 
-duration : Time -> StyleAnimation Dynamic -> StyleAnimation Dynamic
-duration dur anim = { anim | duration = dur }
-
-easing : (Float -> Float) -> StyleAnimation Dynamic -> StyleAnimation Dynamic
-easing ease anim = { anim | ease = ease }
+props : List (StyleProperty Dynamic) -> List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+props p anim = updateOrCreate anim (\anim -> { anim | target = p})
 
 
+duration : Time -> List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+duration dur anim = updateOrCreate anim (\anim -> { anim | duration = dur })
+      
+
+easing : (Float -> Float) -> List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+easing ease anim = updateOrCreate anim (\anim -> { anim | ease = ease })
+
+
+andThen : List (StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+andThen x = emptyAnim :: x
+
+
+updateOrCreate : List (StyleAnimation Dynamic) -> (StyleAnimation Dynamic -> StyleAnimation Dynamic) -> List (StyleAnimation Dynamic)
+updateOrCreate styles fn =
+                 case styles of
+                    [] -> [fn emptyAnim] 
+                    cur::rem -> (fn cur)::rem
 
 
 
@@ -272,7 +314,7 @@ forwardTo i widgets styleGet styleSet fn =
 -- Takes 
 --     * provided value
 --     * previous value
---     * current time
+--     * current normalized time (0.0-1.0) 
 --     * returns current value
 
 to : Float -> Float -> Float -> Float
@@ -319,40 +361,43 @@ findFrom state prop =
 
 render : Model -> List (String, String)
 render model = 
-        case model.anim of
-          Nothing -> 
-            let
-              rendered = 
-                  List.map renderProp model.previous
+        let
+          currentAnim = List.head model.anim
+        in
+          case currentAnim of
+            Nothing -> 
+              let
+                rendered = 
+                    List.map renderProp model.previous
 
-              transformsNprops = 
-                  List.partition (\s -> fst s == "transform") rendered
+                transformsNprops = 
+                    List.partition (\s -> fst s == "transform") rendered
 
-              combinedTransforms = ("transform", 
-                    String.concat (List.intersperse " " 
-                    (List.map (snd) (fst transformsNprops))))
-            in
-              snd transformsNprops ++ [combinedTransforms]
+                combinedTransforms = ("transform", 
+                      String.concat (List.intersperse " " 
+                      (List.map (snd) (fst transformsNprops))))
+              in
+                snd transformsNprops ++ [combinedTransforms]
 
 
-          Just anim ->
-            -- Combine all transform properties
-            let
+            Just anim ->
+              -- Combine all transform properties
+              let
 
-              baked = bake model.elapsed anim model.previous
+                baked = bake model.elapsed anim model.previous
 
-              rendered = 
-                  List.map renderProp baked
+                rendered = 
+                    List.map renderProp baked
 
-              transformsNprops = 
-                  List.partition (\s -> fst s == "transform") rendered
+                transformsNprops = 
+                    List.partition (\s -> fst s == "transform") rendered
 
-              combinedTransforms = ("transform", 
-                    String.concat (List.intersperse " " 
-                    (List.map (snd) (fst transformsNprops))))
-            in
-              snd transformsNprops ++ [combinedTransforms]
-               
+                combinedTransforms = ("transform", 
+                      String.concat (List.intersperse " " 
+                      (List.map (snd) (fst transformsNprops))))
+              in
+                snd transformsNprops ++ [combinedTransforms]
+                 
 
 
 renderProp : StyleProperty Static -> (String, String)
@@ -1024,12 +1069,6 @@ renderValue prop  =
                            
 
 
-done : Model -> Time -> Bool
-done model elapsed =
-        case model.anim of
-          Nothing -> True
-          Just a ->
-            elapsed >= a.duration
 
 
 propId : StyleProperty a -> String

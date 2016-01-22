@@ -47,7 +47,8 @@ update action model =
                       [ UI.RotateX UI.Turn (UI.add 1)
                       , UI.RotateY UI.Turn (UI.add 1)
                       , UI.Rotate UI.Turn (UI.add 1)
-                      ]
+                      ] 
+                  <| []
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -57,15 +58,23 @@ update action model =
        let 
           (widgets, fx) = 
               forwardToWidget i model.widgets
-                    <| UI.animate
-                    <| UI.duration (2*second)
-                    <| UI.props 
-                        [ UI.BackgroundColorA 
-                              UI.RGBA (UI.to 255) (UI.to 0) (UI.to 0) (UI.to 1.0) 
-                        , UI.ColorA 
-                              UI.RGBA (UI.to 0) (UI.to 0) (UI.to 0) (UI.to 1.0) 
-                        ] 
-                        
+                      <| UI.animate
+                          <| UI.duration (2*second)
+                          <| UI.props 
+                              [ UI.BackgroundColorA 
+                                    UI.RGBA (UI.to 255) (UI.to 0) (UI.to 0) (UI.to 1.0) 
+                              , UI.ColorA 
+                                    UI.RGBA (UI.to 0) (UI.to 0) (UI.to 0) (UI.to 1.0) 
+                              ] 
+                      <| UI.andThen
+                          <| UI.duration (2*second)
+                          <| UI.props 
+                              [ UI.BackgroundColorA 
+                                    UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
+                              , UI.ColorA 
+                                    UI.RGBA (UI.to 0) (UI.to 0) (UI.to 255) (UI.to 1.0) 
+                              ] [] 
+
         in
           ( { model | widgets = widgets }
           , Effects.map (Animate i) fx )

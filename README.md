@@ -17,9 +17,10 @@ My focus was to create something I can use to prototype quickly and accurately a
 
  * CSS Units are type checked
  * Declarative animations.  State what the style should be, and it will animate to that style.
- * Animations can be smoothely interrupted.
+ * Animations can be smoothely interrupted.  Or Queued up!
  * Custom easing functions can be used (such as [these](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions))
- * += and -= can be used to animate a property based on its previous value
+ * += and -= can be used to animate a property based on its previous value 
+      * (Though, be aware, mixing this and animation interruption can lead to unanticipated results)
  * Infrastructure for more complicated animations, such as moving along a path, is provided.
 
 
