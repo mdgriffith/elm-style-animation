@@ -11,79 +11,30 @@ import Time exposing (Time, second)
 import String
 import List
 
-
-
 type alias Model =
             { start : Maybe Time
             , elapsed : Time
-            , anim : Maybe StyleAnimation
+            , anim : Maybe (StyleAnimation Dynamic)
             , previous : Style Static
             }
 
-style : Style Static -> Model
-style sty = { empty | previous = sty }
+
+type alias Static = Float
 
 
-empty : Model
-empty = { elapsed = 0.0
-        , start = Nothing
-        , anim = Nothing
-        , previous = []
-        }
+type alias Dynamic 
+        = (Float -> Float -> Float)
 
-emptyAnimation : StyleAnimation
-emptyAnimation = { target = []
-                 , duration = defaultDuration
-                 , ease = defaultEasing 
-                 }
-
-
-defaultDuration : Float
-defaultDuration = 0.4 * second
-
-defaultEasing : Float -> Float
-defaultEasing x = (1 - cos (pi*x))/2
-
-
-type alias StyleAnimation =
-            { target : Style Static
-            , duration : Time
-            , ease : (Float -> Float)
-            }
-
-type alias DynamicStyleAnimation = 
-            { target : Style Transition
-            , duration : Time
-            , ease : (Float -> Float)
-            }
-
-
-
-to : Float -> Float -> Float
-to t f = t
-
-add : Float -> Float -> Float
-add mod existing = existing + mod
-
-minus : Float -> Float -> Float
-minus mod existing = existing - mod
-
-
-(:=) : Float -> Float -> Float
-(:=) t f = t
-
-(+=) : Float -> Float -> Float
-(+=) mod prev = prev + mod
-
-(-=) : Float -> Float -> Float
-(-=) mod prev = prev + mod
 
 type alias Style a
         = List (StyleProperty a)
 
-type alias Static = Float
 
-type alias Transition = (Float -> Float)
+type alias StyleAnimation a =
+            { target : Style a
+            , duration : Time
+            , ease : (Float -> Float)
+            }
 
 
 type StyleProperty a
@@ -137,7 +88,7 @@ type StyleProperty a
         | SkewY Angle a
         | Perspective a
 
-
+-- Units
 type Length
       = Px
       | Percent
@@ -172,12 +123,39 @@ type ColorAlphaType
         | HSLA
 
 type Action 
-        = Begin DynamicStyleAnimation
+        = Begin (StyleAnimation Dynamic)
         | Tick Time
 
 
 
---backFill 
+empty : Model
+empty = { elapsed = 0.0
+        , start = Nothing
+        , anim = Nothing
+        , previous = []
+        }
+
+
+initStyle : Style Static -> Model
+initStyle sty = { empty | previous = sty }
+
+
+emptyAnimation : StyleAnimation Static
+emptyAnimation = { target = []
+                 , duration = defaultDuration
+                 , ease = defaultEasing 
+                 }
+
+
+defaultDuration : Float
+defaultDuration = 0.4 * second
+
+
+defaultEasing : Float -> Float
+defaultEasing x = (1 - cos (pi*x))/2
+
+
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model = 
@@ -187,7 +165,7 @@ update action model =
 
               let
                 -- Convert dynamic to static
-                anims = makeStatic dynamicAnims model.previous
+                --anims = makeStatic dynamicAnims model.previous
 
                 previous = 
                   case model.anim of
@@ -195,7 +173,7 @@ update action model =
                     Just a -> 
                       bake model.elapsed a model.previous
               in
-                ( { model | anim = Just anims
+                ( { model | anim = Just dynamicAnims
                           , elapsed = 0.0
                           , start = Nothing 
                           , previous = previous }
@@ -237,21 +215,94 @@ update action model =
                           , start = Just start }
                 , Effects.tick Tick )
 
+
 -- Convenience Functions
+animateOn : Model -> StyleAnimation Dynamic -> ( Model, Effects Action )
+animateOn model anims = animate anims model
 
-animate : Model -> DynamicStyleAnimation -> ( Model, Effects Action )
-animate model anims = update (Begin anims) model
+animate : StyleAnimation Dynamic -> Model -> ( Model, Effects Action )
+animate anims model = update (Begin anims) model
 
 
-props : List (StyleProperty Transition) -> DynamicStyleAnimation
+props : List (StyleProperty Dynamic) -> StyleAnimation Dynamic
 props p  = { emptyAnimation | target = p} 
 
 
-duration : Time -> DynamicStyleAnimation -> DynamicStyleAnimation
+duration : Time -> StyleAnimation Dynamic -> StyleAnimation Dynamic
 duration dur anim = { anim | duration = dur }
 
-easing : (Float -> Float) -> DynamicStyleAnimation -> DynamicStyleAnimation
+easing : (Float -> Float) -> StyleAnimation Dynamic -> StyleAnimation Dynamic
 easing ease anim = { anim | ease = ease }
+
+
+-- Convenient function to forward an update to a style object contained in a type
+-- See the Showcase Example to get an idea of whats going on here
+forwardTo : Int -> List a -> (a -> Model) -> (a -> Model -> a) -> (Model -> (Model, (Effects Action))) -> (List a, Effects Action)
+forwardTo i widgets styleGet styleSet fn = 
+              let
+                applied = 
+                  List.indexedMap 
+                        (\j w -> 
+                            if j == i then
+                              let
+                                (newStyle, fx) = fn (styleGet w)
+                              in
+                                (styleSet w newStyle, fx)
+                            else
+                              (w, Effects.none)
+                        ) widgets
+
+                combineEffects ef1 ef2 =
+                          if ef1 == Effects.none then
+                            ef2
+                          else
+                            ef1
+                 
+              in
+                 List.foldr 
+                      (\x acc ->
+                          case acc of
+                            (ws, eff1) ->
+                              case x of
+                                (w, eff2) ->
+                                  (w::ws, combineEffects eff1 eff2)
+                      ) ([], Effects.none) applied
+
+-- Takes 
+--     * provided value
+--     * previous value
+--     * current time
+--     * returns current value
+
+to : Float -> Float -> Float -> Float
+to target from current = ((target-from) * current) + from
+
+
+add : Float -> Float -> Float -> Float
+add mod from current = 
+        let
+          target = from + mod
+        in
+          to target from current
+
+
+minus : Float -> Float -> Float -> Float
+minus mod from current = 
+        let
+          target = from - mod
+        in
+          to target from current
+
+
+(:=) : Float -> Float -> Float -> Float
+(:=) t f c = to t f c
+
+(+=) : Float -> Float -> Float -> Float
+(+=) t f c = add t f c
+
+(-=) : Float -> Float -> Float -> Float
+(-=) t f c = minus t f c
+
 
 
 findFrom : Style Static -> StyleProperty a -> Maybe (StyleProperty Static)
@@ -360,41 +411,6 @@ renderName styleProp =
               Perspective _ -> "transform"
 
 
-
-
-
-makeStatic : DynamicStyleAnimation -> Style Static -> StyleAnimation
-makeStatic dynamic previous = 
-                let
-                  from prop = findFrom previous prop 
-                  fn fr dynamicTo = dynamicTo fr
-                in
-                  { duration = dynamic.duration
-                  , ease = dynamic.ease
-                  , target = List.map (\p -> bakeProp p (from p) fn) dynamic.target
-                  }
-
-
-
-
-
-bake : Time -> StyleAnimation -> Style Static -> Style Static
-bake elapsed anim prev = 
-          let
-            percentComplete = elapsed / anim.duration
-            eased = anim.ease percentComplete
-            from prop = findFrom prev prop 
-
-            fn fr to = ((to-fr) * eased) + fr
-               
-            style = List.map (\p -> bakeProp p (from p) fn) anim.target
-          in
-            -- If properties are in previous, but not in the current animation
-            --, copy them over as is
-            fill style prev
-            
-
-
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
            List.foldl
@@ -402,13 +418,34 @@ fill new existing =
                       case findFrom acc x of
                         Nothing -> x::acc 
                         Just _ -> acc
-
                     ) new existing
 
 
+bake : Time -> StyleAnimation Dynamic -> Style Static -> Style Static
+bake elapsed anim prev = 
+          let
+            percentComplete =
+                 elapsed / anim.duration
 
-bakeProp : StyleProperty a ->  Maybe (StyleProperty Static) -> (Float -> a -> c) -> StyleProperty c
-bakeProp prop prev val =
+            eased = 
+                anim.ease percentComplete
+
+            style = 
+                List.map 
+                  (\p -> bakeProp p (findFrom prev p) eased) 
+                    anim.target
+          in
+            -- If properties are in previous
+            -- but not in the current animation
+            -- copy them over as is
+            fill style prev
+
+
+bakeProp : StyleProperty Dynamic -> Maybe (StyleProperty Static) -> Float -> StyleProperty Static
+bakeProp prop prev current =
+            let
+              val from fn = fn from current
+            in
               case prop of
                 Prop name unit to -> 
                   let
@@ -873,10 +910,6 @@ bakeProp prop prev val =
                                       (val 0.0 i) (val 0.0 j) (val 0.0 k) (val 0.0 l) 
                                       (val 0.0 m) (val 0.0 n) (val 0.0 o) (val 0.0 p)
 
-                   
-
-
-
 
 renderValue : StyleProperty Static -> String
 renderValue prop  =
@@ -887,6 +920,20 @@ renderValue prop  =
               renderList xs = "(" ++ (String.concat 
                               <| List.intersperse "," 
                               <| List.map toString xs) ++ ")"
+
+              renderIntList xs = renderList <| List.map round xs
+
+              renderColorA xyza =
+                  let
+                    int a = toString (round a)
+                  in
+                    case xyza of
+                      (x,y,z,a) ->
+                        "(" ++ int x ++ 
+                        "," ++ int y ++ 
+                        "," ++ int z ++ 
+                        "," ++ toString a ++ ")"
+
             in
               case prop of
                 Prop _ u a -> (val a) ++ u
@@ -912,17 +959,16 @@ renderValue prop  =
                 MarginBottom unit a -> renderLength unit a 
 
                 Color unit x y z    -> 
-                      (colorUnit unit) ++  renderList [x,y,x]
+                      (colorUnit unit) ++ renderIntList [x,y,z]
 
                 BackgroundColor unit x y z -> 
-                      (colorUnit unit) ++ renderList [x,y,x]
+                       (colorUnit unit) ++ renderIntList [x,y,z]
 
                 ColorA unit x y z a -> 
-                      (colorAUnit unit) ++ renderList [x,y,x,a]
+                      (colorAUnit unit) ++ renderColorA (x,y,z,a)
 
                 BackgroundColorA unit x y z a -> 
-                      (colorAUnit unit) ++ renderList [x,y,x,a]
-
+                      (colorAUnit unit) ++ renderColorA (x,y,z,a)
 
 
                 Translate unit a1 a2 -> 

@@ -13,7 +13,7 @@ import Time exposing (Time, second)
 import Signal exposing (Address)
 
 import ElmUI as UI
---import Multi
+
 
 -- MODEL
 
@@ -34,59 +34,18 @@ type Action = Rotate Int
             | Animate Int UI.Action
 
 
-
-
-forwardTo : Int -> List Widget -> (Widget -> (Widget, (Effects UI.Action))) -> (List Widget, Effects UI.Action)
-forwardTo i widgets fn = 
-              let
-                applied = 
-                  List.indexedMap 
-                        (\j w -> 
-                            if j == i then
-                              fn w
-                            else
-                              (w, Effects.none)
-                        ) widgets
-
-                combineEffects ef1 ef2 =
-                          if ef1 == Effects.none then
-                            ef2
-                          else
-                            ef1
-                 
-              in
-                 List.foldl 
-                      (\x acc ->
-                          case acc of
-                            (ws, eff1) ->
-                              case x of
-                                (w, eff2) ->
-                                  (w::ws, combineEffects eff1 eff2)
-                      ) ([], Effects.none) applied
-
-
-
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
     Rotate i ->
       let 
-        --(anim, fx) = Multi.animate i model.animations
-        --                    <| UI.props 
-        --                        [ UI.Rotate UI.Turn (UI.add 1) ]
-
-        (widgets, fx) = forwardTo i model.widgets
-                      (\w  ->
-                        let
-                          (newStyle, fx) = 
-                              UI.animate w.style
-                                    <| UI.props 
-                                      [ UI.Rotate UI.Turn (UI.add 1) ]
-                        in
-                          ({ w | style = newStyle }, fx)
-                      )
-                          
-                                  
+        (widgets, fx) = 
+            forwardToWidget i model.widgets 
+                  <| UI.animate
+                  <| UI.duration (2*second)
+                  <| UI.props 
+                      [ UI.RotateY UI.Turn (UI.add 1) ]
+                     
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -94,18 +53,15 @@ update action model =
 
     ChangeBGColor i ->
        let 
-          (widgets, fx) = forwardTo i model.widgets
-                        (\w  ->
-                          let
-                            (newStyle, fx) = 
-                                UI.animate w.style
-                                      <| UI.props 
-                                        [ UI.BackgroundColor UI.RGB (UI.to 255) (UI.to 255) (UI.to 255)]
-                          in
-                            ({ w | style = newStyle }, fx)
-                        )
-                            
-                                    
+          (widgets, fx) = 
+              forwardToWidget i model.widgets
+                    <| UI.animate
+                    <| UI.duration (2*second)
+                    <| UI.props 
+                        [ UI.BackgroundColorA 
+                              UI.RGBA (UI.to 255) (UI.to 0) (UI.to 0) (UI.to 0.5) 
+                        ]
+                        
         in
           ( { model | widgets = widgets }
           , Effects.map (Animate i) fx )
@@ -113,22 +69,15 @@ update action model =
 
     Animate i action ->
       let
-        (widgets, fx) = forwardTo i model.widgets 
-                        (\w -> 
-                            let
-                             (newStyle, fx) = UI.update action w.style
-                            in
-                              ( { w | style = newStyle }, fx)
-                        )
+        (widgets, fx) = 
+            forwardToWidget i model.widgets 
+                  <| UI.update action 
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
 
 
-
-
 -- VIEW
-
 
 view : Address Action -> Model -> Html
 view address model =
@@ -144,11 +93,6 @@ view address model =
               div [ style triggerStyle ]
 
                   (List.indexedMap (\i w -> box address i w) model.widgets)
-
-                  --[ box address model (Rotate 1) 1
-                  --, box address model Blink 2
-                  --, box address model (Rotate 3) 3
-                  --]
 
 
 box : Address Action -> Int -> Widget -> Html
@@ -173,11 +117,12 @@ box address i widget =
 
 
 
-initialWidgetStyle = UI.style 
+initialWidgetStyle = UI.initStyle 
                         [ UI.Rotate UI.Turn 0.0
                         , UI.RotateY UI.Turn 0.0
                         , UI.Opacity 1
-                        , UI.BackgroundColor UI.RGB 58 40 69
+                        , UI.BackgroundColorA UI.RGBA 58 40 69 1.0
+                        , UI.Color UI.RGB 255 255 255
                         , UI.Scale 1.0
                         ]
 
@@ -192,11 +137,11 @@ init = (
               , style = initialWidgetStyle
               , action = Rotate
               }
-          --, 
-          --    { label = "Change Background Color"
-          --    , style = initialWidgetStyle
-          --    , action = ChangeBGColor
-          --    }
+          , 
+              { label = "Change Background Color"
+              , style = initialWidgetStyle
+              , action = ChangeBGColor
+              }
           ]
       }, 
     Effects.none )
@@ -219,3 +164,16 @@ main =
 port tasks : Signal (Task.Task Never ())
 port tasks =
   app.tasks
+
+
+
+
+forwardToWidget : Int -> List Widget -> (UI.Model -> ( UI.Model, Effects UI.Action )) -> (List Widget, Effects UI.Action)
+forwardToWidget i widgets anim = UI.forwardTo 
+                                    i widgets -- index and list of widgets
+                                    .style -- widget style getter
+                                    (\w style -> { w | style = style }) -- widget style setter
+                                    anim -- animation
+
+
+

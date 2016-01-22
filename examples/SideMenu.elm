@@ -32,11 +32,13 @@ update action model =
   case action of
     Show ->
       let 
-        (anim, fx) = UI.animate model.menuAnimation
-                           <| UI.duration (0.4*second)
-                           <| UI.props [ UI.Left UI.Px (UI.to 0) 
-                                       , UI.Opacity (UI.to 1)
-                                       ]
+        (anim, fx) = 
+              UI.animateOn model.menuAnimation
+                 <| UI.duration (0.4*second)
+                 <| UI.props 
+                     [ UI.Left UI.Px (UI.to 0) 
+                     , UI.Opacity (UI.to 1)
+                     ]
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )
@@ -44,11 +46,13 @@ update action model =
 
     Hide ->
       let 
-        (anim, fx) = UI.animate model.menuAnimation
-                           <| UI.duration (0.4*second)
-                           <| UI.props [ UI.Left UI.Px (UI.to -350) 
-                                       , UI.Opacity (UI.to 0)
-                                       ]
+        (anim, fx) = 
+            UI.animateOn model.menuAnimation
+               <| UI.duration (0.4*second)
+               <| UI.props 
+                      [ UI.Left UI.Px (UI.to -350) 
+                      , UI.Opacity (UI.to 0)
+                      ]
       in
         ( { model | menuAnimation = anim }
         , Effects.map Animate fx )
@@ -107,7 +111,7 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { menuAnimation = UI.style [ UI.Left UI.Px -350.0 ]
+init = ( { menuAnimation = UI.initStyle [ UI.Left UI.Px -350.0 ]
          }
        , Effects.none )
 
