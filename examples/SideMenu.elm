@@ -16,7 +16,7 @@ import HtmlAnimation as UI
 
 
 type alias Model = 
-            { menuAnimation : UI.Model 
+            { menuStyle : UI.Model 
             }
 
 -- UPDATE
@@ -33,37 +33,37 @@ update action model =
     Show ->
       let 
         (anim, fx) = 
-              UI.animateOn model.menuAnimation
+              UI.animateOn model.menuStyle
                  <| UI.duration (0.4*second)
                  <| UI.props 
                      [ UI.Left UI.Px (UI.to 0) 
                      , UI.Opacity (UI.to 1)
-                     ] []
+                     ] [] -- every animation has to be 'started' with an empty list
 
       in
-        ( { model | menuAnimation = anim }
+        ( { model | menuStyle = anim }
         , Effects.map Animate fx )
 
 
     Hide ->
       let 
         (anim, fx) = 
-            UI.animateOn model.menuAnimation
+            UI.animateOn model.menuStyle
                <| UI.duration (0.4*second)
                <| UI.props 
                       [ UI.Left UI.Px (UI.to -350) 
                       , UI.Opacity (UI.to 0)
-                      ] []
+                      ] [] -- every animation has to be 'started' with an empty list
       in
-        ( { model | menuAnimation = anim }
+        ( { model | menuStyle = anim }
         , Effects.map Animate fx )
 
 
     Animate action ->
       let
-        (anim, fx) = UI.update action model.menuAnimation
+        (anim, fx) = UI.update action model.menuStyle
       in
-        ( { model | menuAnimation = anim }
+        ( { model | menuStyle = anim }
         , Effects.map Animate fx )
 
 
@@ -101,7 +101,7 @@ viewMenu address model =
                                 , ("color", "white")
                               ]
                 in
-                  div [ style (menuStyle ++ (UI.render model.menuAnimation)) ]
+                  div [ style (menuStyle ++ (UI.render model.menuStyle)) ]
                       [ h1 [] [ text "Hidden Menu"]
                       , ul [] 
                            [ li [] [text "Some things"]
@@ -112,7 +112,7 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { menuAnimation = UI.initStyle [ UI.Left UI.Px -350.0
+init = ( { menuStyle = UI.initStyle [ UI.Left UI.Px -350.0
                                         , UI.Opacity 0.0 
                                         ]
          }
