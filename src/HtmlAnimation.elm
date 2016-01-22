@@ -5,7 +5,6 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List 
 
-import Debug
 
 type alias Model =
             { start : Maybe Time
@@ -31,9 +30,6 @@ type alias StyleAnimation a =
             , duration : Time
             , ease : (Float -> Float)
             }
-
-
---type alias Queue a = List a 
 
 
 type StyleProperty a
@@ -126,7 +122,6 @@ type Action
         = Queue (List (StyleAnimation Dynamic))
         | Interrupt (List (StyleAnimation Dynamic))
         | Tick Time
-
 
 
 empty : Model
@@ -1129,6 +1124,7 @@ colorUnit color =
             case color of
               RGB -> "rgb"
               HSL -> "hsl"
+
 
 colorAUnit : ColorAlphaType -> String
 colorAUnit color =

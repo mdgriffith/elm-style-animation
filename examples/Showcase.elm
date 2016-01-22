@@ -13,6 +13,7 @@ import Time exposing (Time, second)
 import Signal exposing (Address)
 
 import HtmlAnimation as UI
+import Easing exposing (easeOutBounce)
 
 
 -- MODEL
@@ -30,7 +31,11 @@ type alias Widget =
 -- UPDATE
 
 type Action = Rotate Int
+            | RotateAllAxis Int
+            | RotateCustomEasingDuration Int
             | ChangeColors Int
+            | ChangeMultipleColors Int
+            | FadeInFadeOut Int
             | Animate Int UI.Action
 
 
@@ -44,9 +49,39 @@ update action model =
                   <| UI.animate
                   <| UI.duration (2*second)
                   <| UI.props 
+                      [ UI.Rotate UI.Turn (UI.add 1)
+                      ] 
+                  <| []
+      in
+        ( { model | widgets = widgets }
+        , Effects.map (Animate i) fx )
+
+    RotateAllAxis i ->
+      let 
+        (widgets, fx) = 
+            forwardToWidget i model.widgets 
+                  <| UI.animate
+                  <| UI.props 
                       [ UI.RotateX UI.Turn (UI.add 1)
                       , UI.RotateY UI.Turn (UI.add 1)
                       , UI.Rotate UI.Turn (UI.add 1)
+                      ] 
+                  <| []
+      in
+        ( { model | widgets = widgets }
+        , Effects.map (Animate i) fx )
+
+
+
+    RotateCustomEasingDuration i ->
+      let 
+        (widgets, fx) = 
+            forwardToWidget i model.widgets 
+                  <| UI.animate
+                  <| UI.duration (2*second)
+                  <| UI.easing easeOutBounce
+                  <| UI.props 
+                      [ UI.Rotate UI.Turn (UI.add 1)
                       ] 
                   <| []
       in
@@ -59,20 +94,47 @@ update action model =
           (widgets, fx) = 
               forwardToWidget i model.widgets
                       <| UI.animate
-                          <| UI.duration (2*second)
+                      <| UI.props 
+                          [ UI.BackgroundColorA 
+                                UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0) 
+                          ] 
+                      <| []
+                      
+        in
+          ( { model | widgets = widgets }
+          , Effects.map (Animate i) fx )
+
+
+    ChangeMultipleColors i ->
+       let 
+          (widgets, fx) = 
+              forwardToWidget i model.widgets
+                      <| UI.animate
                           <| UI.props 
                               [ UI.BackgroundColorA 
-                                    UI.RGBA (UI.to 255) (UI.to 0) (UI.to 0) (UI.to 1.0) 
-                              , UI.ColorA 
-                                    UI.RGBA (UI.to 0) (UI.to 0) (UI.to 0) (UI.to 1.0) 
+                                    UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
                               ] 
                       <| UI.andThen
-                          <| UI.duration (2*second)
                           <| UI.props 
                               [ UI.BackgroundColorA 
-                                    UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
-                              , UI.ColorA 
-                                    UI.RGBA (UI.to 0) (UI.to 0) (UI.to 255) (UI.to 1.0) 
+                                    UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                              ] [] 
+
+        in
+          ( { model | widgets = widgets }
+          , Effects.map (Animate i) fx )
+
+    FadeInFadeOut i ->
+       let 
+          (widgets, fx) = 
+              forwardToWidget i model.widgets
+                      <| UI.animate
+                          <| UI.props 
+                              [ UI.Opacity (UI.to 0)  
+                              ] 
+                      <| UI.andThen
+                          <| UI.props 
+                              [ UI.Opacity (UI.to 1)  
                               ] [] 
 
         in
@@ -153,9 +215,29 @@ init = (
               , action = Rotate
               }
           , 
+              { label = "Rotate in All Kinds of Ways"
+              , style = initialWidgetStyle
+              , action = RotateAllAxis
+              }
+          ,   
+              { label = "Rotate with custom easing and duration"
+              , style = initialWidgetStyle
+              , action = RotateCustomEasingDuration
+              }
+          , 
               { label = "Change Colors"
               , style = initialWidgetStyle
               , action = ChangeColors
+              }
+          , 
+              { label = "Change Through Multiple Colors"
+              , style = initialWidgetStyle
+              , action = ChangeMultipleColors
+              }
+          , 
+              { label = "FadeIn FadeOut"
+              , style = initialWidgetStyle
+              , action = FadeInFadeOut
               }
           ]
       }, 
