@@ -2,14 +2,14 @@
 
 import StartApp exposing (start)
 
-import Effects exposing (Effects, Never)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Effects exposing (Effects, Never)
+import Signal exposing (Address)
 import Task
 
 import Time exposing (second)
-import Signal exposing (Address)
 
 import ElmUI as UI
 

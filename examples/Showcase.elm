@@ -30,7 +30,7 @@ type alias Widget =
 -- UPDATE
 
 type Action = Rotate Int
-            | ChangeBGColor Int
+            | ChangeColors Int
             | Animate Int UI.Action
 
 
@@ -44,14 +44,17 @@ update action model =
                   <| UI.animate
                   <| UI.duration (2*second)
                   <| UI.props 
-                      [ UI.RotateY UI.Turn (UI.add 1) ]
-                     
+                      [ UI.RotateX UI.Turn (UI.add 1)
+                      , UI.RotateY UI.Turn (UI.add 1)
+                      , UI.Rotate UI.Turn (UI.add 1)
+                      ]
+                  <| UI.emptyAnim
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
 
 
-    ChangeBGColor i ->
+    ChangeColors i ->
        let 
           (widgets, fx) = 
               forwardToWidget i model.widgets
@@ -59,8 +62,12 @@ update action model =
                     <| UI.duration (2*second)
                     <| UI.props 
                         [ UI.BackgroundColorA 
-                              UI.RGBA (UI.to 255) (UI.to 0) (UI.to 0) (UI.to 0.5) 
-                        ]
+                              UI.RGBA (UI.to 255) (UI.to 0) (UI.to 0) (UI.to 1.0) 
+                        , UI.ColorA 
+                              UI.RGBA (UI.to 0) (UI.to 0) (UI.to 0) (UI.to 1.0) 
+                        ] 
+                    <| UI.emptyAnim
+
                         
         in
           ( { model | widgets = widgets }
@@ -119,10 +126,12 @@ box address i widget =
 
 initialWidgetStyle = UI.initStyle 
                         [ UI.Rotate UI.Turn 0.0
+                        , UI.RotateX UI.Turn 0.0
                         , UI.RotateY UI.Turn 0.0
+                        , UI.Rotate UI.Turn 0.0
                         , UI.Opacity 1
                         , UI.BackgroundColorA UI.RGBA 58 40 69 1.0
-                        , UI.Color UI.RGB 255 255 255
+                        , UI.ColorA UI.RGBA 255 255 255 1.0
                         , UI.Scale 1.0
                         ]
 
@@ -138,9 +147,9 @@ init = (
               , action = Rotate
               }
           , 
-              { label = "Change Background Color"
+              { label = "Change Colors"
               , style = initialWidgetStyle
-              , action = ChangeBGColor
+              , action = ChangeColors
               }
           ]
       }, 

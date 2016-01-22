@@ -1,15 +1,10 @@
-module ElmUI where
+module HtmlAnimation where
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
 import Effects exposing (Effects)
-import Signal exposing (Address)
-
 import Time exposing (Time, second)
+import String exposing (concat)
+import List 
 
-import String
-import List
 
 type alias Model =
             { start : Maybe Time
@@ -146,6 +141,12 @@ emptyAnimation = { target = []
                  , ease = defaultEasing 
                  }
 
+emptyAnim : StyleAnimation Dynamic
+emptyAnim =
+                 { target = []
+                 , duration = defaultDuration
+                 , ease = defaultEasing 
+                 }
 
 defaultDuration : Float
 defaultDuration = 0.4 * second
@@ -162,11 +163,7 @@ update action model =
         case action of
 
           Begin dynamicAnims ->
-
               let
-                -- Convert dynamic to static
-                --anims = makeStatic dynamicAnims model.previous
-
                 previous = 
                   case model.anim of
                     Nothing -> model.previous
@@ -178,6 +175,7 @@ update action model =
                           , start = Nothing 
                           , previous = previous }
                 , Effects.tick Tick )
+
 
           Tick now ->
             let
@@ -195,7 +193,6 @@ update action model =
                         (True, a.duration)
                       else
                         (False, newElapsed)
-
             in
               if done then
                 let
@@ -224,8 +221,8 @@ animate : StyleAnimation Dynamic -> Model -> ( Model, Effects Action )
 animate anims model = update (Begin anims) model
 
 
-props : List (StyleProperty Dynamic) -> StyleAnimation Dynamic
-props p  = { emptyAnimation | target = p} 
+props : List (StyleProperty Dynamic) -> StyleAnimation Dynamic -> StyleAnimation Dynamic
+props p anim = { anim | target = p} 
 
 
 duration : Time -> StyleAnimation Dynamic -> StyleAnimation Dynamic
@@ -233,6 +230,9 @@ duration dur anim = { anim | duration = dur }
 
 easing : (Float -> Float) -> StyleAnimation Dynamic -> StyleAnimation Dynamic
 easing ease anim = { anim | ease = ease }
+
+
+
 
 
 -- Convenient function to forward an update to a style object contained in a type
@@ -302,6 +302,8 @@ minus mod from current =
 
 (-=) : Float -> Float -> Float -> Float
 (-=) t f c = minus t f c
+
+
 
 
 

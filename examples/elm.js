@@ -10952,12 +10952,14 @@ Elm.ElmUI.make = function (_elm) {
       {ctor: "_Tuple2",_0: _U.list([]),_1: $Effects.none},
       applied);
    });
+   var andThen = F2(function (style1,style2) {    return style1;});
    var easing = F2(function (ease,anim) {    return _U.update(anim,{ease: ease});});
    var duration = F2(function (dur,anim) {    return _U.update(anim,{duration: dur});});
+   var props = F2(function (p,anim) {    return _U.update(anim,{target: p});});
    var defaultEasing = function (x) {    return (1 - $Basics.cos($Basics.pi * x)) / 2;};
    var defaultDuration = 0.4 * $Time.second;
+   var emptyAnim = {target: _U.list([]),duration: defaultDuration,ease: defaultEasing};
    var emptyAnimation = {target: _U.list([]),duration: defaultDuration,ease: defaultEasing};
-   var props = function (p) {    return _U.update(emptyAnimation,{target: p});};
    var empty = {elapsed: 0.0,start: $Maybe.Nothing,anim: $Maybe.Nothing,previous: _U.list([])};
    var initStyle = function (sty) {    return _U.update(empty,{previous: sty});};
    var Tick = function (a) {    return {ctor: "Tick",_0: a};};
@@ -11824,6 +11826,7 @@ Elm.ElmUI.make = function (_elm) {
                               ,empty: empty
                               ,initStyle: initStyle
                               ,emptyAnimation: emptyAnimation
+                              ,emptyAnim: emptyAnim
                               ,defaultDuration: defaultDuration
                               ,defaultEasing: defaultEasing
                               ,update: update
@@ -11832,6 +11835,7 @@ Elm.ElmUI.make = function (_elm) {
                               ,props: props
                               ,duration: duration
                               ,easing: easing
+                              ,andThen: andThen
                               ,forwardTo: forwardTo
                               ,to: to
                               ,add: add
@@ -11876,10 +11880,12 @@ Elm.Main.make = function (_elm) {
       return A5($ElmUI.forwardTo,i,widgets,function (_) {    return _.style;},F2(function (w,style) {    return _U.update(w,{style: style});}),anim);
    });
    var initialWidgetStyle = $ElmUI.initStyle(_U.list([A2($ElmUI.Rotate,$ElmUI.Turn,0.0)
+                                                     ,A2($ElmUI.RotateX,$ElmUI.Turn,0.0)
                                                      ,A2($ElmUI.RotateY,$ElmUI.Turn,0.0)
+                                                     ,A2($ElmUI.Rotate,$ElmUI.Turn,0.0)
                                                      ,$ElmUI.Opacity(1)
                                                      ,A5($ElmUI.BackgroundColorA,$ElmUI.RGBA,58,40,69,1.0)
-                                                     ,A4($ElmUI.Color,$ElmUI.RGB,255,255,255)
+                                                     ,A5($ElmUI.ColorA,$ElmUI.RGBA,255,255,255,1.0)
                                                      ,$ElmUI.Scale(1.0)]));
    var box = F3(function (address,i,widget) {
       var boxStyle = _U.list([{ctor: "_Tuple2",_0: "position",_1: "relative"}
@@ -11914,17 +11920,29 @@ Elm.Main.make = function (_elm) {
            var _p1 = A3(forwardToWidget,
            _p2,
            model.widgets,
-           $ElmUI.animate(A2($ElmUI.duration,2 * $Time.second,$ElmUI.props(_U.list([A2($ElmUI.RotateY,$ElmUI.Turn,$ElmUI.add(1))])))));
+           $ElmUI.animate(A2($ElmUI.duration,
+           2 * $Time.second,
+           A2($ElmUI.props,
+           _U.list([A2($ElmUI.RotateX,$ElmUI.Turn,$ElmUI.add(1)),A2($ElmUI.RotateY,$ElmUI.Turn,$ElmUI.add(1)),A2($ElmUI.Rotate,$ElmUI.Turn,$ElmUI.add(1))]),
+           $ElmUI.emptyAnim))));
            var widgets = _p1._0;
            var fx = _p1._1;
            return {ctor: "_Tuple2",_0: _U.update(model,{widgets: widgets}),_1: A2($Effects.map,Animate(_p2),fx)};
-         case "ChangeBGColor": var _p4 = _p0._0;
+         case "ChangeColors": var _p4 = _p0._0;
            var _p3 = A3(forwardToWidget,
            _p4,
            model.widgets,
-           $ElmUI.animate(A2($ElmUI.duration,
+           $ElmUI.animate(A2($ElmUI.andThen,
+           A2($ElmUI.props,
+           _U.list([A5($ElmUI.BackgroundColorA,$ElmUI.RGBA,$ElmUI.to(255),$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(1.0))
+                   ,A5($ElmUI.ColorA,$ElmUI.RGBA,$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(1.0))]),
+           $ElmUI.emptyAnim),
+           A2($ElmUI.duration,
            2 * $Time.second,
-           $ElmUI.props(_U.list([A5($ElmUI.BackgroundColorA,$ElmUI.RGBA,$ElmUI.to(255),$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(0.5))])))));
+           A2($ElmUI.props,
+           _U.list([A5($ElmUI.BackgroundColorA,$ElmUI.RGBA,$ElmUI.to(255),$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(1.0))
+                   ,A5($ElmUI.ColorA,$ElmUI.RGBA,$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(0),$ElmUI.to(1.0))]),
+           $ElmUI.emptyAnim)))));
            var widgets = _p3._0;
            var fx = _p3._1;
            return {ctor: "_Tuple2",_0: _U.update(model,{widgets: widgets}),_1: A2($Effects.map,Animate(_p4),fx)};
@@ -11934,11 +11952,11 @@ Elm.Main.make = function (_elm) {
            var fx = _p5._1;
            return {ctor: "_Tuple2",_0: _U.update(model,{widgets: widgets}),_1: A2($Effects.map,Animate(_p6),fx)};}
    });
-   var ChangeBGColor = function (a) {    return {ctor: "ChangeBGColor",_0: a};};
+   var ChangeColors = function (a) {    return {ctor: "ChangeColors",_0: a};};
    var Rotate = function (a) {    return {ctor: "Rotate",_0: a};};
    var init = {ctor: "_Tuple2"
               ,_0: {widgets: _U.list([{label: "Rotate",style: initialWidgetStyle,action: Rotate}
-                                     ,{label: "Change Background Color",style: initialWidgetStyle,action: ChangeBGColor}])}
+                                     ,{label: "Change Colors",style: initialWidgetStyle,action: ChangeColors}])}
               ,_1: $Effects.none};
    var app = $StartApp.start({init: init,update: update,view: view,inputs: _U.list([])});
    var main = app.html;
@@ -11949,7 +11967,7 @@ Elm.Main.make = function (_elm) {
                              ,Model: Model
                              ,Widget: Widget
                              ,Rotate: Rotate
-                             ,ChangeBGColor: ChangeBGColor
+                             ,ChangeColors: ChangeColors
                              ,Animate: Animate
                              ,update: update
                              ,view: view
