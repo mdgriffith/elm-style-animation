@@ -1,13 +1,14 @@
 {
+    "name": "elm-html-animation",
     "version": "1.0.0",
-    "summary": "helpful summary of your project, less than 80 characters",
-    "repository": "https://github.com/user/project.git",
+    "summary": "HTML Animations in Elm",
+    "repository": "https://github.com/mdgriffith/elm-html-animation.git",
     "license": "BSD3",
     "source-directories": [
         "src"
     ],
     "exposed-modules": [
-        "ElmUI"
+        "HtmlAnimation"
     ],
     "dependencies": {
         "elm-lang/core": "3.0.0 <= v < 4.0.0",

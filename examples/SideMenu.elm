@@ -11,7 +11,7 @@ import Task
 
 import Time exposing (second)
 
-import ElmUI as UI
+import HtmlAnimation as UI
 
 
 
@@ -111,7 +111,9 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { menuAnimation = UI.initStyle [ UI.Left UI.Px -350.0 ]
+init = ( { menuAnimation = UI.initStyle [ UI.Left UI.Px -350.0
+                                        , UI.Opacity 0.0 
+                                        ]
          }
        , Effects.none )
 

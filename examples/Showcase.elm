@@ -2,17 +2,17 @@
 
 import StartApp exposing (start)
 
-import Effects exposing (Effects, Never)
-import Task
+
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Dict
+import Effects exposing (Effects, Never)
+import Task
 
 import Time exposing (Time, second)
 import Signal exposing (Address)
 
-import ElmUI as UI
+import HtmlAnimation as UI
 
 
 -- MODEL
@@ -48,7 +48,6 @@ update action model =
                       , UI.RotateY UI.Turn (UI.add 1)
                       , UI.Rotate UI.Turn (UI.add 1)
                       ]
-                  <| UI.emptyAnim
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -66,8 +65,6 @@ update action model =
                         , UI.ColorA 
                               UI.RGBA (UI.to 0) (UI.to 0) (UI.to 0) (UI.to 1.0) 
                         ] 
-                    <| UI.emptyAnim
-
                         
         in
           ( { model | widgets = widgets }

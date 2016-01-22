@@ -83,6 +83,7 @@ type StyleProperty a
         | SkewY Angle a
         | Perspective a
 
+
 -- Units
 type Length
       = Px
@@ -221,8 +222,8 @@ animate : StyleAnimation Dynamic -> Model -> ( Model, Effects Action )
 animate anims model = update (Begin anims) model
 
 
-props : List (StyleProperty Dynamic) -> StyleAnimation Dynamic -> StyleAnimation Dynamic
-props p anim = { anim | target = p} 
+props : List (StyleProperty Dynamic) -> StyleAnimation Dynamic
+props p = { emptyAnim | target = p} 
 
 
 duration : Time -> StyleAnimation Dynamic -> StyleAnimation Dynamic
