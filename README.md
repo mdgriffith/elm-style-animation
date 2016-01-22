@@ -49,7 +49,7 @@ type alias Model = { style : UI.Model }
 init : Model
 init = { style = 
             UI.initStyle 
-                [ UI.Left UI.Px -350.0
+                [ UI.Left -350.0 UI.Px
                 , UI.Opacity 0.0 
                 ]
         }
@@ -64,7 +64,7 @@ Start the animation in your update function.
       animateOn model.style
          <| UI.duration (0.4*second)
          <| UI.props 
-             [ UI.Left UI.Px (UI.to 0) 
+             [ UI.Left (UI.to 0) UI.Px
              , UI.Opacity (UI.to 1)
              ]
          <| []
