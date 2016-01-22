@@ -15,20 +15,14 @@ module HtmlAnimation
     , andThen, forwardTo
     , to, add, minus
     , (:=), (+=), (-=)
-    ) 
-  where
-
-import Effects exposing (Effects)
-import Time exposing (Time, second)
-import String exposing (concat)
-import List 
+    ) where
 
 {-| This library is for animating css properties (and works well with elm-html).
 
 # Definition
-@docs Model, Style, StyleAnimation
+@docs Model, Style, StyleAnimation, Action
 
-# Style Properties and Units
+# All Animatable Style Properties and their Units
 @docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
 
 # Interrupting an animation with a new one
@@ -47,7 +41,10 @@ import List
 @docs to, add, minus, (:=), (+=), (-=)
 
 # Chaining animations together
-@doc andThen
+@docs andThen
+
+# Render a Model into css you can use
+@docs render, update
 
 # Managing a list of styled widgets
 @docs forwardTo
@@ -55,6 +52,14 @@ import List
 -}
 
 
+import Effects exposing (Effects)
+import Time exposing (Time, second)
+import String exposing (concat)
+import List 
+
+{-| Represent an animation state.  This includes a clock to keep time, a queue of style animations, and a reference to what the previous style was.
+
+-}
 type alias Model =
             { start : Maybe Time
             , elapsed : Time
@@ -69,11 +74,16 @@ type alias Static = Float
 type alias Dynamic 
          = (Float -> Float -> Float)
 
-
+{-| Represent a CSS style.
+This is done as a list of style properties with concrete/static values.
+-}
 type alias Style 
          = List (StyleProperty Static)
 
-
+{-| Represent a style animation.
+This is a list of StyleProperys, but instead of having a static value like '5', 
+it has a function that takes the previous value, the current time, and provides the current value.
+-}
 type alias StyleAnimation =
             { target : List (StyleProperty Dynamic)
             , duration : Time
@@ -81,8 +91,6 @@ type alias StyleAnimation =
             }
 
 {-| All currently animatable properties.
-The type variable 'a' is used so that static properties can be created
-
 -}
 type StyleProperty a
         = Prop String String a
@@ -105,7 +113,6 @@ type StyleProperty a
         | MarginRight Length a
         | MarginTop Length a
         | MarginBottom Length a
-
 
         -- Color
         | Color ColorFormat a a a
@@ -185,7 +192,7 @@ type Action
         | Interrupt (List StyleAnimation)
         | Tick Time
 
-
+-- private
 empty : Model
 empty = { elapsed = 0.0
         , start = Nothing
@@ -193,7 +200,7 @@ empty = { elapsed = 0.0
         , previous = []
         }
 
-
+-- private
 emptyAnimation : StyleAnimation
 emptyAnimation =
                  { target = []
@@ -207,17 +214,18 @@ initStyle : Style -> Model
 initStyle sty = { empty | previous = sty }
 
 
-
+-- private
 defaultDuration : Float
 defaultDuration = 0.4 * second
 
-
+-- private
 defaultEasing : Float -> Float
 defaultEasing x = (1 - cos (pi*x))/2
 
 
 
-
+{-| Update an animation.
+-}
 update : Action -> Model -> ( Model, Effects Action )
 update action model = 
         case action of
@@ -329,28 +337,40 @@ queue : List (StyleAnimation) -> Model -> ( Model, Effects Action )
 queue anims model = update (Queue anims) model
 
 {-| Same as queue, except with the arguments flipped.  This is useful when only animating only a single style. See animateOn for an example.
-
 -}
 queueOn : Model -> List (StyleAnimation) -> ( Model, Effects Action )
 queueOn model anims = animate anims model
 
+{-| Specify the properties that should be animated
 
+     UI.animateOn model.menuStyle
+                 <| UI.duration (0.4*second)
+                 <| UI.props 
+                     [ UI.Left UI.Px (UI.to 0) 
+                     , UI.Opacity (UI.to 1)
+                     ] [] -- every animation has to be 'started' with an empty list
+
+-}
 props : List (StyleProperty Dynamic) -> List (StyleAnimation) -> List (StyleAnimation)
 props p anim = updateOrCreate anim (\anim -> { anim | target = p})
 
-
+{-| Specify a duration for an animation.  The default is 400ms.
+-}
 duration : Time -> List (StyleAnimation) -> List (StyleAnimation)
 duration dur anim = updateOrCreate anim (\anim -> { anim | duration = dur })
       
-
+{-| Specify an easing function for an animation.  It is expected that values should start on 0 and end at 1.  The default is a sinusoidal
+in-out.
+-}
 easing : (Float -> Float) -> List (StyleAnimation) -> List (StyleAnimation)
 easing ease anim = updateOrCreate anim (\anim -> { anim | ease = ease })
 
-
+{-| Append another animation.
+-}
 andThen : List (StyleAnimation) -> List (StyleAnimation)
 andThen x = emptyAnimation :: x
 
-
+-- private
 updateOrCreate : List (StyleAnimation) -> (StyleAnimation -> StyleAnimation) -> List (StyleAnimation)
 updateOrCreate styles fn =
                  case styles of
@@ -358,9 +378,9 @@ updateOrCreate styles fn =
                     cur::rem -> (fn cur)::rem
 
 
-
--- Convenient function to forward an update to a style object contained in a type
--- See the Showcase Example to get an idea of whats going on here
+{-| Convenient function to forward an update to a style object contained in a type
+ See the Showcase Example to get an idea of whats going on here
+-}
 forwardTo : Int -> List a -> (a -> Model) -> (a -> Model -> a) -> (Model -> (Model, (Effects Action))) -> (List a, Effects Action)
 forwardTo i widgets styleGet styleSet fn = 
               let
@@ -392,16 +412,22 @@ forwardTo i widgets styleGet styleSet fn =
                                   (w::ws, combineEffects eff1 eff2)
                       ) ([], Effects.none) applied
 
--- Takes 
---     * provided value
---     * previous value
---     * current normalized time (0.0-1.0) 
---     * returns current value
 
+
+{-| Used for animating a StyleProperty to a value
+Takes 
+     * provided value
+     * previous value
+     * current normalized time (0.0-1.0) 
+     * returns current value
+
+-}
 to : Float -> Float -> Float -> Float
 to target from current = ((target-from) * current) + from
 
+{-| Used for animating a StyleProperty by adding to its existing value
 
+-}
 add : Float -> Float -> Float -> Float
 add mod from current = 
         let
@@ -409,7 +435,9 @@ add mod from current =
         in
           to target from current
 
+{-| Used for animating a StyleProperty by subtracting from its existing value
 
+-}
 minus : Float -> Float -> Float -> Float
 minus mod from current = 
         let
@@ -417,20 +445,28 @@ minus mod from current =
         in
           to target from current
 
+{-| Infix version of the above `to` function
 
+-}
 (:=) : Float -> Float -> Float -> Float
 (:=) t f c = to t f c
 
+{-| Infix version of the above `add` function
+
+-}
 (+=) : Float -> Float -> Float -> Float
 (+=) t f c = add t f c
 
+{-| Infix version of the above `minus` function
+
+-}
 (-=) : Float -> Float -> Float -> Float
 (-=) t f c = minus t f c
 
 
 
 
-
+-- private
 findProp : Style -> StyleProperty a -> Maybe (StyleProperty Static)
 findProp state prop =
             let
@@ -439,7 +475,11 @@ findProp state prop =
             in 
               findBy (matchPropID prop) state
 
+{-| Render into concrete css that can be directly applied to 'style' in elm-html
 
+    div [ style (UI.render widget.style) ] [ ]
+
+-}
 render : Model -> List (String, String)
 render model = 
         let
@@ -480,13 +520,13 @@ render model =
                 snd transformsNprops ++ [combinedTransforms]
                  
 
-
+-- private
 renderProp : StyleProperty Static -> (String, String)
 renderProp prop = ( renderName prop 
                   , renderValue prop
                   )
 
-
+-- private
 renderName : StyleProperty a -> String
 renderName styleProp = 
             case styleProp of
@@ -539,7 +579,7 @@ renderName styleProp =
               SkewY _ _ -> "transform"
               Perspective _ -> "transform"
 
-
+-- private
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
            List.foldl
@@ -549,7 +589,8 @@ fill new existing =
                         Just _ -> acc
                     ) new existing
 
-
+-- private
+-- Converts an animation into a Style that can be rendered.
 bake : Time -> StyleAnimation -> Style -> Style
 bake elapsed anim prev = 
           let
@@ -569,7 +610,7 @@ bake elapsed anim prev =
             -- copy them over as is
             fill style prev
 
-
+-- private
 bakeProp : StyleProperty Dynamic -> Maybe (StyleProperty Static) -> Float -> StyleProperty Static
 bakeProp prop prev current =
             let
@@ -991,7 +1032,8 @@ bakeProp prop prev current =
                                       (val 0.0 i) (val 0.0 j) (val 0.0 k) (val 0.0 l) 
                                       (val 0.0 m) (val 0.0 n) (val 0.0 o) (val 0.0 p)
 
-
+-- private
+-- renders a valid css value for a Style Property
 renderValue : StyleProperty Static -> String
 renderValue prop  =
             let
@@ -1103,7 +1145,7 @@ renderValue prop  =
 
 
 
-
+-- private
 propId : StyleProperty a -> String
 propId prop =
         case prop of
@@ -1156,21 +1198,21 @@ propId prop =
 
 
 
-
+-- private
 colorUnit : ColorFormat -> String
 colorUnit color =
             case color of
               RGB -> "rgb"
               HSL -> "hsl"
 
-
+-- private
 colorAUnit : ColorAlphaFormat -> String
 colorAUnit color =
             case color of
               RGBA -> "rgba"
               HSLA -> "hsla"
 
-
+-- private
 lenUnit : Length -> String
 lenUnit unit = 
           case unit of
@@ -1190,7 +1232,7 @@ lenUnit unit =
             Pt -> "pt"
             Pc -> "pc"
 
-
+-- private
 angleUnit : Angle -> String
 angleUnit unit = 
           case unit of
