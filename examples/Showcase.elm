@@ -46,7 +46,8 @@ update action model =
       let 
         (widgets, fx) = 
             forwardToWidget i model.widgets 
-                  <| UI.queue -- queue is used to queue up this animation
+                  <| UI.queue -- queue is used to queue up this animation 
+                              -- as opposed to interrupting
                   <| UI.duration (2*second)
                   <| UI.props 
                       [ UI.Rotate UI.Turn (UI.add 1)
@@ -60,7 +61,9 @@ update action model =
       let 
         (widgets, fx) = 
             forwardToWidget i model.widgets 
-                  <| UI.queue -- queue is used to queue up this animation as opposed to interrupt
+                  <| UI.queue -- queue is used to queue up this animation 
+                              -- as opposed to interrupting
+                  <| UI.duration (2*second)
                   <| UI.props 
                       [ UI.RotateX UI.Turn (UI.add 1)
                       , UI.RotateY UI.Turn (UI.add 1)
@@ -77,7 +80,8 @@ update action model =
       let 
         (widgets, fx) = 
             forwardToWidget i model.widgets 
-                  <| UI.queue -- queue is used to queue up this animation as opposed to interrupt
+                  <| UI.queue -- queue is used to queue up this animation 
+                              -- as opposed to interrupting
                   <| UI.duration (2*second)
                   <| UI.easing easeInBounce
                   <| UI.props 
@@ -116,7 +120,7 @@ update action model =
                               [ UI.BackgroundColorA 
                                     UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
                               ] 
-                      <| UI.andThen
+                      <| UI.andThen 
                           <| UI.props 
                               [ UI.BackgroundColorA 
                                     UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
@@ -244,8 +248,6 @@ init = (
           ]
       }, 
     Effects.none )
-
-
 
 
 app =

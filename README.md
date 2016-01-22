@@ -57,9 +57,8 @@ init = { style =
 
 __Note__ Your initial style should specify all the properties you intend to animate. 
 
-In your update function, you will have to start the animation.
+Start the animation in your update function.
 
-The animation itself is just a statement a target style
 ```elm
 (anim, fx) = 
       animateOn model.style
