@@ -36,10 +36,9 @@ __Infrastructure for more complicated animations__ is provided.  Want to do some
 
 __Note__ Check out the examples for real reference code, this is only a rough overview.
 
-
 Add a field to the model of the widget you want to animate.
 In your initial model, you'll also have to provide an initial style.  
-__note__ Your initial style should specify all the properties you intend to animate. 
+
 
 ```elm
 import HtmlAnimation as UI
@@ -56,6 +55,7 @@ init = { style =
         }
 ```
 
+__Note__ Your initial style should specify all the properties you intend to animate. 
 
 In your update function, you will have to start the animation.
 
