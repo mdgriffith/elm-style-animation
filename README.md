@@ -14,11 +14,13 @@ $ elm-reactor
 
 My focus was to create something I can use to prototype quickly and accurately as a UI designer.
 
+
  * CSS Units are type checked
- * Animations can be smoothely interrupted
+ * Declarative animations.  State what the style should be, and it will animate to that style.
+ * Animations can be smoothely interrupted.
  * Custom easing functions can be used (such as [these](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions))
  * += and -= can be used to animate a property based on its previous value
-
+ * Infrastructure for more complicated animations, such as moving along a path, is provided.
 
 
 ## A rough sketch on how to get started
@@ -45,19 +47,21 @@ init = { style =
 ```
 
 
-In your update function, you will have to start the animation whenever is necessary.
+In your update function, you will have to start the animation.
+
+The animation itself is just a statement a target style
 ```elm
 (anim, fx) = 
       animateOn model.style
-         <| duration (0.4*second)
-         <| props 
-             [ Left Px (to 0) 
-             , Opacity (to 1)
+         <| UI.duration (0.4*second)
+         <| UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
              ]
 ```
 
 
-And finally, in your view function, you will have to render the style on the element.
+And finally, in your view function, you will have to render the style on the element and add any other styling you may already be providing.
 
 ```elm
 
