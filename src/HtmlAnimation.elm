@@ -1,11 +1,11 @@
 module HtmlAnimation 
-    ( Animation
-    , Action
+    ( StyleAnimation
+    , StyleAction
     , StyleProperty (..)
     , Length (..), Angle (..) 
     , ColorFormat (..), ColorAlphaFormat (..)
     , initStyle
-    , update
+    , updateStyle
     , render
     , animate, animateOn
     , queue, queueOn
@@ -18,7 +18,7 @@ module HtmlAnimation
 {-| This library is for animating css properties (and works well with elm-html).
 
 # Definition
-@docs Animation, Action
+@docs StyleAnimation, StyleAction
 
 # All Animatable Style Properties and their Units
 @docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
@@ -41,7 +41,7 @@ module HtmlAnimation
 # Chaining animations together
 @docs andThen
 
-# Render an Animation into css you can use
+# Render a StyleAnimation into css you can use
 @docs render, update
 
 # Managing a list of styled widgets
@@ -65,7 +65,7 @@ type alias Model =
 
 {-| An Animation is a animation of CSS properties.
 -}
-type Animation = A Model
+type StyleAnimation = A Model
 
 
 type alias Static = Float
@@ -183,11 +183,12 @@ type ColorAlphaFormat
         = RGBA
         | HSLA
 
-{-| Actions to be run on an animation. 
+
+{-| StyleActions to be run on an animation. 
 Queue will add a list of animations to the queue.
 Interrupt will stop all animations and start the one that is provided.
 -}
-type Action 
+type StyleAction 
         = Queue (List StyleKeyframe)
         | Interrupt (List StyleKeyframe)
         | Tick Time
@@ -210,7 +211,7 @@ emptyKeyframe =
 
 {-| Used to create an initial style state
 -}
-initStyle : Style -> Animation
+initStyle : Style -> StyleAnimation
 initStyle sty = A { empty | previous = sty }
 
 
@@ -226,8 +227,8 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 {-| Update an animation.
 -}
-update : Action -> Animation -> ( Animation, Effects Action )
-update action (A model) =
+updateStyle : StyleAction -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
+updateStyle action (A model) =
        
         case action of
 
@@ -303,8 +304,8 @@ update action (A model) =
 
 {-| Syntactic sugar for running an Interrupt update.
 -}
-animate : List StyleKeyframe -> Animation -> ( Animation, Effects Action )
-animate anims model = update (Interrupt anims) model
+animate : List StyleKeyframe -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
+animate anims model = updateStyle (Interrupt anims) model
 
 
 {-| Same as animate, except with the arguments flipped.  This is useful only animating only a single style.
@@ -327,19 +328,19 @@ instead of
         model.menuStyle
 
 -}
-animateOn : Animation -> List StyleKeyframe -> ( Animation, Effects Action )
+animateOn : StyleAnimation -> List StyleKeyframe -> ( StyleAnimation, Effects StyleAction )
 animateOn model anims = animate anims model
 
 
 {-| Syntactic sugar for running a Queue update.
 -}
-queue : List StyleKeyframe -> Animation -> ( Animation, Effects Action )
-queue anims model = update (Queue anims) model
+queue : List StyleKeyframe -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
+queue anims model = updateStyle (Queue anims) model
 
 
 {-| Same as queue, except with the arguments flipped.  This is useful when only animating only a single style. See animateOn for an example.
 -}
-queueOn : Animation -> List StyleKeyframe -> ( Animation, Effects Action )
+queueOn : StyleAnimation -> List StyleKeyframe -> ( StyleAnimation, Effects StyleAction )
 queueOn model anims = animate anims model
 
 
@@ -386,7 +387,7 @@ updateOrCreate styles fn =
 {-| Convenient function to forward an update to a style object contained in a type
  See the Showcase Example to get an idea of whats going on here
 -}
-forwardTo : (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> (Animation -> (Animation, (Effects Action))) -> (List a, Effects Action)
+forwardTo : (a -> StyleAnimation) -> (a -> StyleAnimation -> a) -> Int -> List a -> (StyleAnimation -> (StyleAnimation, (Effects StyleAction))) -> (List a, Effects StyleAction)
 forwardTo styleGet styleSet i widgets fn = 
               let
                 applied = 
@@ -484,7 +485,7 @@ findProp state prop =
     div [ style (UI.render widget.style) ] [ ]
 
 -}
-render : Animation -> List (String, String)
+render : StyleAnimation -> List (String, String)
 render (A model) = 
         let
           currentAnim = List.head model.anim
