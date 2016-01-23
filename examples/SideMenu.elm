@@ -16,14 +16,14 @@ import HtmlAnimation as UI
 
 
 type alias Model = 
-            { menuStyle : UI.Animation 
+            { style : UI.StyleAnimation 
             }
 
 -- UPDATE
 
 type Action = Show 
             | Hide
-            | Animate UI.Action
+            | Animate UI.StyleAction
 
 
 
@@ -33,39 +33,41 @@ update action model =
     Show ->
       let 
         (anim, fx) = 
-              UI.animateOn model.menuStyle
+              UI.animateOn model.style
                  <| UI.duration (0.4*second)
                  <| UI.props 
                      [ UI.Left (UI.to 0) UI.Px
                      , UI.Opacity (UI.to 1)
-                     ] [] -- every animation has 
-                          -- to be 'started' with an empty list
+                     ] 
+                <| [] -- every animation has 
+                      -- to be 'started' with an empty list
 
       in
-        ( { model | menuStyle = anim }
+        ( { model | style = anim }
         , Effects.map Animate fx )
 
 
     Hide ->
       let 
         (anim, fx) = 
-            UI.animateOn model.menuStyle
+            UI.animateOn model.style
                <| UI.duration (0.4*second)
                <| UI.props 
                       [ UI.Left (UI.to -350) UI.Px
                       , UI.Opacity (UI.to 0)
-                      ] [] -- every animation has 
-                           -- to be 'started' with an empty list
+                      ] 
+              <| [] -- every animation has 
+                    -- to be 'started' with an empty list
       in
-        ( { model | menuStyle = anim }
+        ( { model | style = anim }
         , Effects.map Animate fx )
 
 
     Animate action ->
       let
-        (anim, fx) = UI.update action model.menuStyle
+        (anim, fx) = UI.updateStyle action model.style
       in
-        ( { model | menuStyle = anim }
+        ( { model | style = anim }
         , Effects.map Animate fx )
 
 
@@ -103,7 +105,7 @@ viewMenu address model =
                                 , ("color", "white")
                               ]
                 in
-                  div [ style (menuStyle ++ (UI.render model.menuStyle)) ]
+                  div [ style (menuStyle ++ (UI.render model.style)) ]
                       [ h1 [] [ text "Hidden Menu"]
                       , ul [] 
                            [ li [] [text "Some things"]

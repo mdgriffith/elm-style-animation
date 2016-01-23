@@ -23,7 +23,7 @@ type alias Model = { widgets : List Widget }
 
 type alias Widget = 
           { label : String
-          , style : UI.Animation
+          , style : UI.StyleAnimation
           , action : (Int -> Action)
           }
 
@@ -36,7 +36,7 @@ type Action = Rotate Int
             | ChangeColors Int
             | ChangeMultipleColors Int
             | FadeInFadeOut Int
-            | Animate Int UI.Action
+            | Animate Int UI.StyleAction
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -152,7 +152,7 @@ update action model =
       let
         (widgets, fx) = 
             forwardToWidget i model.widgets 
-                  <| UI.update action 
+                  <| UI.updateStyle action 
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -271,7 +271,7 @@ port tasks =
 
 forwardToWidget = UI.forwardTo 
                       .style -- widget style getter
-                       (\w style -> { w | style = style }) -- widget style setter
+                      (\w style -> { w | style = style }) -- widget style setter
                                     
 
 
