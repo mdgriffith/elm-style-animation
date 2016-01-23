@@ -16,7 +16,7 @@ import HtmlAnimation as UI
 
 
 type alias Model = 
-            { menuStyle : UI.Model 
+            { menuStyle : UI.Animation 
             }
 
 -- UPDATE
@@ -114,9 +114,10 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { menuStyle = UI.initStyle [ UI.Left -350.0 UI.Px
-                                    , UI.Opacity 0.0 
-                                    ]
+init = ( { menuStyle = UI.initStyle 
+                            [ UI.Left -350.0 UI.Px
+                            , UI.Opacity 0.0 
+                            ]
          }
        , Effects.none )
 

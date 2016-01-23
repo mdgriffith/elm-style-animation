@@ -1,8 +1,6 @@
 module HtmlAnimation 
     ( Animation
     , Action
-    , Style
-    , StyleKeyframe
     , StyleProperty (..)
     , Length (..), Angle (..) 
     , ColorFormat (..), ColorAlphaFormat (..)
@@ -20,7 +18,7 @@ module HtmlAnimation
 {-| This library is for animating css properties (and works well with elm-html).
 
 # Definition
-@docs Animation, Style, StyleKeyframe, Action
+@docs Animation, Action
 
 # All Animatable Style Properties and their Units
 @docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
