@@ -74,6 +74,7 @@ view address model =
                              , ("text-align","center")
                              , ("line-height", "250px")
                              , ("color", "white")
+                             , ("cursor", "pointer")
                              ]
             in
               div [ onClick address ChangeColor

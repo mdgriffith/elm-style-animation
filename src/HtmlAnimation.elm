@@ -63,7 +63,7 @@ type alias Model =
             , previous : Style
             }
 
-{-| An Animation is a animation of CSS properties.
+{-| An Animation is of CSS properties.
 -}
 type StyleAnimation = A Model
 
