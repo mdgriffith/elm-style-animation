@@ -20,7 +20,7 @@ ElmHtmlAnimations supports __Declarative animations__, which tend to be very int
 
 __Animations can be smoothly interrupted.  Or chained together.__   Its up to you.  
 
-__Relative animation__ such as using `+=` and `-=` to animate a property based on its previous value is also available.  Though, be aware mixing this and animation interruption can lead to unanticipated results.
+__Relative animation__ such as using `+=` and `-=` to animate a property based on its previous value is also available.  Though, be aware that mixing this and animation interruption can lead to unanticipated results.
 
 
 __CSS properties and units are type checked.__  No more elusive property typos, it's all caught at compile-time!  Didn't know that the skew transform needs to have angle units?  No problemo, the compiler will let you know.  Didn't know that rgb colors _must_ be integers and not floats?  No worries, you don't need to know that.

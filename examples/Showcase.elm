@@ -23,7 +23,7 @@ type alias Model = { widgets : List Widget }
 
 type alias Widget = 
           { label : String
-          , style : UI.Model
+          , style : UI.Animation
           , action : (Int -> Action)
           }
 
@@ -269,12 +269,11 @@ port tasks =
 
 
 
-forwardToWidget : Int -> List Widget -> (UI.Model -> ( UI.Model, Effects UI.Action )) -> (List Widget, Effects UI.Action)
-forwardToWidget i widgets anim = UI.forwardTo 
-                                    i widgets -- index and list of widgets
-                                    .style -- widget style getter
-                                    (\w style -> { w | style = style }) -- widget style setter
-                                    anim -- animation
+forwardToWidget = UI.forwardTo 
+                      .style -- widget style getter
+                       (\w style -> { w | style = style }) -- widget style setter
+                                    
+
 
 
 

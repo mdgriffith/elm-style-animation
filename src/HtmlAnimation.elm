@@ -1,8 +1,8 @@
 module HtmlAnimation 
-    ( Model
+    ( Animation
     , Action
     , Style
-    , StyleAnimation
+    , StyleKeyframe
     , StyleProperty (..)
     , Length (..), Angle (..) 
     , ColorFormat (..), ColorAlphaFormat (..)
@@ -20,7 +20,7 @@ module HtmlAnimation
 {-| This library is for animating css properties (and works well with elm-html).
 
 # Definition
-@docs Model, Style, StyleAnimation, Action
+@docs Animation, Style, StyleKeyframe, Action
 
 # All Animatable Style Properties and their Units
 @docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
@@ -43,7 +43,7 @@ module HtmlAnimation
 # Chaining animations together
 @docs andThen
 
-# Render a Model into css you can use
+# Render an Animation into css you can use
 @docs render, update
 
 # Managing a list of styled widgets
@@ -57,15 +57,17 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List 
 
-{-| Represent an animation state.  This includes a clock to keep time, a queue of style animations, and a reference to what the previous style was.
 
--}
 type alias Model =
             { start : Maybe Time
             , elapsed : Time
-            , anim : List (StyleAnimation)
+            , anim : List StyleKeyframe
             , previous : Style
             }
+
+{-| An Animation is a animation of CSS properties.
+-}
+type Animation = A Model
 
 
 type alias Static = Float
@@ -84,7 +86,7 @@ type alias Style
 This is a list of StyleProperys, but instead of having a static value like '5', 
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
-type alias StyleAnimation =
+type alias StyleKeyframe =
             { target : List (StyleProperty Dynamic)
             , duration : Time
             , ease : (Float -> Float)
@@ -188,8 +190,8 @@ Queue will add a list of animations to the queue.
 Interrupt will stop all animations and start the one that is provided.
 -}
 type Action 
-        = Queue (List StyleAnimation)
-        | Interrupt (List StyleAnimation)
+        = Queue (List StyleKeyframe)
+        | Interrupt (List StyleKeyframe)
         | Tick Time
 
 -- private
@@ -201,8 +203,8 @@ empty = { elapsed = 0.0
         }
 
 -- private
-emptyAnimation : StyleAnimation
-emptyAnimation =
+emptyKeyframe : StyleKeyframe
+emptyKeyframe =
                  { target = []
                  , duration = defaultDuration
                  , ease = defaultEasing 
@@ -210,8 +212,8 @@ emptyAnimation =
 
 {-| Used to create an initial style state
 -}
-initStyle : Style -> Model
-initStyle sty = { empty | previous = sty }
+initStyle : Style -> Animation
+initStyle sty = A { empty | previous = sty }
 
 
 -- private
@@ -226,13 +228,13 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 {-| Update an animation.
 -}
-update : Action -> Model -> ( Model, Effects Action )
-update action model = 
+update : Action -> Animation -> ( Animation, Effects Action )
+update action (A model) =
+       
         case action of
 
-
           Queue anims ->
-                ( { model | anim = model.anim ++ anims }
+                ( A { model | anim = model.anim ++ anims }
                 , Effects.tick Tick )
 
 
@@ -245,10 +247,10 @@ update action model =
                     Just a -> 
                       bake model.elapsed a model.previous
               in
-                ( { model | anim = anims
-                          , elapsed = 0.0
-                          , start = Nothing 
-                          , previous = previous }
+                ( A { model | anim = anims
+                            , elapsed = 0.0
+                            , start = Nothing 
+                            , previous = previous }
                 , Effects.tick Tick )
 
 
@@ -265,10 +267,10 @@ update action model =
             in
               case currentAnim of
                 Nothing ->
-                   ( { model | elapsed = 0.0 
-                             , start = Nothing
-                             , previous = model.previous
-                             , anim = model.anim }
+                   ( A { model | elapsed = 0.0 
+                               , start = Nothing
+                               , previous = model.previous
+                               , anim = model.anim }
                    , Effects.none )
 
                 Just current ->
@@ -286,16 +288,16 @@ update action model =
                           newElapsed - current.duration
                               
                     in
-                      ( { model | elapsed = resetElapsed
-                                , start = Just (now - resetElapsed)
-                                , previous = previous
-                                , anim = anims }
+                      ( A { model | elapsed = resetElapsed
+                                  , start = Just (now - resetElapsed)
+                                  , previous = previous
+                                  , anim = anims }
                       , Effects.tick Tick )
 
                   else
-                     ( { model | elapsed = newElapsed 
-                               , start = Just start
-                               }
+                     ( A { model | elapsed = newElapsed 
+                                 , start = Just start
+                                 }
                      , Effects.tick Tick )
 
 
@@ -303,7 +305,7 @@ update action model =
 
 {-| Syntactic sugar for running an Interrupt update.
 -}
-animate : List (StyleAnimation) -> Model -> ( Model, Effects Action )
+animate : List StyleKeyframe -> Animation -> ( Animation, Effects Action )
 animate anims model = update (Interrupt anims) model
 
 
@@ -327,19 +329,21 @@ instead of
         model.menuStyle
 
 -}
-animateOn : Model -> List (StyleAnimation) -> ( Model, Effects Action )
+animateOn : Animation -> List StyleKeyframe -> ( Animation, Effects Action )
 animateOn model anims = animate anims model
 
 
 {-| Syntactic sugar for running a Queue update.
 -}
-queue : List (StyleAnimation) -> Model -> ( Model, Effects Action )
+queue : List StyleKeyframe -> Animation -> ( Animation, Effects Action )
 queue anims model = update (Queue anims) model
+
 
 {-| Same as queue, except with the arguments flipped.  This is useful when only animating only a single style. See animateOn for an example.
 -}
-queueOn : Model -> List (StyleAnimation) -> ( Model, Effects Action )
+queueOn : Animation -> List StyleKeyframe -> ( Animation, Effects Action )
 queueOn model anims = animate anims model
+
 
 {-| Specify the properties that should be animated
 
@@ -351,38 +355,41 @@ queueOn model anims = animate anims model
                      ] [] -- every animation has to be 'started' with an empty list
 
 -}
-props : List (StyleProperty Dynamic) -> List (StyleAnimation) -> List (StyleAnimation)
+props : List (StyleProperty Dynamic) -> List StyleKeyframe -> List StyleKeyframe
 props p anim = updateOrCreate anim (\anim -> { anim | target = p})
 
-{-| Specify a duration for an animation.  The default is 400ms.
+
+{-| Specify a duration for a keyframe.  If a duration isn't specified, the default is 400ms.
 -}
-duration : Time -> List (StyleAnimation) -> List (StyleAnimation)
+duration : Time -> List StyleKeyframe -> List StyleKeyframe
 duration dur anim = updateOrCreate anim (\anim -> { anim | duration = dur })
       
-{-| Specify an easing function for an animation.  It is expected that values should start on 0 and end at 1.  The default is a sinusoidal
+
+{-| Specify an easing function for a keyframe.  It is expected that values should start on 0 and end at 1.  The default is a sinusoidal
 in-out.
 -}
-easing : (Float -> Float) -> List (StyleAnimation) -> List (StyleAnimation)
+easing : (Float -> Float) -> List StyleKeyframe -> List StyleKeyframe
 easing ease anim = updateOrCreate anim (\anim -> { anim | ease = ease })
 
-{-| Append another animation.
+
+{-| Append another keyframe.
 -}
-andThen : List (StyleAnimation) -> List (StyleAnimation)
-andThen x = emptyAnimation :: x
+andThen : List StyleKeyframe -> List StyleKeyframe
+andThen x = emptyKeyframe :: x
 
 -- private
-updateOrCreate : List (StyleAnimation) -> (StyleAnimation -> StyleAnimation) -> List (StyleAnimation)
+updateOrCreate : List StyleKeyframe -> (StyleKeyframe -> StyleKeyframe) -> List StyleKeyframe
 updateOrCreate styles fn =
                  case styles of
-                    [] -> [fn emptyAnimation] 
+                    [] -> [fn emptyKeyframe] 
                     cur::rem -> (fn cur)::rem
 
 
 {-| Convenient function to forward an update to a style object contained in a type
  See the Showcase Example to get an idea of whats going on here
 -}
-forwardTo : Int -> List a -> (a -> Model) -> (a -> Model -> a) -> (Model -> (Model, (Effects Action))) -> (List a, Effects Action)
-forwardTo i widgets styleGet styleSet fn = 
+forwardTo : (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> (Animation -> (Animation, (Effects Action))) -> (List a, Effects Action)
+forwardTo styleGet styleSet i widgets fn = 
               let
                 applied = 
                   List.indexedMap 
@@ -401,7 +408,6 @@ forwardTo i widgets styleGet styleSet fn =
                             ef2
                           else
                             ef1
-                 
               in
                  List.foldr 
                       (\x acc ->
@@ -480,8 +486,8 @@ findProp state prop =
     div [ style (UI.render widget.style) ] [ ]
 
 -}
-render : Model -> List (String, String)
-render model = 
+render : Animation -> List (String, String)
+render (A model) = 
         let
           currentAnim = List.head model.anim
         in
@@ -591,7 +597,7 @@ fill new existing =
 
 -- private
 -- Converts an animation into a Style that can be rendered.
-bake : Time -> StyleAnimation -> Style -> Style
+bake : Time -> StyleKeyframe -> Style -> Style
 bake elapsed anim prev = 
           let
             percentComplete = 
