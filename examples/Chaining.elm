@@ -11,7 +11,7 @@ import Task
 
 import Time exposing (second)
 
-import HtmlAnimation as UI
+import Html.Animation as UI
 
 
 

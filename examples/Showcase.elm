@@ -12,7 +12,7 @@ import Task
 import Time exposing (Time, second)
 import Signal exposing (Address)
 
-import HtmlAnimation as UI
+import Html.Animation as UI
 import Easing exposing (easeInBounce)
 
 

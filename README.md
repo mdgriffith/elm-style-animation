@@ -16,7 +16,7 @@ $ elm-reactor
 My focus was to create something I could use as a UI designer to prototype animations quickly, accurately, and without sneaky errors.
 
 
-ElmHtmlAnimations supports __Declarative animations__, which tend to be very intuitive. State what the style should be, and it will animate to that style. 
+Html.Animation supports __Declarative animations__, which tend to be very intuitive. State what the style should be, and it will animate to that style. 
 
  * __Animations can be smoothly interrupted.  Or chained together.__  
 
@@ -44,7 +44,7 @@ To add animations to a module, you'll need to do the following:
 __Note__ all properties that are going to be animated need to be accounted for in the initial style.
 
 ```elm
-import HtmlAnimation as UI
+import Html.Animation as UI
 
 type alias Model = { style : UI.StyleAnimation }
 
@@ -122,7 +122,7 @@ Notice we are programming declaratively by defining what style property should b
 
 We have the option of defining a duration and an easing function. In the above code, these are commented out, which means the defaults are used.  The default duration is _400ms_, while the default easing is _sinusoidal in-out_.  Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
 
-Finally, we also have to `Effects.map` the resulting effect(fx) in order to route it to the Animate action we created earlier.
+Finally, we have to `map` the resulting animation Effect, `fx`, to the Animate action we created earlier.
 
 Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
 
@@ -205,13 +205,11 @@ Now that we have this function, we can animate a widget by using code like this:
         (widgets, fx) = 
             forwardToWidget i model.widgets
                     <| UI.animate
+                        <| UI.duration (5*second)
                         <| UI.props 
                             [ UI.Opacity (UI.to 0)  
                             ] 
-                    <| UI.andThen
-                        <| UI.props 
-                            [ UI.Opacity (UI.to 1)  
-                            ] [] 
+                        <| []
 
       in
         ( { model | widgets = widgets }

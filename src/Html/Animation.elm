@@ -1,4 +1,4 @@
-module HtmlAnimation 
+module Html.Animation 
     ( StyleAnimation
     , StyleAction
     , StyleProperty (..)
@@ -209,7 +209,7 @@ emptyKeyframe =
                  , ease = defaultEasing 
                  }
 
-{-| Used to create an initial style state
+{-| Create an initial style state
 -}
 initStyle : Style -> StyleAnimation
 initStyle sty = A { empty | previous = sty }
