@@ -189,8 +189,8 @@ type ColorAlphaFormat
 
 
 {-| StyleActions to be run on an animation. 
-Queue will add a list of animations to the queue.
-Interrupt will stop all animations and start the one that is provided.
+You won't be using this type directly, though it may show up in your type signatures.
+To perform updates you'll be using the `animate` and `queue` functions
 -}
 type StyleAction 
         = Queue (List StyleKeyframe)
