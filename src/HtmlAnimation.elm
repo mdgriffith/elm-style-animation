@@ -81,7 +81,7 @@ type alias Style
          = List (StyleProperty Static)
 
 {-| Represent a style animation.
-This is a list of StyleProperys, but instead of having a static value like '5', 
+This is a list of StylePropertys, but instead of having a static value like '5', 
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
 type alias StyleKeyframe =
