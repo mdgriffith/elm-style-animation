@@ -45,14 +45,13 @@ update action model =
     Rotate i ->
       let 
         (widgets, fx) = 
-            forwardToWidget i model.widgets 
-                  <| UI.queue -- queue is used to queue up this animation 
-                              -- as opposed to interrupting
-                  <| UI.duration (2*second)
-                  <| UI.props 
+              UI.queue -- queue up this animation 
+                       -- as opposed to interrupting
+                  |> UI.duration (2*second)
+                  |> UI.props 
                       [ UI.Rotate (UI.add 1) UI.Turn 
                       ] 
-                  <| [] -- every animation has to be 'started' with an empty list
+                  |> forwardToWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -60,16 +59,15 @@ update action model =
     RotateAllAxis i ->
       let 
         (widgets, fx) = 
-            forwardToWidget i model.widgets 
-                  <| UI.queue -- queue is used to queue up this animation 
-                              -- as opposed to interrupting
-                  <| UI.duration (2*second)
-                  <| UI.props 
+              UI.queue -- queue up this animation 
+                       -- as opposed to interrupting
+                  |> UI.duration (2*second)
+                  |> UI.props 
                       [ UI.RotateX (UI.add 1) UI.Turn
                       , UI.RotateY (UI.add 1) UI.Turn
                       , UI.Rotate (UI.add 1) UI.Turn
                       ] 
-                  <| [] -- every animation has to be 'started' with an empty list
+                  |> forwardToWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -79,15 +77,14 @@ update action model =
     RotateCustomEasingDuration i ->
       let 
         (widgets, fx) = 
-            forwardToWidget i model.widgets 
-                  <| UI.queue -- queue is used to queue up this animation 
-                              -- as opposed to interrupting
-                  <| UI.duration (2*second)
-                  <| UI.easing easeInBounce
-                  <| UI.props 
+                UI.queue -- queue up this animation 
+                          -- as opposed to interrupting
+                  |> UI.duration (2*second)
+                  |> UI.easing easeInBounce
+                  |> UI.props 
                       [ UI.Rotate (UI.add 1) UI.Turn 
                       ] 
-                  <| [] -- every animation has to be 'started' with an empty list
+                  |> forwardToWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
@@ -96,14 +93,13 @@ update action model =
     ChangeColors i ->
        let 
           (widgets, fx) = 
-              forwardToWidget i model.widgets
-                      <| UI.animate -- animate is used to interrupt whatever current animation
-                                    -- is running and smoothely move to the new style
-                      <| UI.props 
+                  UI.animate -- animate is used to interrupt whatever current animation
+                             -- is running and smoothely move to the new style
+                      |> UI.props 
                           [ UI.BackgroundColorA 
                                 UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0) 
                           ] 
-                      <| [] -- every animation has to be 'started' with an empty list
+                      |> forwardToWidget i model.widgets
                       
         in
           ( { model | widgets = widgets }
@@ -113,18 +109,18 @@ update action model =
     ChangeMultipleColors i ->
        let 
           (widgets, fx) = 
-              forwardToWidget i model.widgets
-                      <| UI.animate -- animate is used to interrupt whatever current animation
-                                    -- is running and smoothely move to the new style
-                          <| UI.props 
+                      UI.animate -- animate is used to interrupt whatever current animation
+                                 -- is running and smoothely move to the new style
+                          |> UI.props 
                               [ UI.BackgroundColorA 
                                     UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
                               ] 
-                      <| UI.andThen 
-                          <| UI.props 
+                      |> UI.andThen 
+                          |> UI.props 
                               [ UI.BackgroundColorA 
                                     UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
-                              ] [] 
+                              ] 
+                      |> forwardToWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
@@ -132,16 +128,16 @@ update action model =
 
     FadeInFadeOut i ->
        let 
-          (widgets, fx) = 
-              forwardToWidget i model.widgets
-                      <| UI.animate
-                          <| UI.props 
-                              [ UI.Opacity (UI.to 0)  
-                              ] 
-                      <| UI.andThen
-                          <| UI.props 
-                              [ UI.Opacity (UI.to 1)  
-                              ] [] 
+          (widgets, fx) =
+                    UI.animate
+                        |> UI.props 
+                            [ UI.Opacity (UI.to 0)  
+                            ] 
+                    |> UI.andThen
+                        |> UI.props 
+                            [ UI.Opacity (UI.to 1)  
+                            ] 
+                    |> forwardToWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
@@ -150,9 +146,7 @@ update action model =
 
     Animate i action ->
       let
-        (widgets, fx) = 
-            forwardToWidget i model.widgets 
-                  <| UI.updateStyle action 
+        (widgets, fx) = forwardToWidget i model.widgets action
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )

@@ -33,14 +33,13 @@ update action model =
     Show ->
       let 
         (anim, fx) = 
-              UI.animateOn model.style
-                 <| UI.duration (0.4*second)
-                 <| UI.props 
+              UI.animate 
+                 |> UI.duration (0.4*second)
+                 |> UI.props 
                      [ UI.Left (UI.to 0) UI.Px
                      , UI.Opacity (UI.to 1)
                      ] 
-                <| [] -- every animation has 
-                      -- to be 'started' with an empty list
+                 |> UI.on model.style
 
       in
         ( { model | style = anim }
@@ -50,14 +49,13 @@ update action model =
     Hide ->
       let 
         (anim, fx) = 
-            UI.animateOn model.style
-               <| UI.duration (0.4*second)
-               <| UI.props 
+            UI.animate
+               |> UI.duration (0.4*second)
+               |> UI.props 
                       [ UI.Left (UI.to -350) UI.Px
                       , UI.Opacity (UI.to 0)
                       ] 
-              <| [] -- every animation has 
-                    -- to be 'started' with an empty list
+               |> UI.on model.style
       in
         ( { model | style = anim }
         , Effects.map Animate fx )

@@ -31,23 +31,23 @@ update action model =
     ChangeColor ->
       let 
         (anim, fx) = 
-            UI.animateOn model.style
-                    <| UI.props 
-                        [ UI.BackgroundColorA 
-                              UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
-                        ] 
-                <| UI.andThen -- create a new keyframe
-                    <| UI.duration (1*second)
-                    <| UI.props 
-                        [ UI.BackgroundColorA 
-                              UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
-                        ] 
-                <| UI.andThen 
-                    <| UI.props 
-                        [ UI.BackgroundColorA 
-                              UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
-                        ] 
-                <| [] 
+            UI.animate 
+                  |> UI.props 
+                      [ UI.BackgroundColorA 
+                            UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
+                      ] 
+              |> UI.andThen -- create a new keyframe
+                  |> UI.duration (1*second)
+                  |> UI.props 
+                      [ UI.BackgroundColorA 
+                            UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                      ] 
+              |> UI.andThen 
+                  |> UI.props 
+                      [ UI.BackgroundColorA 
+                            UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
+                      ] 
+              |> UI.on model.style
 
       in
         ( { model | style = anim }

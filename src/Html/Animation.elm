@@ -7,8 +7,9 @@ module Html.Animation
     , initStyle
     , updateStyle
     , render
-    , animate, animateOn
-    , queue, queueOn
+    , animate
+    , queue
+    , on
     , props, duration, easing
     , andThen, forwardTo
     , to, add, minus
@@ -24,10 +25,13 @@ module Html.Animation
 @docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
 
 # Interrupting an animation with a new one
-@docs animate, animateOn
+@docs animate
 
 # Queueing an Animation
-@docs queue, queueOn
+@docs queue
+
+# Updating an animation
+@docs on
 
 # Creating a starting style
 @docs initStyle
@@ -300,48 +304,26 @@ updateStyle action (A model) =
                      , Effects.tick Tick )
 
 
-
+type alias PreAction = (List StyleKeyframe -> StyleAction)
 
 {-| Syntactic sugar for running an Interrupt update.
 -}
-animate : List StyleKeyframe -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
-animate anims model = updateStyle (Interrupt anims) model
+animate : StyleAction
+animate = Interrupt []
 
 
-{-| Same as animate, except with the arguments flipped.  This is useful only animating only a single style.
-
-     UI.animateOn model.menuStyle
-         <| UI.duration (0.4*second)
-         <| UI.props 
-             [ UI.Left UI.Px (UI.to 0) 
-             , UI.Opacity (UI.to 1)
-             ] [] 
-instead of 
-
-      UI.animate 
-         (  UI.duration (0.4*second)
-         <| UI.props 
-             [ UI.Left UI.Px (UI.to 0) 
-             , UI.Opacity (UI.to 1)
-             ] [] 
-         ) 
-        model.menuStyle
-
+{-| Perform an update on a StyleAnimation
 -}
-animateOn : StyleAnimation -> List StyleKeyframe -> ( StyleAnimation, Effects StyleAction )
-animateOn model anims = animate anims model
+on : StyleAnimation -> StyleAction -> ( StyleAnimation, Effects StyleAction )
+on model action = updateStyle action model
 
 
-{-| Syntactic sugar for running a Queue update.
+
+{-| Queue up a new animation to be played after the current one.
 -}
-queue : List StyleKeyframe -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
-queue anims model = updateStyle (Queue anims) model
+queue : StyleAction
+queue = Queue []
 
-
-{-| Same as queue, except with the arguments flipped.  This is useful when only animating only a single style. See animateOn for an example.
--}
-queueOn : StyleAnimation -> List StyleKeyframe -> ( StyleAnimation, Effects StyleAction )
-queueOn model anims = animate anims model
 
 
 {-| Specify the properties that should be animated
@@ -354,48 +336,68 @@ queueOn model anims = animate anims model
                      ] [] -- every animation has to be 'started' with an empty list
 
 -}
-props : List (StyleProperty Dynamic) -> List StyleKeyframe -> List StyleKeyframe
-props p anim = updateOrCreate anim (\anim -> { anim | target = p})
-
+props : List (StyleProperty Dynamic) -> StyleAction -> StyleAction
+props p action = updateOrCreate action (\a -> { a | target = p})
+    
 
 {-| Specify a duration for a keyframe.  If a duration isn't specified, the default is 400ms.
 -}
-duration : Time -> List StyleKeyframe -> List StyleKeyframe
-duration dur anim = updateOrCreate anim (\anim -> { anim | duration = dur })
+duration : Time -> StyleAction -> StyleAction
+duration dur action = updateOrCreate action (\a -> { a | duration = dur })
       
 
 {-| Specify an easing function for a keyframe.  It is expected that values should start on 0 and end at 1.  The default is a sinusoidal
 in-out.
 -}
-easing : (Float -> Float) -> List StyleKeyframe -> List StyleKeyframe
-easing ease anim = updateOrCreate anim (\anim -> { anim | ease = ease })
+easing : (Float -> Float) -> StyleAction -> StyleAction
+easing ease action = updateOrCreate action (\a -> { a | ease = ease })
 
 
 {-| Append another keyframe.
 -}
-andThen : List StyleKeyframe -> List StyleKeyframe
-andThen x = emptyKeyframe :: x
+andThen : StyleAction -> StyleAction
+andThen action = 
+          case action of
+              Tick _ -> action
+
+              Interrupt frames -> 
+                Interrupt (frames ++ [emptyKeyframe])
+
+              Queue frames -> 
+                Queue (frames ++ [emptyKeyframe])
+
 
 -- private
-updateOrCreate : List StyleKeyframe -> (StyleKeyframe -> StyleKeyframe) -> List StyleKeyframe
-updateOrCreate styles fn =
-                 case styles of
-                    [] -> [fn emptyKeyframe] 
-                    cur::rem -> (fn cur)::rem
+updateOrCreate : StyleAction -> (StyleKeyframe -> StyleKeyframe) -> StyleAction
+updateOrCreate action fn =
+                let
+                  update frames = 
+                    case List.reverse frames of
+                      [] -> [fn emptyKeyframe] 
+                      cur::rem -> List.reverse ((fn cur)::rem)
+                in
+                 case action of
+                    Tick _ -> action
+
+                    Interrupt frames -> 
+                      Interrupt (update frames)
+
+                    Queue frames -> 
+                      Queue (update frames)
 
 
 {-| Convenient function to forward an update to a style object contained in a type
  See the Showcase Example to get an idea of whats going on here
 -}
-forwardTo : (a -> StyleAnimation) -> (a -> StyleAnimation -> a) -> Int -> List a -> (StyleAnimation -> (StyleAnimation, (Effects StyleAction))) -> (List a, Effects StyleAction)
-forwardTo styleGet styleSet i widgets fn = 
+forwardTo : (a -> StyleAnimation) -> (a -> StyleAnimation -> a) -> Int -> List a -> StyleAction -> (List a, Effects StyleAction)
+forwardTo styleGet styleSet i widgets action = 
               let
                 applied = 
                   List.indexedMap 
                         (\j w -> 
                             if j == i then
                               let
-                                (newStyle, fx) = fn (styleGet w)
+                                (newStyle, fx) = updateStyle action (styleGet w)
                               in
                                 (styleSet w newStyle, fx)
                             else
