@@ -26,7 +26,7 @@ ElmHtmlAnimations supports __Declarative animations__, which tend to be very int
 
  * __Use custom easing__ such as all the lovely functions in [this library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions).
 
- * __Manage multiple animations__ by using the `forwardTo` function.  See the _Showcase_ example to see how it works.
+ * __Manage multiple animations__ by using the `forwardTo` function.  See _Example 3_.
 
  * __Infrastructure for more complicated animations__ is provided.  Want to do something like animate a position along a path?  You have the tools to do that.  (If you're curious, you'd start by writing a custom `to` function.)
 
@@ -125,7 +125,7 @@ Finally, we also have to `Effects.map` the resulting effect(fx) in order to rout
 
 Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
 
-
+However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queueOn` instead of `UI.animateOn`
 
 
 # Example 2: Chaining Animations
@@ -169,6 +169,80 @@ In this case we can use `UI.andThen` to create a new key frame.  This new keyfra
 # Example 3: Managing Multiple Animations
 [demo](https://mdgriffith.github.io/elm-html-animation/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
 
+It's also fairly common to have a list of elements that all need to animated individually.  In order to do this we need to make a few changes to our boilerplate code we had in the beginning.
+
+
+First, our model would be something like this:
+
+```elm
+
+type alias Model = { widgets : List Widget }
+
+type alias Widget = 
+          { style : UI.StyleAnimation
+          }
+
+```
+
+
+We also need to prepare a function that will perform an animation update on a specific widget in the list.  
+
+To do this, we're going to use `UI.forwardTo`.  Essentially, `UI.forwardTo` will take a list of things and an index, and apply an update to the thing at that index.  In order to do this, it needs a `getter` and a `setter` function to get and set the style of the widget.
+
+```elm
+
+forwardToWidget = UI.forwardTo 
+                      .style -- widget style getter
+                      (\w style -> { w | style = style }) -- widget style setter
+```
+
+
+Now that we have this function, we can animate a widget by using code like this:
+```elm
+      -- where i is the index of the widget we want to animate.
+      let 
+        (widgets, fx) = 
+            forwardToWidget i model.widgets
+                    <| UI.animate
+                        <| UI.props 
+                            [ UI.Opacity (UI.to 0)  
+                            ] 
+                    <| UI.andThen
+                        <| UI.props 
+                            [ UI.Opacity (UI.to 1)  
+                            ] [] 
+
+      in
+        ( { model | widgets = widgets }
+        , Effects.map (Animate i) fx )
+
+```
+
+
+Because of this change, we also have to slightly change our `Animate` action to include the index of the widget that is being animated.
+
+So, our Animate action gets an Int.
+
+```elm
+
+type Action = Animate Int UI.StyleAction
+```
+
+And the update function forwards an animation update to a specific widget using our forwardToWidget.
+```elm
+    Animate i action ->
+      let
+        (widgets, fx) = 
+            forwardToWidget i model.widgets 
+                  <| UI.updateStyle action 
+      in
+        ( { model | widgets = widgets }
+        , Effects.map (Animate i) fx )
+
+```
+
+
+From here, we're able to animate each widget independently.
 
 
 
