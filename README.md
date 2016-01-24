@@ -39,8 +39,9 @@ So, with all that in mind, here's a basic overview of what you'll need to do to 
 
 To add animations to a module, you'll need to do the following:
 
-  1. Store the styling data in your `model`, and define an initial style.
-  __Note__ all properties that are going to be animated need to be accounted for in the initial style.
+  * Store the styling data in your `model`, and define an initial style.
+
+__Note__ all properties that are going to be animated need to be accounted for in the initial style.
 
 ```elm
 import HtmlAnimation as UI
@@ -56,7 +57,7 @@ init = { style =
         }
 ```
 
-  2. Add a new action to your Action type to allow updates to be sent to an animation.
+  * Add a new action to your Action type to allow updates to be sent to an animation.
 
 ```elm
 type Action = Animate UI.StyleAction
@@ -75,7 +76,7 @@ update action model =
         , Effects.map Animate fx )
 ```
 
-  3. In your `view`, render the animation as a css style.
+  * In your `view`, render the animation as a css style.
 
 ```elm
 
@@ -86,7 +87,7 @@ view address model =
 ```
 
 
-  4. Start creating animations!  Now that we're set up, we can begin animating. 
+  * Start creating animations!  Now that we're set up, we can begin animating. 
 
 
 # Example 1: Showing a Menu on Hover
