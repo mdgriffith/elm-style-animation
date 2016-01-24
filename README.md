@@ -125,7 +125,7 @@ Finally, we have to `map` the resulting animation Effect, `fx`, to the Animate a
 
 Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
 
-However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queueOn` instead of `UI.animateOn`
+However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queue` instead of `UI.animate`
 
 
 # Example 2: Chaining Animations
@@ -138,7 +138,7 @@ We also have option of chaining animations together.  So, let's make a square th
     ChangeColor ->
       let 
         (anim, fx) = 
-            UI.animateOn 
+            UI.animate 
                     |> UI.props 
                         [ UI.BackgroundColorA 
                               UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  

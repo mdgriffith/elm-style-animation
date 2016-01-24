@@ -328,12 +328,13 @@ queue = Queue []
 
 {-| Specify the properties that should be animated
 
-     UI.animateOn model.menuStyle
-                 <| UI.duration (0.4*second)
-                 <| UI.props 
-                     [ UI.Left UI.Px (UI.to 0) 
-                     , UI.Opacity (UI.to 1)
-                     ] [] -- every animation has to be 'started' with an empty list
+     UI.animate 
+         |> UI.duration (0.4*second)
+         |> UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
+             ] 
+         |> UI.on model.menuStyle
 
 -}
 props : List (StyleProperty Dynamic) -> StyleAction -> StyleAction
