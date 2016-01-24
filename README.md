@@ -103,15 +103,14 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
     Show ->
       let 
         (anim, fx) = 
-              UI.animateOn model.style
-              -- <| UI.duration (0.5*second)
-              -- <| UI.easing (\x -> x)
-                 <| UI.props 
+              UI.animate 
+              -- |> UI.duration (0.5*second)
+              -- |> UI.easing (\x -> x)
+                 |> UI.props 
                      [ UI.Left (UI.to 0) UI.Px
                      , UI.Opacity (UI.to 1)
                      ] 
-                <| [] -- every animation has 
-                      -- to be 'started' with an empty list
+                 |> UI.on model.style
 
       in
         ( { model | style = anim }
@@ -139,23 +138,23 @@ We also have option of chaining animations together.  So, let's make a square th
     ChangeColor ->
       let 
         (anim, fx) = 
-            UI.animateOn model.style
-                    <| UI.props 
+            UI.animateOn 
+                    |> UI.props 
                         [ UI.BackgroundColorA 
                               UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
                         ] 
-                <| UI.andThen -- create a new keyframe
-                    <| UI.duration (1*second)
-                    <| UI.props 
+                |> UI.andThen -- create a new keyframe
+                    |> UI.duration (1*second)
+                    |> UI.props 
                         [ UI.BackgroundColorA 
                               UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
                         ] 
-                <| UI.andThen 
-                    <| UI.props 
+                |> UI.andThen 
+                    |> UI.props 
                         [ UI.BackgroundColorA 
                               UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
                         ] 
-                <| [] 
+                |> UI.on model.style 
 
       in
         ( { model | style = anim }
@@ -203,13 +202,12 @@ Now that we have this function, we can animate a widget by using code like this:
       -- where i is the index of the widget we want to animate.
       let 
         (widgets, fx) = 
-            forwardToWidget i model.widgets
-                    <| UI.animate
-                        <| UI.duration (5*second)
-                        <| UI.props 
+                    UI.animate
+                        |> UI.duration (5*second)
+                        |> UI.props 
                             [ UI.Opacity (UI.to 0)  
                             ] 
-                        <| []
+                        |> forwardToWidget i model.widgets
 
       in
         ( { model | widgets = widgets }
@@ -232,8 +230,7 @@ And the update function forwards an animation update to a specific widget using 
     Animate i action ->
       let
         (widgets, fx) = 
-            forwardToWidget i model.widgets 
-                  <| UI.updateStyle action 
+            forwardToWidget i model.widgets action 
       in
         ( { model | widgets = widgets }
         , Effects.map (Animate i) fx )
