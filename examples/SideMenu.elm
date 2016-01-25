@@ -36,8 +36,8 @@ update action model =
               UI.animate 
                  |> UI.duration (0.4*second)
                  |> UI.props 
-                     [ UI.Left (UI.to 0) UI.Px
-                     , UI.Opacity (UI.to 1)
+                     [ UI.left (UI.to 0)    |> UI.distance
+                     , UI.opacity (UI.to 1) |> UI.unitless
                      ] 
                  |> UI.on model.style
 
@@ -52,8 +52,8 @@ update action model =
             UI.animate
                |> UI.duration (0.4*second)
                |> UI.props 
-                      [ UI.Left (UI.to -350) UI.Px
-                      , UI.Opacity (UI.to 0)
+                      [ UI.left (UI.to -350) |> UI.distance
+                      , UI.opacity (UI.to 0) |> UI.unitless
                       ] 
                |> UI.on model.style
       in
@@ -115,8 +115,8 @@ viewMenu address model =
 
 init : ( Model, Effects Action )
 init = ( { style = UI.initStyle 
-                      [ UI.Left -350.0 UI.Px
-                      , UI.Opacity 0.0 
+                      [ UI.left -350.0 |> UI.px
+                      , UI.opacity 0.0 |> UI.noUnit
                       ]
          }
        , Effects.none )

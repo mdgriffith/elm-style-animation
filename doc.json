@@ -1,0 +1,129 @@
+[
+  {
+    "name": "Html.Animation",
+    "comment": " This library is for animating css properties (and works well with elm-html).\n\n# Definition\n@docs StyleAnimation, StyleAction\n\n# All Animatable Style Properties and their Units\n@docs opacity, px, noUnit, left\n\n# Interrupting an animation with a new one\n@docs animate\n\n# Queueing an Animation\n@docs queue\n\n# Updating an animation\n@docs on\n\n# Creating a starting style\n@docs initStyle\n\n# Creating an animation\n@docs props, duration, easing\n\n# Animating Properties\n@docs to, add, minus, (:=), (+=), (-=)\n\n# Chaining animations together\n@docs andThen\n\n# Render a StyleAnimation into css you can use\n@docs render, updateStyle\n\n# Managing a list of styled widgets\n@docs forwardTo\n\n",
+    "aliases": [],
+    "types": [
+      {
+        "name": "StyleAction",
+        "comment": " StyleActions to be run on an animation. \nYou won't be using this type directly, though it may show up in your type signatures.\nTo perform updates you'll be using the `animate` and `queue` functions\n",
+        "args": [],
+        "cases": []
+      },
+      {
+        "name": "StyleAnimation",
+        "comment": " An Animation of CSS properties.\n",
+        "args": [],
+        "cases": []
+      }
+    ],
+    "values": [
+      {
+        "name": "+=",
+        "comment": " Infix version of the above `add` function\n\n",
+        "type": "Float -> Float -> Float -> Float"
+      },
+      {
+        "name": "-=",
+        "comment": " Infix version of the above `minus` function\n\n",
+        "type": "Float -> Float -> Float -> Float"
+      },
+      {
+        "name": ":=",
+        "comment": " Infix version of the above `to` function\n\n",
+        "type": "Float -> Float -> Float -> Float"
+      },
+      {
+        "name": "add",
+        "comment": " Used for animating a StyleProperty by adding to its existing value\n\n",
+        "type": "Float -> Float -> Float -> Float"
+      },
+      {
+        "name": "andThen",
+        "comment": " Append another keyframe.\n",
+        "type": "Html.Animation.StyleAction -> Html.Animation.StyleAction"
+      },
+      {
+        "name": "animate",
+        "comment": " Syntactic sugar for running an Interrupt update.\n",
+        "type": "Html.Animation.StyleAction"
+      },
+      {
+        "name": "duration",
+        "comment": " Specify a duration for a keyframe.  If a duration isn't specified, the default is 400ms.\n",
+        "type": "Time.Time -> Html.Animation.StyleAction -> Html.Animation.StyleAction"
+      },
+      {
+        "name": "easing",
+        "comment": " Specify an easing function for a keyframe.  It is expected that values should start on 0 and end at 1.  The default is a sinusoidal\nin-out.\n",
+        "type": "(Float -> Float) -> Html.Animation.StyleAction -> Html.Animation.StyleAction"
+      },
+      {
+        "name": "forwardTo",
+        "comment": " Convenient function to forward an update to a style object contained in a type\n See the Showcase Example to get an idea of whats going on here\n",
+        "type": "(a -> Html.Animation.StyleAnimation) -> (a -> Html.Animation.StyleAnimation -> a) -> Int -> List a -> Html.Animation.StyleAction -> ( List a, Effects.Effects Html.Animation.StyleAction )"
+      },
+      {
+        "name": "initStyle",
+        "comment": " Create an initial style state\n",
+        "type": "Html.Animation.Style -> Html.Animation.StyleAnimation"
+      },
+      {
+        "name": "left",
+        "comment": " Left style property\n",
+        "type": "a -> Html.Animation.StyleProperty a"
+      },
+      {
+        "name": "minus",
+        "comment": " Used for animating a StyleProperty by subtracting from its existing value\n\n",
+        "type": "Float -> Float -> Float -> Float"
+      },
+      {
+        "name": "noUnit",
+        "comment": " When a property doesn't have units\n",
+        "type": "Html.Animation.Unitless a -> Html.Animation.StylePropWithUnit a"
+      },
+      {
+        "name": "on",
+        "comment": " Perform an update on a StyleAnimation\n",
+        "type": "Html.Animation.StyleAnimation -> Html.Animation.StyleAction -> ( Html.Animation.StyleAnimation , Effects.Effects Html.Animation.StyleAction )"
+      },
+      {
+        "name": "opacity",
+        "comment": " Opacity style property\n",
+        "type": "a -> Html.Animation.StyleProperty a"
+      },
+      {
+        "name": "props",
+        "comment": " Specify the properties that should be animated\n\n     UI.animate \n         |> UI.duration (0.4*second)\n         |> UI.props \n             [ UI.Left UI.Px (UI.to 0) \n             , UI.Opacity (UI.to 1)\n             ] \n         |> UI.on model.menuStyle\n\n",
+        "type": "List (Html.Animation.StyleProperty Html.Animation.Dynamic) -> Html.Animation.StyleAction -> Html.Animation.StyleAction"
+      },
+      {
+        "name": "px",
+        "comment": " Pixel units\n",
+        "type": "Html.Animation.LengthProperty a -> Html.Animation.StylePropWithUnit a"
+      },
+      {
+        "name": "queue",
+        "comment": " Queue up a new animation to be played after the current one.\n",
+        "type": "Html.Animation.StyleAction"
+      },
+      {
+        "name": "render",
+        "comment": " Render into concrete css that can be directly applied to 'style' in elm-html\n\n    div [ style (UI.render widget.style) ] [ ]\n\n",
+        "type": "Html.Animation.StyleAnimation -> List ( String, String )"
+      },
+      {
+        "name": "to",
+        "comment": " Used for animating a StyleProperty to a value\nTakes \n     * provided value\n     * previous value\n     * current normalized time (0.0-1.0) \n     * returns current value\n\n",
+        "type": "Float -> Float -> Float -> Float"
+      },
+      {
+        "name": "updateStyle",
+        "comment": " Update an animation.\n",
+        "type": "Html.Animation.StyleAction -> Html.Animation.StyleAnimation -> ( Html.Animation.StyleAnimation , Effects.Effects Html.Animation.StyleAction )"
+      }
+    ],
+    "generated-with-elm-version": "0.16.0"
+  }
+]

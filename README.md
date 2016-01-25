@@ -241,4 +241,33 @@ And the update function forwards an animation update to a specific widget using 
 From here, we're able to animate each widget independently.
 
 
+#Notes and Common Pitfalls
+
+This module was made to be with the option of having it imported unqualified.  
+
+```elm
+import Html.Animation exposing (..)
+```
+
+Be aware that if you want to use the infix operators (:=, +=, and ==), then you'll need to do this as infix operators can't be used when qualified (i.e. UI.:= doesnt work).
+
+
+
+## Uninitialized Style Animations
+
+If you attempt to animate a property that hasn't been provided in the initial style, that property will simply not be animated.
+
+This was done because it seems to be the better option than animating with an arbitrarily chosen default value and with arbitrarily chosen default units.
+
+So, if a property isn't animating, check your initStyle!
+
+
+
+
+
+
+
+
+
+
 
