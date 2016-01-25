@@ -46,7 +46,7 @@ module Html.Animation
 @docs andThen
 
 # Render a StyleAnimation into css you can use
-@docs render, update
+@docs render, updateStyle
 
 # Managing a list of styled widgets
 @docs forwardTo
@@ -609,8 +609,13 @@ bake elapsed anim prev =
                  anim.ease percentComplete
 
             style = 
-                List.map 
-                  (\p -> bakeProp p (findProp prev p) eased) 
+                List.concatMap 
+                  (\p -> 
+                    case findProp prev p of
+                      Nothing -> []
+                      Just e ->
+                          [bakeProp p e eased]
+                  ) 
                     anim.target
           in
             -- If properties are in previous
@@ -619,7 +624,7 @@ bake elapsed anim prev =
             fill style prev
 
 -- private
-bakeProp : StyleProperty Dynamic -> Maybe (StyleProperty Static) -> Float -> StyleProperty Static
+bakeProp : StyleProperty Dynamic -> StyleProperty Static -> Float -> StyleProperty Static
 bakeProp prop prev current =
             let
               val from fn = fn from current
@@ -629,7 +634,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Prop _ x _) -> x
+                        Prop _ x _ -> x
                         _ -> 0.0
                   in
                     Prop name (val from to) unit
@@ -639,7 +644,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Opacity x) -> x
+                        Opacity x -> x
                         _ -> 0.0
                   in
                     Opacity (val from to)
@@ -649,7 +654,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Height x _) -> x
+                        Height x _ -> x
                         _ -> 0.0
                   in
                     Height (val from to) unit
@@ -659,7 +664,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Width x _) -> x
+                        Width x _ -> x
                         _ -> 0.0
                   in
                     Width (val from to) unit
@@ -669,7 +674,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Left x _) -> x
+                        Left x _ -> x
                         _ -> 0.0
                   in
                     Left (val from to) unit
@@ -679,7 +684,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Top x _) -> x
+                        Top x _ -> x
                         _ -> 0.0
                   in
                     Top (val from to) unit
@@ -689,7 +694,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Right x _) -> x
+                        Right x _ -> x
                         _ -> 0.0
                   in
                     Right (val from to) unit
@@ -699,7 +704,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Bottom x _) -> x
+                        Bottom x _ -> x
                         _ -> 0.0
                   in
                     Bottom (val from to) unit
@@ -709,7 +714,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Padding x _) -> x
+                        Padding x _ -> x
                         _ -> 0.0
                   in
                     Padding (val from to) unit
@@ -719,7 +724,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (PaddingLeft x _) -> x
+                        PaddingLeft x _ -> x
                         _ -> 0.0
                   in
                     PaddingLeft (val from to) unit
@@ -729,7 +734,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (PaddingRight x _) -> x
+                        PaddingRight x _ -> x
                         _ -> 0.0
                   in
                     PaddingRight (val from to) unit
@@ -739,7 +744,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (PaddingTop x _) -> x
+                        PaddingTop x _ -> x
                         _ -> 0.0
                   in
                     PaddingTop (val from to) unit
@@ -749,7 +754,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (PaddingBottom x _) -> x
+                        PaddingBottom x _ -> x
                         _ -> 0.0
                   in
                     PaddingBottom (val from to) unit
@@ -759,7 +764,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Margin x _) -> x
+                        Margin x _ -> x
                         _ -> 0.0
                   in
                     Margin (val from to) unit
@@ -769,7 +774,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (MarginLeft x _) -> x
+                        MarginLeft x _ -> x
                         _ -> 0.0
                   in
                     MarginLeft (val from to) unit
@@ -779,7 +784,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (MarginRight x _) -> x
+                        MarginRight x _ -> x
                         _ -> 0.0
                   in
                     MarginRight (val from to) unit
@@ -789,7 +794,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (MarginTop x _) -> x
+                        MarginTop x _ -> x
                         _ -> 0.0
                   in
                     MarginTop (val from to) unit 
@@ -799,7 +804,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (MarginBottom x _) -> x
+                        MarginBottom x _ -> x
                         _ -> 0.0
                   in
                     MarginBottom (val from to) unit
@@ -809,7 +814,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom) =
                       case prev of
-                        Just (Color _ x1 y1 z1) -> (x1, y1, z1)
+                        Color _ x1 y1 z1 -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
                     Color unit (val xFrom x) (val yFrom y) (val zFrom z)
@@ -819,7 +824,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom) =
                       case prev of
-                        Just (BackgroundColor _ x1 y1 z1) -> (x1, y1, z1)
+                        BackgroundColor _ x1 y1 z1 -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
                     BackgroundColor unit (val xFrom x) (val yFrom y) (val zFrom z)
@@ -829,7 +834,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        Just (ColorA _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
+                        ColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
                     ColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
@@ -839,7 +844,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        Just (BackgroundColorA _ x1 y1 z1 a1) -> (x1, y1, z1, a1)
+                        BackgroundColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
                     BackgroundColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
@@ -850,7 +855,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom) =
                       case prev of
-                        Just (Translate x1 y1 _) -> (x1, y1)
+                        Translate x1 y1 _ -> (x1, y1)
                         _ -> (0.0, 0.0)
                   in
                     Translate (val xFrom x) (val yFrom y) unit
@@ -860,7 +865,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom) =
                       case prev of
-                        Just (Translate3d x1 y1 z1 _) -> (x1, y1, z1)
+                        Translate3d x1 y1 z1 _ -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
                     Translate3d (val xFrom x) (val yFrom y) (val zFrom z) unit
@@ -870,7 +875,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (TranslateX x _) -> x
+                        TranslateX x _ -> x
                         _ -> 0.0
                   in
                     TranslateX (val from to) unit
@@ -880,7 +885,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (TranslateY x _) -> x
+                        TranslateY x _ -> x
                         _ -> 0.0
                   in
                     TranslateY (val from to) unit
@@ -890,7 +895,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Scale x) -> x
+                        Scale x -> x
                         _ -> 0.0
                   in
                      Scale (val from to)
@@ -900,7 +905,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom) =
                       case prev of
-                        Just (Scale3d x1 y1 z1) -> (x1, y1, z1)
+                        Scale3d x1 y1 z1 -> (x1, y1, z1)
                         _ -> (0.0, 0.0, 0.0)
                   in
                     Scale3d (val xFrom x) (val yFrom y) (val zFrom z)
@@ -910,7 +915,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (ScaleX x) -> x
+                        ScaleX x -> x
                         _ -> 0.0
                   in
                     ScaleX (val from to)
@@ -920,7 +925,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (ScaleY x) -> x
+                        ScaleY x -> x
                         _ -> 0.0
                   in
                     ScaleY (val from to)
@@ -930,7 +935,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (ScaleZ x) -> x
+                        ScaleZ x -> x
                         _ -> 0.0
                   in
                     ScaleZ (val from to)
@@ -940,7 +945,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (Rotate x _) -> x
+                        Rotate x _ -> x
                         _ -> 0.0
                   in
                     Rotate (val from to) unit
@@ -950,7 +955,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        Just (Rotate3d x1 y1 z1 a1 _) -> (x1, y1, z1, a1)
+                        Rotate3d x1 y1 z1 a1 _ -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in 
                     Rotate3d (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a) unit
@@ -960,7 +965,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (RotateX x _) -> x
+                        RotateX x _ -> x
                         _ -> 0.0
                   in
                     RotateX (val from to) unit
@@ -969,7 +974,7 @@ bakeProp prop prev current =
                   let
                     from =
                       case prev of
-                        Just (RotateY x _) -> x
+                        RotateY x _ -> x
                         _ -> 0.0
                   in
                     RotateY (val from to) unit
@@ -979,7 +984,7 @@ bakeProp prop prev current =
                   let
                     (xFrom, yFrom) =
                       case prev of
-                        Just (Skew x y _) -> (x, y)
+                        Skew x y _ -> (x, y)
                         _ -> (0.0, 0.0)
                   in
                     Skew (val xFrom x) (val yFrom y) unit 
@@ -989,7 +994,7 @@ bakeProp prop prev current =
                   let
                      from =
                       case prev of
-                        Just (SkewX x _) -> x
+                        SkewX x _ -> x
                         _ -> 0.0
                   in
                     SkewX (val from to) unit
@@ -998,7 +1003,7 @@ bakeProp prop prev current =
                   let
                      from =
                       case prev of
-                        Just (SkewY x _) -> x
+                        SkewY x _ -> x
                         _ -> 0.0
                   in
                     SkewY (val from to) unit
@@ -1007,38 +1012,33 @@ bakeProp prop prev current =
                   let
                      from =
                       case prev of
-                        Just (SkewY x _) -> x
+                        SkewY x _ -> x
                         _ -> 0.0
                   in
                     Perspective (val from to)
 
                 Matrix a b c x y z -> 
-                  let
-                    (aFrom, bFrom, cFrom, xFrom, yFrom, zFrom) =
-                      case prev of
-                        Just (Matrix a2 b2 c2 x2 y2 z2) -> 
-                            (a2, b2, c2, x2, y2, z2)
-                        _ -> 
-                            (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-                  in 
-                    Matrix (val aFrom a) (val bFrom b) (val cFrom c) (val xFrom x) (val yFrom y) (val zFrom z)
-                
-
+                    case prev of
+                      Matrix aFrom bFrom cFrom xFrom yFrom zFrom -> 
+                          Matrix (val aFrom a) (val bFrom b) (val cFrom c) 
+                                 (val xFrom x) (val yFrom y) (val zFrom z)
+                      _ -> 
+                          Matrix (val 0.0 a) (val 0.0 b) (val 0.0 c) 
+                                 (val 0.0 x) (val 0.0 y) (val 0.0 z)
+                   
 
                 Matrix3d a b c d e f g h i j k l m n o p -> 
-                      case prev of
-
-                        Just (Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2) -> 
-                             Matrix3d (val a2 a) (val b2 b) (val c2 c) (val d2 d) 
-                                      (val e2 e) (val f2 f) (val g2 g) (val h2 h) 
-                                      (val i2 i) (val j2 j) (val k2 k) (val l2 l) 
-                                      (val m2 m) (val n2 n) (val o2 o) (val p2 p)
-
-                        _ -> 
-                             Matrix3d (val 0.0 a) (val 0.0 b) (val 0.0 c) (val 0.0 d) 
-                                      (val 0.0 e) (val 0.0 f) (val 0.0 g) (val 0.0 h) 
-                                      (val 0.0 i) (val 0.0 j) (val 0.0 k) (val 0.0 l) 
-                                      (val 0.0 m) (val 0.0 n) (val 0.0 o) (val 0.0 p)
+                    case prev of
+                      Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2 -> 
+                           Matrix3d (val a2 a) (val b2 b) (val c2 c) (val d2 d) 
+                                    (val e2 e) (val f2 f) (val g2 g) (val h2 h) 
+                                    (val i2 i) (val j2 j) (val k2 k) (val l2 l) 
+                                    (val m2 m) (val n2 n) (val o2 o) (val p2 p)
+                      _ -> 
+                           Matrix3d (val 0.0 a) (val 0.0 b) (val 0.0 c) (val 0.0 d) 
+                                    (val 0.0 e) (val 0.0 f) (val 0.0 g) (val 0.0 h) 
+                                    (val 0.0 i) (val 0.0 j) (val 0.0 k) (val 0.0 l) 
+                                    (val 0.0 m) (val 0.0 n) (val 0.0 o) (val 0.0 p)
 
 -- private
 -- renders a valid css value for a Style Property
