@@ -730,12 +730,12 @@ renderName styleProp =
 -- private
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
-           List.foldl
+           List.foldr
                     (\x acc ->
-                      case findProp acc x of
-                        Nothing -> x::acc 
-                        Just _ -> acc
-                    ) new existing
+                      case findProp new x of
+                        Nothing ->   x :: acc 
+                        Just newX -> newX :: acc
+                    ) [] existing
 
 -- private
 -- Converts an animation into a Style that can be rendered.
