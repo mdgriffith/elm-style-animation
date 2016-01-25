@@ -16,37 +16,49 @@ module Html.Animation
     , (:=), (+=), (-=)
     ) where
 
-{-| This library is for animating css properties (and works well with elm-html).
+{-| This library is for animating css properties and is meant to work well with elm-html.
 
-# Definition
+The easiest way to get started with this library is to check out the examples that are included with the [source code](https://github.com/mdgriffith/elm-html-animation).
+
+Once you have the basic structure of how to use this library, you can refer to this documentation to fill any gaps.
+
+
+# Base Definitions
 @docs StyleAnimation, StyleAction
 
-# All Animatable Style Properties and their Units
-@docs StyleProperty, Length, Angle, ColorFormat, ColorAlphaFormat
-
-# Interrupting an animation with a new one
-@docs animate
-
-# Queueing an Animation
-@docs queue
-
-# Updating an animation
-@docs on
-
-# Creating a starting style
-@docs initStyle
-
 # Creating an animation
-@docs props, duration, easing
+@docs animate, queue, props, duration, easing, andThen, on
 
 # Animating Properties
+
+These functions specify the value for a StyleProperty
+
 @docs to, add, minus, (:=), (+=), (-=)
 
-# Chaining animations together
-@docs andThen
+You can substitute a custom function to use instead of `to`, `add` or `minus`.  This could be useful if to do something like animate along a path.
 
-# Render a StyleAnimation into css you can use
-@docs render, updateStyle
+The function needs to have the following signature.
+
+    Float -> Float -> Float
+
+Where the first argument is the existing property value and the second argument represents the current time (between 0.0 and 1.0).  
+Finally the function would return what the current value should be for the property.
+
+
+# Render a StyleAnimation into CSS
+@docs render
+
+# Setting the starting style
+@docs initStyle
+
+# Update a Style
+@docs updateStyle
+
+# All Animatable Style Properties
+@docs StyleProperty
+
+# Units
+@docs Length, Angle, ColorFormat, ColorAlphaFormat
 
 # Managing a list of styled widgets
 @docs forwardTo
@@ -78,8 +90,7 @@ type alias Static = Float
 type alias Dynamic 
          = (Float -> Float -> Float)
 
-{-| Represent a CSS style.
-This is done as a list of style properties with concrete/static values.
+{-| Represent a CSS style as a list of style properties with concrete values.
 -}
 type alias Style 
          = List (StyleProperty Static)
@@ -211,8 +222,9 @@ type ColorAlphaFormat
 
 
 {-| StyleActions to be run on an animation. 
-You won't be using this type directly, though it may show up in your type signatures.
-To perform updates you'll be using the `animate` and `queue` functions
+You won't be constructing using this type directly, though it may show up in your type signatures.
+
+To start animations you'll be using the `animate` and `queue` functions
 -}
 type StyleAction 
         = Queue (List StyleKeyframe)
@@ -235,7 +247,10 @@ emptyKeyframe =
                  , ease = defaultEasing 
                  }
 
-{-| Create an initial style state
+{-| Create an initial style for your init model.
+
+__Note__ All properties that you animate must be present in the initStyle or else that property won't be animated.
+
 -}
 initStyle : Style -> StyleAnimation
 initStyle sty = A { empty | previous = sty }
@@ -251,7 +266,7 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 
 
-{-| Update an animation.
+{-| Update an animation.  This is only used to 'forward' updates to a style.  So, it will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
 updateStyle : StyleAction -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
 updateStyle action (A model) =
@@ -328,27 +343,36 @@ updateStyle action (A model) =
 
 type alias PreAction = (List StyleKeyframe -> StyleAction)
 
-{-| Syntactic sugar for running an Interrupt update.
+{-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
+
+      UI.animate 
+         |> UI.duration (0.4*second)
+         |> UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
+             ] 
+         |> UI.on model.style
+
 -}
 animate : StyleAction
 animate = Interrupt []
 
 
-{-| Perform an update on a StyleAnimation
--}
-on : StyleAnimation -> StyleAction -> ( StyleAnimation, Effects StyleAction )
-on model action = updateStyle action model
+{-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
 
+      UI.queue
+         |> UI.duration (0.4*second)
+         |> UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
+             ] 
+         |> UI.on model.style
 
-
-{-| Queue up a new animation to be played after the current one.
 -}
 queue : StyleAction
 queue = Queue []
 
-
-
-{-| Specify the properties that should be animated
+{-| Apply an update to a StyleAnimation model.  This is used at the end of constructing an animation.
 
      UI.animate 
          |> UI.duration (0.4*second)
@@ -356,61 +380,43 @@ queue = Queue []
              [ UI.Left UI.Px (UI.to 0) 
              , UI.Opacity (UI.to 1)
              ] 
-         |> UI.on model.menuStyle
+         |> UI.on model.style
 
 -}
-props : List (StyleProperty Dynamic) -> StyleAction -> StyleAction
-props p action = updateOrCreate action (\a -> { a | target = p})
-    
-
-{-| Specify a duration for a keyframe.  If a duration isn't specified, the default is 400ms.
--}
-duration : Time -> StyleAction -> StyleAction
-duration dur action = updateOrCreate action (\a -> { a | duration = dur })
-      
-
-{-| Specify an easing function for a keyframe.  It is expected that values should start on 0 and end at 1.  The default is a sinusoidal
-in-out.
--}
-easing : (Float -> Float) -> StyleAction -> StyleAction
-easing ease action = updateOrCreate action (\a -> { a | ease = ease })
+on : StyleAnimation -> StyleAction -> ( StyleAnimation, Effects StyleAction )
+on model action = updateStyle action model
 
 
-{-| Append another keyframe.
--}
-andThen : StyleAction -> StyleAction
-andThen action = 
-          case action of
-              Tick _ -> action
 
-              Interrupt frames -> 
-                Interrupt (frames ++ [emptyKeyframe])
+{-|  Can be used in place of `on`.  Instead of applying an update directly to a StyleAnimation model,
+you can forward the update to a specific element in a list that has a StyleAnimation model.
 
-              Queue frames -> 
-                Queue (frames ++ [emptyKeyframe])
+To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
 
+So, for a model like the following
 
--- private
-updateOrCreate : StyleAction -> (StyleKeyframe -> StyleKeyframe) -> StyleAction
-updateOrCreate action fn =
-                let
-                  update frames = 
-                    case List.reverse frames of
-                      [] -> [fn emptyKeyframe] 
-                      cur::rem -> List.reverse ((fn cur)::rem)
-                in
-                 case action of
-                    Tick _ -> action
+    type alias Model = { widgets : List Widget }
 
-                    Interrupt frames -> 
-                      Interrupt (update frames)
+    type alias Widget = 
+              { style : UI.StyleAnimation
+              }
+You'd probably want to create a specialized version of `forwardTo`.
 
-                    Queue frames -> 
-                      Queue (update frames)
+    forwardToWidget = UI.forwardTo 
+                        .style -- widget style getter
+                        (\w style -> { w | style = style }) -- widget style setter
 
+Which you can then use to apply an animation to a widget in a list.
 
-{-| Convenient function to forward an update to a style object contained in a type
- See the Showcase Example to get an idea of whats going on here
+    (widgets, fx) = 
+            UI.animate
+                |> UI.duration (5*second)
+                |> UI.props 
+                    [ UI.Opacity (UI.to 0)  
+                    ] 
+                |> forwardToWidget i model.widgets
+                -- Where i is the index of the widget to update.
+
 -}
 forwardTo : (a -> StyleAnimation) -> (a -> StyleAnimation -> a) -> Int -> List a -> StyleAction -> (List a, Effects StyleAction)
 forwardTo styleGet styleSet i widgets action = 
@@ -444,18 +450,94 @@ forwardTo styleGet styleSet i widgets action =
 
 
 
-{-| Used for animating a StyleProperty to a value
-Takes 
-     * provided value
-     * previous value
-     * current normalized time (0.0-1.0) 
-     * returns current value
+{-| Specify the properties that should be animated
+
+     UI.animate 
+         |> UI.duration (0.4*second)
+         |> UI.props 
+             [ UI.Left UI.Px (UI.to 0) 
+             , UI.Opacity (UI.to 1)
+             ] 
+         |> UI.on model.style
+
+-}
+props : List (StyleProperty Dynamic) -> StyleAction -> StyleAction
+props p action = updateOrCreate action (\a -> { a | target = p})
+    
+
+{-| Optionally specify a duration.  The default is 400ms.
+-}
+duration : Time -> StyleAction -> StyleAction
+duration dur action = updateOrCreate action (\a -> { a | duration = dur })
+      
+
+{-| Opitionally specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
+in-out.
+-}
+easing : (Float -> Float) -> StyleAction -> StyleAction
+easing ease action = updateOrCreate action (\a -> { a | ease = ease })
+
+
+{-| Append another keyframe.  This is used for multistage animations.  For example, to cycle through colors, we'd use the following:
+
+      UI.animate 
+              |> UI.props 
+                  [ UI.BackgroundColorA 
+                        UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
+                  ] 
+          |> UI.andThen -- create a new keyframe
+              |> UI.duration (1*second)
+              |> UI.props 
+                  [ UI.BackgroundColorA 
+                        UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                  ] 
+          |> UI.andThen 
+              |> UI.props 
+                  [ UI.BackgroundColorA 
+                        UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
+                  ] 
+          |> UI.on model.style
+-}
+andThen : StyleAction -> StyleAction
+andThen action = 
+          case action of
+              Tick _ -> action
+
+              Interrupt frames -> 
+                Interrupt (frames ++ [emptyKeyframe])
+
+              Queue frames -> 
+                Queue (frames ++ [emptyKeyframe])
+
+
+-- private
+updateOrCreate : StyleAction -> (StyleKeyframe -> StyleKeyframe) -> StyleAction
+updateOrCreate action fn =
+                let
+                  update frames = 
+                    case List.reverse frames of
+                      [] -> [fn emptyKeyframe] 
+                      cur::rem -> List.reverse ((fn cur)::rem)
+                in
+                 case action of
+                    Tick _ -> action
+
+                    Interrupt frames -> 
+                      Interrupt (update frames)
+
+                    Queue frames -> 
+                      Queue (update frames)
+
+
+
+
+{-| Animate a StyleProperty to a value.
 
 -}
 to : Float -> Float -> Float -> Float
 to target from current = ((target-from) * current) + from
 
-{-| Used for animating a StyleProperty by adding to its existing value
+{-| Animate a StyleProperty by adding to its existing value
 
 -}
 add : Float -> Float -> Float -> Float
@@ -465,7 +547,7 @@ add mod from current =
         in
           to target from current
 
-{-| Used for animating a StyleProperty by subtracting from its existing value
+{-| Animate a StyleProperty by subtracting to its existing value
 
 -}
 minus : Float -> Float -> Float -> Float
@@ -477,17 +559,23 @@ minus mod from current =
 
 {-| Infix version of the above `to` function
 
+__Note__ only usable if imported unqualified.
+
 -}
 (:=) : Float -> Float -> Float -> Float
 (:=) t f c = to t f c
 
 {-| Infix version of the above `add` function
 
+__Note__ only usable if imported unqualified.
+
 -}
 (+=) : Float -> Float -> Float -> Float
 (+=) t f c = add t f c
 
 {-| Infix version of the above `minus` function
+
+__Note__ only usable if imported unqualified.
 
 -}
 (-=) : Float -> Float -> Float -> Float
@@ -1239,20 +1327,6 @@ renderValue prop  =
               renderList xs = "(" ++ (String.concat 
                               <| List.intersperse "," 
                               <| List.map toString xs) ++ ")"
-
-              renderIntList xs = renderList <| List.map round xs
-
-              renderColorA xyza =
-                  let
-                    int a = toString (round a)
-                  in
-                    case xyza of
-                      (x,y,z,a) ->
-                        "(" ++ int x ++ 
-                        "," ++ int y ++ 
-                        "," ++ int z ++ 
-                        "," ++ toString a ++ ")"
-
             in
               case prop of
                 Prop _ a u -> (val a) ++ u
@@ -1303,23 +1377,22 @@ renderValue prop  =
 
 
                 Color unit x y z    -> 
-                      (colorUnit unit) ++ renderIntList [x,y,z]
+                      renderColor unit x y z
 
                 BackgroundColor unit x y z -> 
-                       (colorUnit unit) ++ renderIntList [x,y,z]
+                       renderColor unit x y z
 
                 BorderColor unit x y z -> 
-                       (colorUnit unit) ++ renderIntList [x,y,z]
+                       renderColor unit x y z
 
                 ColorA unit x y z a -> 
-                      (colorAUnit unit) ++ renderColorA (x,y,z,a)
+                      renderAlphaColor unit x y z a
 
                 BackgroundColorA unit x y z a -> 
-                      (colorAUnit unit) ++ renderColorA (x,y,z,a)
+                      renderAlphaColor unit x y z a
 
                 BorderColorA unit x y z a -> 
-                      (colorAUnit unit) ++ renderColorA (x,y,z,a)
-
+                      renderAlphaColor unit x y z a
 
                 Translate a1 a2 unit -> 
                         "translate(" ++ (renderLength a1 unit) 
@@ -1370,6 +1443,50 @@ renderValue prop  =
                           (renderList [a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p])
                            
 
+
+renderColor : ColorFormat -> Float -> Float -> Float -> String
+renderColor format x y z =
+            let
+              renderList xs = "(" ++ (String.concat 
+                              <| List.intersperse "," 
+                              <| List.map toString xs) ++ ")"
+
+              renderIntList xs = renderList <| List.map round xs
+            in
+                case format of
+                  RGB ->
+                    "rgb(" ++ renderIntList [x,y,z] ++ ")"
+
+                  HSL ->
+                    "hsl(" ++ toString x 
+                   ++ "," ++ toString y ++ "%"
+                   ++ "," ++ toString z ++ "%"
+                   ++ ")"
+
+
+renderAlphaColor : ColorAlphaFormat -> Float -> Float -> Float -> Float -> String
+renderAlphaColor format x y z a =
+            let
+              renderList xs = "(" ++ (String.concat 
+                              <| List.intersperse "," 
+                              <| List.map toString xs) ++ ")"
+
+              renderIntList xs = renderList <| List.map round xs
+            in
+              case format of
+                RGBA ->
+                   "rgba(" ++ toString (round x) 
+                     ++ "," ++ toString (round y) 
+                     ++ "," ++ toString (round z) 
+                     ++ "," ++ toString a
+                     ++ ")"
+                      
+                HSLA ->
+                  "hsl(" ++ toString x 
+                  ++ "," ++ toString y ++ "%"
+                  ++ "," ++ toString z ++ "%"
+                  ++ "," ++ toString a
+                  ++ ")"
 
 
 -- private

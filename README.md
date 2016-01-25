@@ -246,7 +246,7 @@ From here, we're able to animate each widget independently.
 
 ## Importing Unqualified
 
-You have option of importing  `Html.Animation` unqualified.  
+You have the option of importing  `Html.Animation` unqualified.  
 
 ```elm
 import Html.Animation exposing (..)
@@ -257,7 +257,7 @@ And you'll need to do this to use the infix operators (:=, +=, and ==), (i.e. UI
 
 ## Uninitialized Style Animations
 
-If you attempt to animate a property that hasn't been provided in the initial style, that property will not be animated.
+If you attempt to animate a property that hasn't been provided in the initial style, _that property will not be animated._
 
 This was done because it seems to be the better option than animating with an arbitrarily chosen default value and with arbitrarily chosen default units.
 
@@ -266,15 +266,17 @@ So, if a property isn't animating, check your initStyle!
 
 ## Doubly Specified Units
 
-If you specify different units for a property in the initStyle vs the animation, that property animation will also not be animated.
+If you specify different units for a property in the initStyle vs the animation, _that property animation will also not be animated._
 
 I know this is not the best solution, but there are a few reasons why it's the case.
 
- 1. Unfortunately Html.Animation can't automatically convert between units.  A classic example of why not, would be attempting to convert px to %. This can't be done without querying the DOM and my hunch is that it would be fairly unreliable even if you could.
+ 1. Html.Animation can't automatically convert between units.  A classic example of why not, would be attempting to convert px to %. This can't be done without querying the DOM.
 
  2. Again we want to avoid making up arbitrary default values.
 
-I'm currently working on a solution by making units only specified in the initStyle, however this turns out to be fairly complicated (see __eliminating-twice-declared-units__ branch if you're curious and want a headache.)  So, maybe in the future?
+I'm currently working on a solution by making units only specified in the initStyle, however this turns out to be fairly complicated (see __eliminating-twice-declared-units__ branch if you're curious and want a headache.)  
+
+So, maybe this will be solved in the future?
 
 
 
