@@ -106,6 +106,11 @@ type StyleProperty a
         | Right a Length
         | Bottom a Length
 
+        | MaxHeight a Length
+        | MaxWidth a Length
+        | MinHeight a Length
+        | MinWidth a Length
+
         | Padding a Length
         | PaddingLeft a Length
         | PaddingRight a Length
@@ -118,12 +123,29 @@ type StyleProperty a
         | MarginTop a Length
         | MarginBottom a Length
 
+        | BorderWidth a Length
+        | BorderRadius a Length
+        | BorderTopLeftRadius a Length
+        | BorderTopRightRadius a Length
+        | BorderBottomLeftRadius a Length
+        | BorderBottomRightRadius a Length
+
+        | LetterSpacing a Length
+        | LineHeight a Length
+
+        | BackgroundPosition a a Length
+
+
         -- Color
         | Color ColorFormat a a a
         | BackgroundColor ColorFormat a a a
+        | BorderColor ColorFormat a a a
 
         | ColorA ColorAlphaFormat a a a a
         | BackgroundColorA ColorAlphaFormat a a a a
+        | BorderColorA ColorAlphaFormat a a a a
+
+        | TransformOrigin a a a Length
 
         -- Transformations
         | Matrix a a a a a a 
@@ -548,6 +570,11 @@ renderName styleProp =
               Bottom _ _  -> "bottom"
               Top _ _     -> "top"
 
+              MaxHeight _ _ -> "max-height"
+              MaxWidth _ _  -> "max-width"
+              MinHeight _ _ -> "min-height"
+              MinWidth _ _  -> "min-width"
+
               Padding _ _       -> "padding"
               PaddingLeft _ _   -> "padding-left"
               PaddingRight _ _  -> "padding-right"
@@ -560,12 +587,27 @@ renderName styleProp =
               MarginTop _ _    -> "margin-top"
               MarginBottom _ _ -> "margin-bottom"
 
+              BorderWidth _ _ -> "border-width"
+              BorderRadius _ _ -> "border-radius"
+              BorderTopLeftRadius _ _ -> "border-top-left-radius"
+              BorderTopRightRadius _ _ -> "border-top-right-radius"
+              BorderBottomLeftRadius _ _ -> "border-bottom-left-radius"
+              BorderBottomRightRadius _ _ -> "border-bottom-right-radius"
+
+              LetterSpacing _ _ -> "letter-spacing"
+              LineHeight _ _ -> "line-height"
+
+              BackgroundPosition _ _ _ -> "background-position"
+
+              TransformOrigin _ _ _ _ -> "transform-origin"
+
               Color _ _ _ _    -> "color"
               BackgroundColor _ _ _ _ -> "background-color"
+              BorderColor _ _ _ _ -> "border-color"
 
               ColorA _ _ _ _ _ -> "color"
               BackgroundColorA _ _ _ _ _ -> "background-color"
-
+              BorderColorA _ _ _ _ _ -> "border-color"
 
               Matrix _ _ _ _ _ _ -> "transform"
               Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "transform"
@@ -709,6 +751,43 @@ bakeProp prop prev current =
                   in
                     Bottom (val from to) unit
 
+                MaxHeight to unit -> 
+                  let
+                    from =
+                      case prev of
+                        MaxHeight x _ -> x
+                        _ -> 0.0
+                  in
+                    MaxHeight (val from to) unit
+
+                MaxWidth to unit  -> 
+                  let
+                    from =
+                      case prev of
+                        MaxWidth x _ -> x
+                        _ -> 0.0
+                  in
+                    MaxWidth (val from to) unit
+
+                MinHeight to unit -> 
+                  let
+                    from =
+                      case prev of
+                        MinHeight x _ -> x
+                        _ -> 0.0
+                  in
+                    MinHeight (val from to) unit
+
+                MinWidth to unit  -> 
+                  let
+                    from =
+                      case prev of
+                        MinWidth x _ -> x
+                        _ -> 0.0
+                  in
+                    MinWidth (val from to) unit
+
+
 
                 Padding to unit -> 
                   let
@@ -809,6 +888,88 @@ bakeProp prop prev current =
                   in
                     MarginBottom (val from to) unit
 
+                BorderWidth to unit ->  
+                  let
+                    from =
+                      case prev of
+                        BorderWidth x _ -> x
+                        _ -> 0.0
+                  in
+                    BorderWidth (val from to) unit
+
+                BorderRadius to unit ->  
+                  let
+                    from =
+                      case prev of
+                        BorderRadius x _ -> x
+                        _ -> 0.0
+                  in
+                    BorderRadius (val from to) unit
+
+                BorderTopLeftRadius to unit ->  
+                  let
+                    from =
+                      case prev of
+                        BorderTopLeftRadius x _ -> x
+                        _ -> 0.0
+                  in
+                    BorderTopLeftRadius (val from to) unit
+
+                BorderTopRightRadius to unit ->  
+                  let
+                    from =
+                      case prev of
+                        BorderTopRightRadius x _ -> x
+                        _ -> 0.0
+                  in
+                    BorderTopRightRadius (val from to) unit
+
+                BorderBottomLeftRadius to unit ->  
+                  let
+                    from =
+                      case prev of
+                        BorderBottomLeftRadius x _ -> x
+                        _ -> 0.0
+                  in
+                    BorderBottomLeftRadius (val from to) unit
+
+                BorderBottomRightRadius to unit ->  
+                  let
+                    from =
+                      case prev of
+                        BorderBottomRightRadius x _ -> x
+                        _ -> 0.0
+                  in
+                    BorderBottomRightRadius (val from to) unit
+
+
+                LetterSpacing to unit ->  
+                  let
+                    from =
+                      case prev of
+                        LetterSpacing x _ -> x
+                        _ -> 0.0
+                  in
+                    LetterSpacing (val from to) unit
+
+                LineHeight to unit ->  
+                  let
+                    from =
+                      case prev of
+                        LineHeight x _ -> x
+                        _ -> 0.0
+                  in
+                    LineHeight (val from to) unit
+
+
+                BackgroundPosition x y unit ->  
+                      case prev of
+                        BackgroundPosition xFrom yFrom _ -> 
+                              BackgroundPosition (val xFrom x) (val yFrom y) unit
+                        _ -> 
+                          BackgroundPosition (val 0.0 x) (val 0.0 y) unit
+                 
+
 
                 Color unit x y z    -> 
                   let
@@ -818,6 +979,15 @@ bakeProp prop prev current =
                         _ -> (0.0, 0.0, 0.0)
                   in
                     Color unit (val xFrom x) (val yFrom y) (val zFrom z)
+
+                BorderColor unit x y z    -> 
+                  let
+                    (xFrom, yFrom, zFrom) =
+                      case prev of
+                        BorderColor _ x1 y1 z1 -> (x1, y1, z1)
+                        _ -> (0.0, 0.0, 0.0)
+                  in
+                    BorderColor unit (val xFrom x) (val yFrom y) (val zFrom z)
 
 
                 BackgroundColor unit x y z -> 
@@ -839,6 +1009,15 @@ bakeProp prop prev current =
                   in
                     ColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
+                BorderColorA unit x y z a -> 
+                  let
+                    (xFrom, yFrom, zFrom, aFrom) =
+                      case prev of
+                        BorderColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        _ -> (0.0, 0.0, 0.0, 0.0)
+                  in
+                    BorderColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+
 
                 BackgroundColorA unit x y z a -> 
                   let
@@ -849,6 +1028,15 @@ bakeProp prop prev current =
                   in
                     BackgroundColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
+
+                TransformOrigin x y z unit ->
+                  let
+                    (xFrom, yFrom, zFrom) =
+                      case prev of
+                        TransformOrigin x1 y1 z1 _ -> (x1, y1, z1)
+                        _ -> (0.0, 0.0, 0.0)
+                  in
+                    TransformOrigin (val xFrom x) (val yFrom y) (val zFrom z) unit
 
 
                 Translate x y unit -> 
@@ -1077,6 +1265,11 @@ renderValue prop  =
                 Right a unit -> renderLength a unit
                 Bottom a unit -> renderLength a unit
 
+                MaxHeight a unit -> renderLength a unit
+                MaxWidth a unit  -> renderLength a unit
+                MinHeight a unit -> renderLength a unit
+                MinWidth a unit  -> renderLength a unit
+
                 Padding a unit       -> renderLength a unit 
                 PaddingLeft a unit   -> renderLength a unit 
                 PaddingRight a unit  -> renderLength a unit
@@ -1089,16 +1282,42 @@ renderValue prop  =
                 MarginTop a unit    -> renderLength a unit 
                 MarginBottom a unit -> renderLength a unit 
 
+
+                BorderWidth a unit -> renderLength a unit 
+                BorderRadius a unit -> renderLength a unit 
+                BorderTopLeftRadius a unit -> renderLength a unit 
+                BorderTopRightRadius a unit -> renderLength a unit 
+                BorderBottomLeftRadius a unit -> renderLength a unit 
+                BorderBottomRightRadius a unit -> renderLength a unit 
+
+                LetterSpacing a unit -> renderLength a unit 
+                LineHeight    a unit -> renderLength a unit 
+
+                BackgroundPosition x y unit -> renderLength x unit 
+                                     ++ " " ++ renderLength y unit
+
+                TransformOrigin x y z unit -> renderLength x unit 
+                                    ++ " " ++ renderLength y unit 
+                                    ++ " " ++ renderLength z unit
+
+
+
                 Color unit x y z    -> 
                       (colorUnit unit) ++ renderIntList [x,y,z]
 
                 BackgroundColor unit x y z -> 
                        (colorUnit unit) ++ renderIntList [x,y,z]
 
+                BorderColor unit x y z -> 
+                       (colorUnit unit) ++ renderIntList [x,y,z]
+
                 ColorA unit x y z a -> 
                       (colorAUnit unit) ++ renderColorA (x,y,z,a)
 
                 BackgroundColorA unit x y z a -> 
+                      (colorAUnit unit) ++ renderColorA (x,y,z,a)
+
+                BorderColorA unit x y z a -> 
                       (colorAUnit unit) ++ renderColorA (x,y,z,a)
 
 
@@ -1159,49 +1378,70 @@ propId prop =
         case prop of
           Prop name _ unit -> name ++ unit
           Opacity _ -> "opacity"
-          Height _ unit -> "height" ++ (lenUnit unit)
-          Width _ unit  -> "width" ++ (lenUnit unit)
-          Left _ unit   -> "left" ++ (lenUnit unit)
-          Right _ unit  -> "right" ++ (lenUnit unit)
-          Bottom _ unit -> "bottom" ++ (lenUnit unit)
-          Top _ unit    -> "top" ++ (lenUnit unit)
+          Height _ unit -> "height" ++ lenUnit unit
+          Width _ unit  -> "width" ++ lenUnit unit
+          Left _ unit   -> "left" ++ lenUnit unit
+          Right _ unit  -> "right" ++ lenUnit unit
+          Bottom _ unit -> "bottom" ++ lenUnit unit
+          Top _ unit    -> "top" ++ lenUnit unit
 
-          Padding _ unit      -> "padding" ++ (lenUnit unit)
-          PaddingLeft _ unit  -> "padding-left" ++ (lenUnit unit)
-          PaddingRight _ unit -> "padding-right" ++ (lenUnit unit)
-          PaddingTop _ unit   -> "padding-top" ++ (lenUnit unit)
-          PaddingBottom _ unit-> "padding-bottom" ++ (lenUnit unit)
+          MaxHeight _ unit -> "max-height" ++ lenUnit unit
+          MaxWidth _ unit  -> "max-width" ++ lenUnit unit
+          MinHeight _ unit -> "min-height" ++ lenUnit unit
+          MinWidth _ unit  -> "min-width" ++ lenUnit unit
 
-          Margin _ unit      -> "margin" ++ (lenUnit unit)
-          MarginLeft _ unit  -> "margin-left" ++ (lenUnit unit)
-          MarginRight _ unit -> "margin-right" ++ (lenUnit unit)
-          MarginTop _ unit   -> "margin-top" ++ (lenUnit unit)
-          MarginBottom _ unit-> "margin-bottom" ++ (lenUnit unit)
+          Padding _ unit      -> "padding" ++ lenUnit unit
+          PaddingLeft _ unit  -> "padding-left" ++ lenUnit unit
+          PaddingRight _ unit -> "padding-right" ++ lenUnit unit
+          PaddingTop _ unit   -> "padding-top" ++ lenUnit unit
+          PaddingBottom _ unit-> "padding-bottom" ++ lenUnit unit
 
-          Color unit _ _ _    -> "color" ++ (colorUnit unit)
-          BackgroundColor unit _ _ _ -> "background-color" ++ (colorUnit unit)
+          Margin _ unit      -> "margin" ++ lenUnit unit
+          MarginLeft _ unit  -> "margin-left" ++ lenUnit unit
+          MarginRight _ unit -> "margin-right" ++ lenUnit unit
+          MarginTop _ unit   -> "margin-top" ++ lenUnit unit
+          MarginBottom _ unit-> "margin-bottom" ++ lenUnit unit
 
-          ColorA unit _ _ _ _ -> "color" ++ (colorAUnit unit)
-          BackgroundColorA unit _ _ _ _ -> "background-color" ++ (colorAUnit unit)
+          BorderWidth _ unit -> "border-width" ++ lenUnit unit
+          BorderRadius _ unit -> "border-radius" ++ lenUnit unit
+          BorderTopLeftRadius _ unit -> "border-top-left-radius" ++ lenUnit unit
+          BorderTopRightRadius _ unit -> "border-top-right-radius" ++ lenUnit unit
+          BorderBottomLeftRadius _ unit -> "border-bottom-left-radius" ++ lenUnit unit
+          BorderBottomRightRadius _ unit -> "border-bottom-right-radius" ++ lenUnit unit
 
+          LetterSpacing _ unit -> "letter-spacing" ++ lenUnit unit
+          LineHeight _ unit -> "line-height" ++ lenUnit unit
+
+          BackgroundPosition _ _ unit -> "background-position" ++ lenUnit unit
+
+          Color unit _ _ _    -> "color" ++ colorUnit unit
+          BackgroundColor unit _ _ _ -> "background-color" ++ colorUnit unit
+          BorderColor unit _ _ _ -> "border-color" ++ colorUnit unit
+
+          ColorA unit _ _ _ _ -> "color" ++ colorAUnit unit
+          BackgroundColorA unit _ _ _ _ -> "background-color" ++ colorAUnit unit
+          BorderColorA unit _ _ _ _ -> "border-color" ++ colorAUnit unit
+
+
+          TransformOrigin _ _ _ unit -> "transform-origin" ++ lenUnit unit
           Matrix _ _ _ _ _ _ -> "matrix"
           Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "matrix3d"
-          Translate _ _ unit -> "translate" ++ (lenUnit unit)
-          Translate3d _ _ _ unit -> "translate3d"  ++ (lenUnit unit)
-          TranslateX _ unit -> "translatex" ++ (lenUnit unit)
-          TranslateY _ unit -> "translatey" ++ (lenUnit unit)
+          Translate _ _ unit -> "translate" ++ lenUnit unit
+          Translate3d _ _ _ unit -> "translate3d"  ++ lenUnit unit
+          TranslateX _ unit -> "translatex" ++ lenUnit unit
+          TranslateY _ unit -> "translatey" ++ lenUnit unit
           Scale _        -> "scale"
           Scale3d _ _ _  -> "scale3d"
           ScaleX _   -> "scalex"
           ScaleY _   -> "scaley"
           ScaleZ _   -> "scalez"
-          Rotate _ unit -> "rotate" ++ (angleUnit unit)
-          Rotate3d _ _ _ _ unit -> "rotate3d" ++ (angleUnit unit)
-          RotateX _ unit   -> "rotatex" ++ (angleUnit unit)
-          RotateY _ unit   -> "rotatey" ++ (angleUnit unit)
-          Skew _ _ unit   -> "skew" ++ (angleUnit unit)
-          SkewX _ unit     -> "skewx" ++ (angleUnit unit)
-          SkewY _ unit     -> "skewy" ++ (angleUnit unit)
+          Rotate _ unit -> "rotate" ++ angleUnit unit
+          Rotate3d _ _ _ _ unit -> "rotate3d" ++ angleUnit unit
+          RotateX _ unit   -> "rotatex" ++ angleUnit unit
+          RotateY _ unit   -> "rotatey" ++ angleUnit unit
+          Skew _ _ unit   -> "skew" ++ angleUnit unit
+          SkewX _ unit     -> "skewx" ++ angleUnit unit
+          SkewY _ unit     -> "skewy" ++ angleUnit unit
           Perspective _ -> "perspective"
 
 
