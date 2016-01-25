@@ -196,7 +196,6 @@ initialWidgetStyle = UI.initStyle
                         [ UI.Rotate 0.0 UI.Turn
                         , UI.RotateX 0.0 UI.Turn
                         , UI.RotateY 0.0 UI.Turn
-                        , UI.Rotate 0.0 UI.Turn
                         , UI.Opacity 1
                         , UI.BackgroundColorA UI.RGBA 58 40 69 1.0
                         , UI.ColorA UI.RGBA 255 255 255 1.0
