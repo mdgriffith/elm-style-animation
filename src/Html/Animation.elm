@@ -253,7 +253,17 @@ __Note__ All properties that you animate must be present in the initStyle or els
 
 -}
 initStyle : Style -> StyleAnimation
-initStyle sty = A { empty | previous = sty }
+initStyle sty = 
+            let
+              deduped = List.foldr 
+                              (\x acc ->
+                                  if List.any (\y -> propId x == propId y) acc then
+                                    acc
+                                  else
+                                    x :: acc 
+                              ) [] sty
+            in
+              A { empty | previous = deduped }
 
 
 -- private
