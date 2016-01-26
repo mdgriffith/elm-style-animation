@@ -23,7 +23,7 @@ type alias Model = { widgets : List Widget }
 
 type alias Widget = 
           { label : String
-          , style : UI.StyleAnimation
+          , style : UI.Animation
           , action : (Int -> Action)
           }
 
@@ -36,7 +36,7 @@ type Action = Rotate Int
             | ChangeColors Int
             | ChangeMultipleColors Int
             | FadeInFadeOut Int
-            | Animate Int UI.StyleAction
+            | Animate Int UI.Action
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -192,7 +192,7 @@ box address i widget =
 
 
 
-initialWidgetStyle = UI.initStyle 
+initialWidgetStyle = UI.init 
                         [ UI.Rotate 0.0 UI.Turn
                         , UI.RotateX 0.0 UI.Turn
                         , UI.RotateY 0.0 UI.Turn

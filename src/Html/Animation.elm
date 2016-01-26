@@ -1,11 +1,11 @@
 module Html.Animation 
-    ( StyleAnimation
-    , StyleAction
+    ( Animation
+    , Action
     , StyleProperty (..)
     , Length (..), Angle (..) 
     , ColorFormat (..), ColorAlphaFormat (..)
-    , initStyle
-    , updateStyle
+    , init
+    , update
     , render
     , animate
     , queue
@@ -13,7 +13,6 @@ module Html.Animation
     , props, duration, easing
     , andThen, forwardTo
     , to, add, minus
-    , (:=), (+=), (-=)
     ) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
@@ -24,7 +23,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 
 # Base Definitions
-@docs StyleAnimation, StyleAction
+@docs Animation, Action
 
 # Creating an animation
 @docs animate, queue, props, duration, easing, andThen, on
@@ -33,7 +32,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 These functions specify the value for a StyleProperty
 
-@docs to, add, minus, (:=), (+=), (-=)
+@docs to, add, minus
 
 You can substitute a custom function to use instead of `to`, `add` or `minus`.  This could be useful if to do something like animate along a path.
 
@@ -45,14 +44,14 @@ Where the first argument is the existing property value and the second argument 
 Finally the function would return what the current value should be for the property.
 
 
-# Render a StyleAnimation into CSS
+# Render a Animation into CSS
 @docs render
 
 # Setting the starting style
-@docs initStyle
+@docs init
 
 # Update a Style
-@docs updateStyle
+@docs update
 
 # All Animatable Style Properties
 @docs StyleProperty
@@ -81,7 +80,7 @@ type alias Model =
 
 {-| An Animation of CSS properties.
 -}
-type StyleAnimation = A Model
+type Animation = A Model
 
 
 type alias Static = Float
@@ -221,12 +220,12 @@ type ColorAlphaFormat
         | HSLA
 
 
-{-| StyleActions to be run on an animation. 
+{-| Actions to be run on an animation. 
 You won't be constructing using this type directly, though it may show up in your type signatures.
 
 To start animations you'll be using the `animate` and `queue` functions
 -}
-type StyleAction 
+type Action 
         = Queue (List StyleKeyframe)
         | Interrupt (List StyleKeyframe)
         | Tick Time
@@ -249,11 +248,11 @@ emptyKeyframe =
 
 {-| Create an initial style for your init model.
 
-__Note__ All properties that you animate must be present in the initStyle or else that property won't be animated.
+__Note__ All properties that you animate must be present in the init or else that property won't be animated.
 
 -}
-initStyle : Style -> StyleAnimation
-initStyle sty = 
+init : Style -> Animation
+init sty = 
             let
               deduped = List.foldr 
                               (\x acc ->
@@ -278,8 +277,8 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 {-| Update an animation.  This is only used to 'forward' updates to a style.  So, it will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
-updateStyle : StyleAction -> StyleAnimation -> ( StyleAnimation, Effects StyleAction )
-updateStyle action (A model) =
+update : Action -> Animation -> ( Animation, Effects Action )
+update action (A model) =
        
         case action of
 
@@ -351,8 +350,6 @@ updateStyle action (A model) =
                      , Effects.tick Tick )
 
 
-type alias PreAction = (List StyleKeyframe -> StyleAction)
-
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
 
       UI.animate 
@@ -364,7 +361,7 @@ type alias PreAction = (List StyleKeyframe -> StyleAction)
          |> UI.on model.style
 
 -}
-animate : StyleAction
+animate : Action
 animate = Interrupt []
 
 
@@ -379,10 +376,10 @@ animate = Interrupt []
          |> UI.on model.style
 
 -}
-queue : StyleAction
+queue : Action
 queue = Queue []
 
-{-| Apply an update to a StyleAnimation model.  This is used at the end of constructing an animation.
+{-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
 
      UI.animate 
          |> UI.duration (0.4*second)
@@ -393,13 +390,13 @@ queue = Queue []
          |> UI.on model.style
 
 -}
-on : StyleAnimation -> StyleAction -> ( StyleAnimation, Effects StyleAction )
-on model action = updateStyle action model
+on : Animation -> Action -> ( Animation, Effects Action )
+on model action = update action model
 
 
 
-{-|  Can be used in place of `on`.  Instead of applying an update directly to a StyleAnimation model,
-you can forward the update to a specific element in a list that has a StyleAnimation model.
+{-|  Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
+you can forward the update to a specific element in a list that has a Animation model.
 
 To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
 
@@ -408,7 +405,7 @@ So, for a model like the following
     type alias Model = { widgets : List Widget }
 
     type alias Widget = 
-              { style : UI.StyleAnimation
+              { style : UI.Animation
               }
 You'd probably want to create a specialized version of `forwardTo`.
 
@@ -428,7 +425,7 @@ Which you can then use to apply an animation to a widget in a list.
                 -- Where i is the index of the widget to update.
 
 -}
-forwardTo : (a -> StyleAnimation) -> (a -> StyleAnimation -> a) -> Int -> List a -> StyleAction -> (List a, Effects StyleAction)
+forwardTo : (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> (List a, Effects Action)
 forwardTo styleGet styleSet i widgets action = 
               let
                 applied = 
@@ -436,7 +433,7 @@ forwardTo styleGet styleSet i widgets action =
                         (\j w -> 
                             if j == i then
                               let
-                                (newStyle, fx) = updateStyle action (styleGet w)
+                                (newStyle, fx) = update action (styleGet w)
                               in
                                 (styleSet w newStyle, fx)
                             else
@@ -471,20 +468,20 @@ forwardTo styleGet styleSet i widgets action =
          |> UI.on model.style
 
 -}
-props : List (StyleProperty Dynamic) -> StyleAction -> StyleAction
+props : List (StyleProperty Dynamic) -> Action -> Action
 props p action = updateOrCreate action (\a -> { a | target = p})
     
 
 {-| Optionally specify a duration.  The default is 400ms.
 -}
-duration : Time -> StyleAction -> StyleAction
+duration : Time -> Action -> Action
 duration dur action = updateOrCreate action (\a -> { a | duration = dur })
       
 
 {-| Opitionally specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
 -}
-easing : (Float -> Float) -> StyleAction -> StyleAction
+easing : (Float -> Float) -> Action -> Action
 easing ease action = updateOrCreate action (\a -> { a | ease = ease })
 
 
@@ -508,7 +505,7 @@ easing ease action = updateOrCreate action (\a -> { a | ease = ease })
                   ] 
           |> UI.on model.style
 -}
-andThen : StyleAction -> StyleAction
+andThen : Action -> Action
 andThen action = 
           case action of
               Tick _ -> action
@@ -521,7 +518,7 @@ andThen action =
 
 
 -- private
-updateOrCreate : StyleAction -> (StyleKeyframe -> StyleKeyframe) -> StyleAction
+updateOrCreate : Action -> (StyleKeyframe -> StyleKeyframe) -> Action
 updateOrCreate action fn =
                 let
                   update frames = 
@@ -567,31 +564,6 @@ minus mod from current =
         in
           to target from current
 
-{-| Infix version of the above `to` function
-
-__Note__ only usable if imported unqualified.
-
--}
-(:=) : Float -> Float -> Float -> Float
-(:=) t f c = to t f c
-
-{-| Infix version of the above `add` function
-
-__Note__ only usable if imported unqualified.
-
--}
-(+=) : Float -> Float -> Float -> Float
-(+=) t f c = add t f c
-
-{-| Infix version of the above `minus` function
-
-__Note__ only usable if imported unqualified.
-
--}
-(-=) : Float -> Float -> Float -> Float
-(-=) t f c = minus t f c
-
-
 
 
 -- private
@@ -608,7 +580,7 @@ findProp state prop =
     div [ style (UI.render widget.style) ] [ ]
 
 -}
-render : StyleAnimation -> List (String, String)
+render : Animation -> List (String, String)
 render (A model) = 
         let
           currentAnim = List.head model.anim

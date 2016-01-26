@@ -16,14 +16,14 @@ import Html.Animation as UI
 
 
 type alias Model = 
-            { style : UI.StyleAnimation 
+            { style : UI.Animation 
             }
 
 -- UPDATE
 
 type Action = Show 
             | Hide
-            | Animate UI.StyleAction
+            | Animate UI.Action
 
 
 
@@ -63,7 +63,7 @@ update action model =
 
     Animate action ->
       let
-        (anim, fx) = UI.updateStyle action model.style
+        (anim, fx) = UI.update action model.style
       in
         ( { model | style = anim }
         , Effects.map Animate fx )
@@ -114,7 +114,7 @@ viewMenu address model =
 
 
 init : ( Model, Effects Action )
-init = ( { style = UI.initStyle 
+init = ( { style = UI.init 
                       [ UI.Left -350.0 UI.Px
                       , UI.Opacity 0.0 
                       ]

@@ -46,11 +46,11 @@ __Note__ all properties that are going to be animated need to be accounted for i
 ```elm
 import Html.Animation as UI
 
-type alias Model = { style : UI.StyleAnimation }
+type alias Model = { style : UI.Animation }
 
 init : Model
 init = { style = 
-            UI.initStyle 
+            UI.init 
                 [ UI.Left -350.0 UI.Px
                 , UI.Opacity 0.0 
                 ]
@@ -60,7 +60,7 @@ init = { style =
   * Add a new action to your Action type to allow updates to be sent to an animation.
 
 ```elm
-type Action = Animate UI.StyleAction
+type Action = Animate UI.Action
 
 -- and in our update function, we need the following code to allow for updates to be passed to an animation
 
@@ -70,7 +70,7 @@ update action model =
 
     Animate action ->
       let
-        (anim, fx) = UI.updateStyle action model.style
+        (anim, fx) = UI.update action model.style
       in
         ( { model | style = anim }
         , Effects.map Animate fx )
@@ -179,7 +179,7 @@ First, our model would be something like this:
 type alias Model = { widgets : List Widget }
 
 type alias Widget = 
-          { style : UI.StyleAnimation
+          { style : UI.Animation
           }
 
 ```
@@ -222,7 +222,7 @@ So, our Animate action gets an Int.
 
 ```elm
 
-type Action = Animate Int UI.StyleAction
+type Action = Animate Int UI.Action
 ```
 
 And the update function forwards an animation update to a specific widget using our forwardToWidget.
@@ -261,12 +261,12 @@ If you attempt to animate a property that hasn't been provided in the initial st
 
 This was done because it seems to be the better option than animating with an arbitrarily chosen default value and with arbitrarily chosen default units.
 
-So, if a property isn't animating, check your initStyle!
+So, if a property isn't animating, check your UI.init!
 
 
 ## Doubly Specified Units
 
-If you specify different units for a property in the initStyle vs the animation, _that property animation will also not be animated._
+If you specify different units for a property in the UI.init vs the animation, _that property animation will also not be animated._
 
 I know this is not the best solution, but there are a few reasons why it's the case.
 
@@ -274,7 +274,7 @@ I know this is not the best solution, but there are a few reasons why it's the c
 
  2. Again we want to avoid making up arbitrary default values.
 
-I'm currently working on a solution by making units only specified in the initStyle, however this turns out to be fairly complicated (see __eliminating-twice-declared-units__ branch if you're curious and want a headache.)  
+I'm currently working on a solution by making units only specified in the UI.init, however this turns out to be fairly complicated (see __eliminating-twice-declared-units__ branch if you're curious and want a headache.)  
 
 So, maybe this will be solved in the future?
 

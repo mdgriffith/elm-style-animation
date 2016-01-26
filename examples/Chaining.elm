@@ -14,15 +14,14 @@ import Time exposing (second)
 import Html.Animation as UI
 
 
-
 type alias Model = 
-            { style : UI.StyleAnimation 
+            { style : UI.Animation 
             }
 
 -- UPDATE
 
 type Action = ChangeColor
-            | Animate UI.StyleAction
+            | Animate UI.Action
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -57,7 +56,7 @@ update action model =
 
     Animate action ->
       let
-        (anim, fx) = UI.updateStyle action model.style
+        (anim, fx) = UI.update action model.style
       in
         ( { model | style = anim }
         , Effects.map Animate fx )
@@ -88,7 +87,7 @@ view address model =
 
 init : ( Model, Effects Action )
 init = ( { style = 
-              UI.initStyle 
+              UI.init 
                   [ UI.BackgroundColorA UI.RGBA 58 40 69 1.0 ]
          }
        , Effects.none )
