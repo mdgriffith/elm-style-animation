@@ -256,7 +256,8 @@ init sty =
             let
               deduped = List.foldr 
                               (\x acc ->
-                                  if List.any (\y -> propId x == propId y) acc then
+                                  if List.any (\y -> propId x == propId y 
+                                                 && renderName x /= "transform") acc then
                                     acc
                                   else
                                     x :: acc 
@@ -567,13 +568,19 @@ minus mod from current =
 
 
 -- private
-findProp : Style -> StyleProperty a -> Maybe (StyleProperty Static)
-findProp state prop =
+-- propCount refers to the how many times a property shows up 
+-- in the original list that prop is being pulled from
+findProp : Style -> StyleProperty a -> Int -> Maybe (StyleProperty Static)
+findProp state prop propCount =
             let
-              findBy fn xs = List.head (List.filter fn xs)
+              findBy fn xs = List.head 
+                          <| List.drop propCount 
+                          <| List.filter fn xs
+                              
               matchPropID a b = propId a == propId b
             in 
               findBy (matchPropID prop) state
+
 
 {-| Render into concrete css that can be directly applied to 'style' in elm-html
 
@@ -704,9 +711,19 @@ fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (Style
 fill new existing =
            List.foldr
                     (\x acc ->
-                      case findProp new x of
-                        Nothing ->   x :: acc 
-                        Just newX -> newX :: acc
+                      -- need to know the propIndex of x, meaning how many times it's shown up already. 
+                      let
+                        xI = List.foldr 
+                                    (\x2 count -> 
+                                        if propId x == propId x2 then
+                                          count + 1
+                                        else
+                                          count
+                                    ) 0 acc
+                      in
+                        case findProp new x xI of
+                          Nothing ->   x :: acc 
+                          Just newX -> newX :: acc
                     ) [] existing
 
 -- private
@@ -721,14 +738,23 @@ bake elapsed anim prev =
                  anim.ease percentComplete
 
             style = 
-                List.concatMap 
-                  (\p -> 
-                    case findProp prev p of
-                      Nothing -> []
-                      Just e ->
-                          [bakeProp p e eased]
-                  ) 
-                    anim.target
+               List.foldr
+                    (\x acc ->
+                      -- need to know how many times x has shown up already. 
+                      let
+                        xI = List.foldr 
+                                  (\x2 count -> 
+                                      if propId x == propId x2 then
+                                        count + 1
+                                      else
+                                        count
+                                  ) 0 acc
+                      in
+                        case findProp prev x xI of
+                          Nothing ->   acc 
+                          Just prevX -> (bakeProp x prevX eased) :: acc
+                    ) [] anim.target
+
           in
             -- If properties are in previous
             -- but not in the current animation
@@ -1437,7 +1463,7 @@ renderColor format x y z =
             in
                 case format of
                   RGB ->
-                    "rgb(" ++ renderIntList [x,y,z] ++ ")"
+                    "rgb" ++ renderIntList [x,y,z]
 
                   HSL ->
                     "hsl(" ++ toString x 
