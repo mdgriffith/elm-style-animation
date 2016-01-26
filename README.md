@@ -20,7 +20,7 @@ Html.Animation supports __Declarative animations__, which tend to be very intuit
 
  * __Animations can be smoothly interrupted.  Or chained together.__  
 
- * __Relative animation__ such as using `+=` and `-=` to animate a property based on its previous value is also available.  Though, be aware that mixing this and animation interruption can lead to unanticipated results.
+ * __Relative animation__ such as using `add` and `subtract` to animate a property based on its previous value is also available.  Though, be aware that mixing this and animation interruption can lead to unanticipated results.
 
  * __CSS properties and units are type checked.__ 
 
@@ -243,16 +243,6 @@ From here, we're able to animate each widget independently.
 
 
 # Notes and Common Pitfalls
-
-## Importing Unqualified
-
-You have the option of importing  `Html.Animation` unqualified.  
-
-```elm
-import Html.Animation exposing (..)
-```
-
-And you'll need to do this to use the infix operators (:=, +=, and ==), (i.e. UI.:= doesnt work).
 
 
 ## Uninitialized Style Animations
