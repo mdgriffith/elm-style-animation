@@ -20,7 +20,7 @@ Html.Animation supports __Declarative animations__, which tend to be very intuit
 
  * __Animations can be smoothly interrupted.  Or chained together.__  
 
- * __Relative animation__ such as using `add` and `subtract` to animate a property based on its previous value is also available.  Though, be aware that mixing this and animation interruption can lead to unanticipated results.
+ * __Relative animation__ such as using `add` and `minus` to animate a property based on its previous value is also available.  Though, be aware that mixing this and animation interruption can lead to unanticipated results.
 
  * __CSS properties and units are type checked.__ 
 
