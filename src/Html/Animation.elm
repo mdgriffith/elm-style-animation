@@ -11,7 +11,7 @@ module Html.Animation
     , queue
     , on
     , props, duration, easing
-    , andThen, forwardTo
+    , andThen, forwardTo, forwardToAll
     , to, add, minus
     ) where
 
@@ -60,7 +60,7 @@ Finally the function would return what the current value should be for the prope
 @docs Length, Angle, ColorFormat, ColorAlphaFormat
 
 # Managing a list of styled widgets
-@docs forwardTo
+@docs forwardTo, forwardToAll
 
 -}
 
@@ -86,7 +86,7 @@ type Animation = A Model
 type alias Static = Float
 
 
-type alias Dynamic 
+type alias Dynamic
          = (Float -> Float -> Float)
 
 {-| Represent a CSS style as a list of style properties with concrete values.
@@ -426,35 +426,41 @@ Which you can then use to apply an animation to a widget in a list.
                 -- Where i is the index of the widget to update.
 
 -}
-forwardTo : (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> (List a, Effects Action)
-forwardTo styleGet styleSet i widgets action = 
+forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> (List a, Effects b)
+forwardTo toAction styleGet styleSet i widgets action = 
               let
-                applied = 
-                  List.indexedMap 
-                        (\j w -> 
-                            if j == i then
-                              let
-                                (newStyle, fx) = update action (styleGet w)
-                              in
-                                (styleSet w newStyle, fx)
-                            else
-                              (w, Effects.none)
-                        ) widgets
-
-                combineEffects ef1 ef2 =
-                          if ef1 == Effects.none then
-                            ef2
-                          else
-                            ef1
+                (widgets, effects) = 
+                    List.unzip 
+                      <| List.indexedMap 
+                            (\j widget -> 
+                                if j == i then
+                                  let
+                                    (newStyle, fx) = update action (styleGet widget)
+                                  in
+                                    (styleSet widget newStyle, Effects.map (toAction i) fx)
+                                else
+                                  (widget, Effects.none)
+                            ) widgets
               in
-                 List.foldr 
-                      (\x acc ->
-                          case acc of
-                            (ws, eff1) ->
-                              case x of
-                                (w, eff2) ->
-                                  (w::ws, combineEffects eff1 eff2)
-                      ) ([], Effects.none) applied
+                (widgets, Effects.batch effects)
+
+{-|  Same as `forwardTo`, except it applies an update to every member of the list.
+
+-}
+forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> (List a, Effects b)
+forwardToAll toAction styleGet styleSet widgets action = 
+              let
+                (widgets, effects) = 
+                        List.unzip 
+                          <| List.indexedMap 
+                              (\i widget -> 
+                                let
+                                  (newStyle, fx) = update action (styleGet widget)
+                                in
+                                  (styleSet widget newStyle, Effects.map (toAction i) fx)
+                              ) widgets
+              in
+                (widgets, Effects.batch effects)
 
 
 
