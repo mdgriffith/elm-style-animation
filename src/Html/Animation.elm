@@ -1,7 +1,6 @@
 module Html.Animation 
     ( Animation
     , Action
-    , Staggered
     , StyleProperty (..)
     , Length (..), Angle (..) 
     , ColorFormat (..), ColorAlphaFormat (..)
@@ -222,15 +221,22 @@ type ColorAlphaFormat
         | HSLA
 
 
-{-| Actions to be run on an animation. 
-You won't be constructing using this type directly, though it may show up in your type signatures.
-
-To start animations you'll be using the `animate` and `queue` functions
--}
-type Action 
+{-|-}
+type InternalAction 
         = Queue (List StyleKeyframe)
         | Interrupt (List StyleKeyframe)
         | Tick Time
+
+
+{-| Actions to be run on an animation. 
+You won't be constructing using this type directly, though it may show up in your type signatures.
+
+To start animations you'll be using the `animate`, `queue`, and `stagger` functions
+-}
+type Action 
+      = Staggered (Float -> Action)
+      | Unstaggered InternalAction
+
 
 -- private
 empty : Model
@@ -280,7 +286,7 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 {-| Update an animation.  This is only used to 'forward' updates to a style.  So, it will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
-update : Action -> Animation -> ( Animation, Effects Action )
+update : InternalAction -> Animation -> ( Animation, Effects InternalAction )
 update action (A model) =
        
         case action of
@@ -364,7 +370,7 @@ update action (A model) =
          |> UI.on model.style
 
 -}
-animate : Staggered
+animate : Action
 animate = Unstaggered (Interrupt [])
 
 
@@ -379,16 +385,13 @@ animate = Unstaggered (Interrupt [])
          |> UI.on model.style
 
 -}
-queue : Staggered
+queue : Action
 queue = Unstaggered (Queue [])
 
 
-type Staggered 
-      = Staggered (Float -> Staggered)
-      | Unstaggered Action
 
 
-stagger : (Float -> Staggered) -> Staggered
+stagger : (Float -> Action) -> Action
 stagger = Staggered
           
 
@@ -404,11 +407,11 @@ stagger = Staggered
          |> UI.on model.style
 
 -}
-on : Animation -> Staggered -> ( Animation, Effects Action )
+on : Animation -> Action -> ( Animation, Effects InternalAction )
 on model action = update (resolveStagger action 0) model
 
 
-resolveStagger : Staggered -> Int -> Action
+resolveStagger : Action -> Int -> InternalAction
 resolveStagger stag i =
                   let
                     f = toFloat i
@@ -447,8 +450,8 @@ Which you can then use to apply an animation to a widget in a list.
                 -- Where i is the index of the widget to update.
 
 -}
-forwardTo : (Int -> Staggered -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Staggered -> (List a, Effects b)
-forwardTo toAction styleGet styleSet i widgets action = 
+forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> (List a, Effects b)
+forwardTo toInternalAction styleGet styleSet i widgets action = 
               let
                 (widgets, effects) = 
                     List.unzip 
@@ -458,7 +461,7 @@ forwardTo toAction styleGet styleSet i widgets action =
                                   let
                                     (newStyle, fx) = update (resolveStagger action i) (styleGet widget)
                                   in
-                                    (styleSet widget newStyle, Effects.map (\a -> toAction i (Unstaggered a)) fx)
+                                    (styleSet widget newStyle, Effects.map (\a -> toInternalAction i (Unstaggered a)) fx)
                                 else
                                   (widget, Effects.none)
                             ) widgets
@@ -468,8 +471,8 @@ forwardTo toAction styleGet styleSet i widgets action =
 {-|  Same as `forwardTo`, except it applies an update to every member of the list.
 
 -}
-forwardToAll : (Int -> Staggered -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Staggered -> (List a, Effects b)
-forwardToAll toAction styleGet styleSet widgets action = 
+forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> (List a, Effects b)
+forwardToAll toInternalAction styleGet styleSet widgets action = 
               let
                 (widgets, effects) = 
                         List.unzip 
@@ -478,7 +481,7 @@ forwardToAll toAction styleGet styleSet widgets action =
                                 let
                                   (newStyle, fx) = update (resolveStagger action i) (styleGet widget)
                                 in
-                                  (styleSet widget newStyle, Effects.map (\a -> toAction i (Unstaggered a)) fx)
+                                  (styleSet widget newStyle, Effects.map (\a -> toInternalAction i (Unstaggered a)) fx)
                               ) widgets
               in
                 (widgets, Effects.batch effects)
@@ -496,26 +499,26 @@ forwardToAll toAction styleGet styleSet widgets action =
          |> UI.on model.style
 
 -}
-props : List (StyleProperty Dynamic) -> Staggered -> Staggered
+props : List (StyleProperty Dynamic) -> Action -> Action
 props p action = updateOrCreate action (\a -> { a | target = p})
     
 
 {-| Optionally specify a duration.  The default is 400ms.
 -}
-duration : Time -> Staggered -> Staggered
+duration : Time -> Action -> Action
 duration dur action = updateOrCreate action (\a -> { a | duration = dur })
   
 
 {-| Optionally specify a delay.  The default is 0.
 -}
-delay : Time -> Staggered -> Staggered
+delay : Time -> Action -> Action
 delay dur action = updateOrCreate action (\a -> { a | delay = dur })
 
 
 {-| Opitionally specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
 -}
-easing : (Float -> Float) -> Staggered -> Staggered
+easing : (Float -> Float) -> Action -> Action
 easing ease action = updateOrCreate action (\a -> { a | ease = ease })
 
 
@@ -539,7 +542,7 @@ easing ease action = updateOrCreate action (\a -> { a | ease = ease })
                   ] 
           |> UI.on model.style
 -}
-andThen : Staggered -> Staggered
+andThen : Action -> Action
 andThen stag = 
           case stag of 
             Staggered s -> Staggered s
@@ -558,7 +561,7 @@ andThen stag =
 
 
 -- private
-updateOrCreate : Staggered -> (StyleKeyframe -> StyleKeyframe) -> Staggered
+updateOrCreate : Action -> (StyleKeyframe -> StyleKeyframe) -> Action
 updateOrCreate stag fn =
                 case stag of 
                   Staggered s -> Staggered s
