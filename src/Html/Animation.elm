@@ -10,7 +10,7 @@ module Html.Animation
     , animate
     , queue
     , on
-    , props, duration, easing
+    , props, duration, delay, easing
     , andThen, forwardTo, forwardToAll
     , to, add, minus
     ) where
@@ -101,6 +101,7 @@ it has a function that takes the previous value, the current time, and provides 
 type alias StyleKeyframe =
             { target : List (StyleProperty Dynamic)
             , duration : Time
+            , delay : Time
             , ease : (Float -> Float)
             }
 
@@ -240,11 +241,11 @@ empty = { elapsed = 0.0
 
 -- private
 emptyKeyframe : StyleKeyframe
-emptyKeyframe =
-                 { target = []
-                 , duration = defaultDuration
-                 , ease = defaultEasing 
-                 }
+emptyKeyframe = { target = []
+                , duration = defaultDuration
+                , ease = defaultEasing 
+                , delay = 0.0
+                }
 
 {-| Create an initial style for your init model.
 
@@ -324,7 +325,7 @@ update action (A model) =
                    , Effects.none )
 
                 Just current ->
-                  if newElapsed >= current.duration then
+                  if newElapsed >= (current.duration + current.delay) then
                     let
                       anims = 
                         case remaining of
@@ -332,10 +333,10 @@ update action (A model) =
                           Just a -> a
 
                       previous = 
-                          bake current.duration current model.previous
+                          bake (current.duration + current.delay) current model.previous
 
                       resetElapsed = 
-                          newElapsed - current.duration
+                          newElapsed - (current.duration + current.delay)
                               
                     in
                       ( A { model | elapsed = resetElapsed
@@ -483,7 +484,13 @@ props p action = updateOrCreate action (\a -> { a | target = p})
 -}
 duration : Time -> Action -> Action
 duration dur action = updateOrCreate action (\a -> { a | duration = dur })
-      
+  
+
+{-| Optionally specify a delau.  The default is 0.
+-}
+delay : Time -> Action -> Action
+delay dur action = updateOrCreate action (\a -> { a | delay = dur })
+
 
 {-| Opitionally specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
@@ -738,7 +745,7 @@ bake : Time -> StyleKeyframe -> Style -> Style
 bake elapsed anim prev = 
           let
             percentComplete = 
-                 elapsed / anim.duration
+                 (elapsed - anim.delay) / anim.duration
 
             eased = 
                  anim.ease percentComplete
@@ -762,10 +769,13 @@ bake elapsed anim prev =
                     ) [] anim.target
 
           in
-            -- If properties are in previous
-            -- but not in the current animation
-            -- copy them over as is
-            fill style prev
+            if percentComplete > 0.0 then
+              -- If properties are in previous
+              -- but not in the current animation
+              -- copy them over as is
+              fill style prev
+            else
+              prev
 
 -- private
 bakeProp : StyleProperty Dynamic -> StyleProperty Static -> Float -> StyleProperty Static
