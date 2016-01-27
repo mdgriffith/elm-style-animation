@@ -105,6 +105,7 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
         (anim, fx) = 
               UI.animate 
               -- |> UI.duration (0.5*second)
+              -- |> UI.delay (0.5*second)
               -- |> UI.easing (\x -> x)
                  |> UI.props 
                      [ UI.Left (UI.to 0) UI.Px
@@ -119,7 +120,17 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
 
 Notice we are programming declaratively by defining what style property should be by using `UI.to`.  
 
-We have the option of defining a duration and an easing function. In the above code, these are commented out, which means the defaults are used.  The default duration is _400ms_, while the default easing is _sinusoidal in-out_.  Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
+We also have the option of defining a _duration_, a _delay_, and an easing function. 
+
+In the above code, these are commented out, which means the defaults are used.  
+
+| Option   | Default |
+|----------|---------|
+| duration | 400ms   |
+| delay    | 0       |
+| easing   | _sinusoidal in-out_ |
+
+Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
 
 Finally, we have to `map` the resulting animation Effect, `fx`, to the Animate action we created earlier.
 

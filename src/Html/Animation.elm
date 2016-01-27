@@ -486,7 +486,7 @@ duration : Time -> Action -> Action
 duration dur action = updateOrCreate action (\a -> { a | duration = dur })
   
 
-{-| Optionally specify a delau.  The default is 0.
+{-| Optionally specify a delay.  The default is 0.
 -}
 delay : Time -> Action -> Action
 delay dur action = updateOrCreate action (\a -> { a | delay = dur })
