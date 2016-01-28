@@ -16,13 +16,16 @@ Try it out!
 
 First have [Elm installed](http://elm-lang.org/install), then
 
-If you just want to play with the examples:
+If you just want to play with the examples, run the following in a console:
 
 ```bash
-$ git clone https://github.com/mdgriffith/elm-html-animation.git
-$ cd elm-html-animation/examples
-$ elm package install
-$ elm-reactor
+git clone https://github.com/mdgriffith/elm-html-animation.git
+cd elm-html-animation/examples
+elm-reactor
+# Make sure to cd into the examples folder.
+# The library and the examples have different dependencies
+# So, running elm-reactor on the base folder will not work
+# if you just want to run examples.
 ```
 
 Or, if you want to install the package in one of your elm projects.
