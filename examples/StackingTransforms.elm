@@ -33,35 +33,36 @@ update action model =
     Transform ->
       let 
         (anim, fx) = 
-            UI.animate
-              |> UI.props 
-                        [ UI.Rotate 
-                            (UI.to 0.2) UI.Turn
-                        ] 
+              UI.animate 
+                  |> UI.duration (0.5*second)
+                  |> UI.props 
+                      [ UI.Rotate (UI.to 20) UI.Deg
+                      ] 
               |> UI.andThen
-                 |> UI.props 
-                        [ UI.Rotate3d 
-                            (UI.to 0.45) (UI.to 0.45) (UI.to 0.45) (UI.to 0.2) UI.Turn
-                        ] 
+                  |> UI.duration (0.7*second)
+                  |> UI.props 
+                      [ UI.TranslateY (UI.to -200) UI.Px
+                      ] 
               |> UI.andThen
-                 |> UI.props 
-                        [ UI.TranslateY 
-                            (UI.to 200) UI.Px
-                        ] 
+                  |> UI.duration (0.7*second)
+                  |> UI.props 
+                      [ UI.Rotate UI.stay UI.Deg  -- <-  Here's the only new function! 
+                                                  --  UI.stay allows us to specify 
+                                                  --  the 2nd Rotate we mentioned in our init
+                      , UI.Rotate (UI.to 360) UI.Deg
+                      ] 
+                |> UI.andThen
+                  |> UI.duration (0.7*second)
+                  |> UI.props 
+                      [ UI.Rotate (UI.to 380) UI.Deg 
+                      ] 
               |> UI.andThen
-                 |> UI.props 
-                        [ UI.Rotate 
-                            (UI.to 0.2) UI.Turn
-                        , UI.Rotate 
-                            (UI.to 0.5) UI.Turn
-                        ] 
-              |> UI.andThen
-                 |> UI.props 
-                        [ UI.Rotate (UI.to 0.0) UI.Turn
-                        , UI.Rotate3d (UI.to 0.0) (UI.to 0.0) (UI.to 0.0) (UI.to 0.0) UI.Turn
-                        , UI.TranslateY (UI.to 0.0) UI.Px
-                        , UI.Rotate (UI.to 0.0) UI.Turn
-                        ] 
+                  |> UI.delay (1*second)
+                  |> UI.props 
+                      [ UI.Rotate (UI.to 0.0) UI.Deg
+                      , UI.TranslateY (UI.to 0.0) UI.Px
+                      , UI.Rotate (UI.to 0.0) UI.Deg
+                      ] 
               |> UI.on model.style
       in
         ( { model | style = anim }
@@ -105,12 +106,11 @@ view address model =
 
 init : ( Model, Effects Action )
 init = ( { style = UI.init 
-                      [ UI.Rotate 0.0 UI.Turn
-                      , UI.Rotate3d 0.0 0.0 0.0 0.0 UI.Turn
-                      , UI.TranslateY 0.0 UI.Px
-                      , UI.Rotate 0.0 UI.Turn
-                      , UI.Scale 1.0
-                      ]
+                        [ UI.Rotate 0.0 UI.Deg
+                        , UI.TranslateY 0.0 UI.Px
+                        , UI.TranslateX 0.0 UI.Px
+                        , UI.Rotate 0.0 UI.Deg
+                        ]
          }
        , Effects.none )
 
