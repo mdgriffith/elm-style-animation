@@ -6,6 +6,7 @@ import StartApp exposing (start)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Html.Lazy
 import Effects exposing (Effects, Never)
 import Task
 
@@ -13,7 +14,7 @@ import Time exposing (Time, second)
 import Signal exposing (Address)
 
 import Html.Animation as UI
-import Easing exposing (easeInBounce)
+import Easing exposing (easeInBounce, easeInSine, easeOutSine)
 
 
 -- MODEL
@@ -36,6 +37,7 @@ type Action = Rotate Int
             | ChangeColors Int
             | ChangeMultipleColors Int
             | FadeInFadeOut Int
+            | Loopty Int
             | Animate Int UI.Action
 
 
@@ -47,21 +49,21 @@ update action model =
         (widgets, fx) = 
               UI.queue -- queue up this animation 
                        -- as opposed to interrupting
-                  |> UI.duration (2*second)
+                  |> UI.duration (1*second)
                   |> UI.props 
                       [ UI.Rotate (UI.add 1) UI.Turn 
                       ] 
                   |> forwardToWidget i model.widgets 
       in
         ( { model | widgets = widgets }
-        , Effects.map (Animate i) fx )
+        , fx )
 
     RotateAllAxis i ->
       let 
         (widgets, fx) = 
               UI.queue -- queue up this animation 
                        -- as opposed to interrupting
-                  |> UI.duration (2*second)
+                  |> UI.duration (1*second)
                   |> UI.props 
                       [ UI.RotateX (UI.add 1) UI.Turn
                       , UI.RotateY (UI.add 1) UI.Turn
@@ -70,7 +72,7 @@ update action model =
                   |> forwardToWidget i model.widgets 
       in
         ( { model | widgets = widgets }
-        , Effects.map (Animate i) fx )
+        , fx )
 
 
 
@@ -87,7 +89,35 @@ update action model =
                   |> forwardToWidget i model.widgets 
       in
         ( { model | widgets = widgets }
-        , Effects.map (Animate i) fx )
+        , fx )
+
+
+    Loopty i ->
+      let 
+        (widgets, fx) = 
+                UI.queue -- queue up this animation 
+                         -- as opposed to interrupting
+                    |> UI.duration (0.5*second)
+                    |> UI.easing easeInSine
+                    |> UI.props 
+                        [ UI.Rotate (UI.add -0.5) UI.Turn
+                        , UI.TranslateY (UI.to 50) UI.Px
+                        , UI.Rotate (UI.add 0.5) UI.Turn
+                        ] 
+                  |> UI.andThen
+                    |> UI.duration (0.5*second)
+                    |> UI.easing easeOutSine
+                    |> UI.props 
+                        [ UI.Rotate (UI.add -0.5) UI.Turn
+                        , UI.TranslateY (UI.to 0) UI.Px
+                        , UI.Rotate (UI.add 0.5) UI.Turn
+                        ] 
+
+                  |> forwardToWidget i model.widgets 
+      in
+        ( { model | widgets = widgets }
+        , fx )
+
 
 
     ChangeColors i ->
@@ -96,14 +126,16 @@ update action model =
                   UI.animate -- animate is used to interrupt whatever current animation
                              -- is running and smoothely move to the new style
                       |> UI.props 
-                          [ UI.BackgroundColorA 
-                                UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0) 
+                          [ UI.BackgroundColor 
+                                |> UI.toRgba 100 100 100 1.0 
+                          , UI.BorderColor 
+                                |> UI.toRgba 100 100 100 1.0 
                           ] 
                       |> forwardToWidget i model.widgets
                       
         in
           ( { model | widgets = widgets }
-          , Effects.map (Animate i) fx )
+          , fx )
 
 
     ChangeMultipleColors i ->
@@ -112,19 +144,23 @@ update action model =
                       UI.animate -- animate is used to interrupt whatever current animation
                                  -- is running and smoothely move to the new style
                           |> UI.props 
-                              [ UI.BackgroundColorA 
-                                    UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
+                              [ UI.BackgroundColor
+                                    |> UI.toRgba 100 100 100 1.0 
+                              , UI.BorderColor
+                                    |> UI.toRgba 100 100 100 1.0  
                               ] 
                       |> UI.andThen 
                           |> UI.props 
-                              [ UI.BackgroundColorA 
-                                    UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                              [ UI.BackgroundColor
+                                    |> UI.toRgba 178 201 14 1.0 
+                              , UI.BorderColor
+                                    |> UI.toRgba 178 201 14 1.0 
                               ] 
                       |> forwardToWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
-          , Effects.map (Animate i) fx )
+          , fx)
 
     FadeInFadeOut i ->
        let 
@@ -141,7 +177,7 @@ update action model =
 
         in
           ( { model | widgets = widgets }
-          , Effects.map (Animate i) fx )
+          , fx )
 
 
     Animate i action ->
@@ -149,7 +185,7 @@ update action model =
         (widgets, fx) = forwardToWidget i model.widgets action
       in
         ( { model | widgets = widgets }
-        , Effects.map (Animate i) fx )
+        , fx )
 
 
 -- VIEW
@@ -167,7 +203,7 @@ view address model =
             in
               div [ style triggerStyle ]
 
-                  (List.indexedMap (\i w -> box address i w) model.widgets)
+                  (List.indexedMap (\i w -> Html.Lazy.lazy (box address i) w) model.widgets)
 
 
 box : Address Action -> Int -> Widget -> Html
@@ -182,6 +218,7 @@ box address i widget =
                                 , ("height", "100px")
                                 , ("color", "white")
                                 , ("cursor", "pointer")
+                                , ("border-style", "solid")
                                 , ("vertical-align", "middle")
                               ]
                 in
@@ -196,10 +233,15 @@ initialWidgetStyle = UI.init
                         [ UI.Rotate 0.0 UI.Turn
                         , UI.RotateX 0.0 UI.Turn
                         , UI.RotateY 0.0 UI.Turn
+                        , UI.TranslateY 0.0 UI.Px
+                        , UI.Rotate 0.0 UI.Turn
                         , UI.Opacity 1
-                        , UI.BackgroundColorA UI.RGBA 58 40 69 1.0
-                        , UI.ColorA UI.RGBA 255 255 255 1.0
+                        , UI.BackgroundColor |> UI.rgba 58 40 69 1.0
+                        , UI.Color |> UI.rgba 255 255 255 1.0
                         , UI.Scale 1.0
+                        , UI.BorderColor |> UI.rgb 136 96 161
+                        , UI.BorderWidth 4 UI.Px 
+                        , UI.BorderRadius 8 UI.Px
                         ]
 
 
@@ -238,6 +280,11 @@ init = (
               , style = initialWidgetStyle
               , action = FadeInFadeOut
               }
+          , 
+              { label = "Loop About"
+              , style = initialWidgetStyle
+              , action = Loopty
+              }
           ]
       }, 
     Effects.none )
@@ -263,6 +310,7 @@ port tasks =
 
 
 forwardToWidget = UI.forwardTo 
+                      Animate
                       .style -- widget style getter
                       (\w style -> { w | style = style }) -- widget style setter
                                     
