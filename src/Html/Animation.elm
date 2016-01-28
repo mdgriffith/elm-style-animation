@@ -674,19 +674,11 @@ toHsla h s l a prop =
                      (to rgba.alpha)
 
 
-{-| 
+{-| Fade a color to a specific alpha level
 
 -}
 fade : Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
 fade alpha prop = prop stay stay stay (to alpha)
-
-
-{-| 
-
--}
-mapColor : (Color.Color -> Color.Color) -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
-mapColor colorFn prop = prop stay stay stay stay
-
 
 
 
