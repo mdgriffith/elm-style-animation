@@ -3,7 +3,6 @@ module Html.Animation
     , Action
     , StyleProperty (..)
     , Length (..), Angle (..) 
-    , ColorFormat (..), ColorAlphaFormat (..)
     , init
     , update
     , render
@@ -13,6 +12,8 @@ module Html.Animation
     , props, duration, delay, easing
     , andThen, forwardTo, forwardToAll
     , to, add, minus
+    , toColor, toRgb, toRgba, toHsl, toHsla
+    , rgb, rgba, hsl, hsla, fromColor
     ) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
@@ -43,12 +44,18 @@ The function needs to have the following signature.
 Where the first argument is the existing property value and the second argument represents the current time (between 0.0 and 1.0).  
 Finally the function would return what the current value should be for the property.
 
+# Animating Colors
+@docs toColor, toRgb, toRgba, toHsl, toHsla
+
 
 # Render a Animation into CSS
 @docs render
 
 # Setting the starting style
 @docs init
+
+# Initial Color Formats
+@docs fromColor, rgb, rgba, hsl, hsla
 
 # Update a Style
 @docs update
@@ -57,7 +64,7 @@ Finally the function would return what the current value should be for the prope
 @docs StyleProperty
 
 # Units
-@docs Length, Angle, ColorFormat, ColorAlphaFormat
+@docs Length, Angle
 
 # Managing a list of styled widgets
 @docs forwardTo, forwardToAll
@@ -69,7 +76,7 @@ import Effects exposing (Effects)
 import Time exposing (Time, second)
 import String exposing (concat)
 import List 
-
+import Color
 
 type alias Model =
             { start : Maybe Time
@@ -148,13 +155,9 @@ type StyleProperty a
 
 
         -- Color
-        | Color ColorFormat a a a
-        | BackgroundColor ColorFormat a a a
-        | BorderColor ColorFormat a a a
-
-        | ColorA ColorAlphaFormat a a a a
-        | BackgroundColorA ColorAlphaFormat a a a a
-        | BorderColorA ColorAlphaFormat a a a a
+        | Color a a a a
+        | BackgroundColor a a a a
+        | BorderColor a a a a
 
         | TransformOrigin a a a Length
 
@@ -207,19 +210,11 @@ type Angle
       | Rad
       | Turn
 
-{-| Units representing color.  Hex codes aren't currently supported, but may be in the future if they're wanted.
+{-| Units representing color. 
 -}
-type ColorFormat
-      = RGB
-      | HSL
-
-
-{-| Units representing color that has an alpha channel.
--}
-type ColorAlphaFormat
-        = RGBA
-        | HSLA
-
+--type ColorFormat
+--      = RGBA
+--      | HSLA
 
 {-|-}
 type InternalAction 
@@ -526,19 +521,19 @@ easing ease action = updateOrCreate action (\a -> { a | ease = ease })
 
       UI.animate 
               |> UI.props 
-                  [ UI.BackgroundColorA 
-                        UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
+                  [ UI.BackgroundColor 
+                        UI.toRgba 100 100 100 1.0  
                   ] 
           |> UI.andThen -- create a new keyframe
               |> UI.duration (1*second)
               |> UI.props 
-                  [ UI.BackgroundColorA 
-                        UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                  [ UI.BackgroundColor 
+                        UI.toRgba 178 201 14 1.0 
                   ] 
           |> UI.andThen 
               |> UI.props 
-                  [ UI.BackgroundColorA 
-                        UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
+                  [ UI.BackgroundColor 
+                        UI.RGBA 58 40 69 1.0 
                   ] 
           |> UI.on model.style
 -}
@@ -611,6 +606,108 @@ minus mod from current =
         in
           to target from current
 
+{-| Animate a color-based property, given a color from the Color elm module.
+
+-}
+toColor : Color.Color -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toColor color almostColor = 
+              let
+                rgba = Color.toRgb color
+              in
+                almostColor (to <| toFloat rgba.red) 
+                            (to <| toFloat rgba.green) 
+                            (to <| toFloat rgba.blue) 
+                            (to rgba.alpha)
+
+{-| Animate a color-based style property to an rgb color.
+
+-}
+toRgb : Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRgb r g b prop = prop (to r) (to g) (to b) (to 1.0)
+
+{-| Animate a color-based style property to an rgba color.
+
+-}
+toRgba : Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRgba r g b a prop = prop (to r) (to g) (to b) (to a)
+
+
+{-| Animate a color-based style property to an hsl color.
+
+-}
+toHsl: Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHsl h s l prop = 
+              let
+                rgba = Color.toRgb <| Color.hsl h s l
+              in
+                prop (to <| toFloat rgba.red) 
+                     (to <| toFloat rgba.green) 
+                     (to <| toFloat rgba.blue) 
+                     (to rgba.alpha)
+
+{-| Animate a color-based style property to an hsla color.
+
+-}
+toHsla: Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHsla h s l a prop = 
+              let
+                rgba = Color.toRgb <| Color.hsl h s l
+              in
+                prop (to <| toFloat rgba.red) 
+                     (to <| toFloat rgba.green) 
+                     (to <| toFloat rgba.blue) 
+                     (to rgba.alpha)
+
+{-| Specify an initial Color-based property using a Color from the elm core Color module.
+
+-}
+fromColor : Color.Color -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+fromColor color almostColor = 
+              let
+                rgba = Color.toRgb color
+              in
+                almostColor (toFloat rgba.red) 
+                            (toFloat rgba.green) 
+                            (toFloat rgba.blue) 
+                            (rgba.alpha)
+
+{-| Specify an initial Color-based property using RGB
+
+-}
+rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+rgb r g b prop = prop r g b 1.0 
+
+{-| Specify an initial Color-based property using RGBA
+
+-}
+rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+rgba r g b a prop = prop r g b a 
+
+{-| Specify an initial Color-based property using HSL
+
+-}
+hsl :  Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+hsl h s l prop = 
+        let
+          rgba = Color.toRgb <| Color.hsl h s l
+        in
+          prop (toFloat rgba.red) 
+               (toFloat rgba.blue) 
+               (toFloat rgba.green) 
+               rgba.alpha
+
+{-| Specify an initial Color-based property using HSLA
+
+-}
+hsla :  Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+hsla h s l a prop = 
+        let
+          rgba = Color.toRgb <| Color.hsla h s l a
+        in
+          prop (toFloat rgba.red) 
+               (toFloat rgba.blue) 
+               (toFloat rgba.green) 
+               rgba.alpha
 
 
 -- private
@@ -724,13 +821,9 @@ renderName styleProp =
 
               TransformOrigin _ _ _ _ -> "transform-origin"
 
-              Color _ _ _ _    -> "color"
+              Color _ _ _ _   -> "color"
               BackgroundColor _ _ _ _ -> "background-color"
               BorderColor _ _ _ _ -> "border-color"
-
-              ColorA _ _ _ _ _ -> "color"
-              BackgroundColorA _ _ _ _ _ -> "background-color"
-              BorderColorA _ _ _ _ _ -> "border-color"
 
               Matrix _ _ _ _ _ _ -> "transform"
               Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "transform"
@@ -1113,65 +1206,34 @@ bakeProp prop prev current =
                               BackgroundPosition (val xFrom x) (val yFrom y) unit
                         _ -> 
                           BackgroundPosition (val 0.0 x) (val 0.0 y) unit
-                 
 
-
-                Color unit x y z    -> 
-                  let
-                    (xFrom, yFrom, zFrom) =
-                      case prev of
-                        Color _ x1 y1 z1 -> (x1, y1, z1)
-                        _ -> (0.0, 0.0, 0.0)
-                  in
-                    Color unit (val xFrom x) (val yFrom y) (val zFrom z)
-
-                BorderColor unit x y z    -> 
-                  let
-                    (xFrom, yFrom, zFrom) =
-                      case prev of
-                        BorderColor _ x1 y1 z1 -> (x1, y1, z1)
-                        _ -> (0.0, 0.0, 0.0)
-                  in
-                    BorderColor unit (val xFrom x) (val yFrom y) (val zFrom z)
-
-
-                BackgroundColor unit x y z -> 
-                  let
-                    (xFrom, yFrom, zFrom) =
-                      case prev of
-                        BackgroundColor _ x1 y1 z1 -> (x1, y1, z1)
-                        _ -> (0.0, 0.0, 0.0)
-                  in
-                    BackgroundColor unit (val xFrom x) (val yFrom y) (val zFrom z)
-
-
-                ColorA unit x y z a -> 
+                Color x y z a -> 
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        ColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        Color x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
-                    ColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    Color (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
-                BorderColorA unit x y z a -> 
+                BorderColor x y z a -> 
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        BorderColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        BorderColor x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
-                    BorderColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    BorderColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
 
-                BackgroundColorA unit x y z a -> 
+                BackgroundColor x y z a -> 
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        BackgroundColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        BackgroundColor x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
-                    BackgroundColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    BackgroundColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
 
                 TransformOrigin x y z unit ->
@@ -1432,24 +1494,14 @@ renderValue prop  =
                                     ++ " " ++ renderLength z unit
 
 
+                Color x y z a -> 
+                      renderColor x y z a
 
-                Color unit x y z    -> 
-                      renderColor unit x y z
+                BackgroundColor x y z a -> 
+                      renderColor x y z a
 
-                BackgroundColor unit x y z -> 
-                       renderColor unit x y z
-
-                BorderColor unit x y z -> 
-                       renderColor unit x y z
-
-                ColorA unit x y z a -> 
-                      renderAlphaColor unit x y z a
-
-                BackgroundColorA unit x y z a -> 
-                      renderAlphaColor unit x y z a
-
-                BorderColorA unit x y z a -> 
-                      renderAlphaColor unit x y z a
+                BorderColor x y z a -> 
+                      renderColor x y z a
 
                 Translate a1 a2 unit -> 
                         "translate(" ++ (renderLength a1 unit) 
@@ -1501,8 +1553,9 @@ renderValue prop  =
                            
 
 
-renderColor : ColorFormat -> Float -> Float -> Float -> String
-renderColor format x y z =
+
+renderColor :  Float -> Float -> Float -> Float -> String
+renderColor x y z a =
             let
               renderList xs = "(" ++ (String.concat 
                               <| List.intersperse "," 
@@ -1510,40 +1563,11 @@ renderColor format x y z =
 
               renderIntList xs = renderList <| List.map round xs
             in
-                case format of
-                  RGB ->
-                    "rgb" ++ renderIntList [x,y,z]
-
-                  HSL ->
-                    "hsl(" ++ toString x 
-                   ++ "," ++ toString y ++ "%"
-                   ++ "," ++ toString z ++ "%"
-                   ++ ")"
-
-
-renderAlphaColor : ColorAlphaFormat -> Float -> Float -> Float -> Float -> String
-renderAlphaColor format x y z a =
-            let
-              renderList xs = "(" ++ (String.concat 
-                              <| List.intersperse "," 
-                              <| List.map toString xs) ++ ")"
-
-              renderIntList xs = renderList <| List.map round xs
-            in
-              case format of
-                RGBA ->
-                   "rgba(" ++ toString (round x) 
-                     ++ "," ++ toString (round y) 
-                     ++ "," ++ toString (round z) 
-                     ++ "," ++ toString a
-                     ++ ")"
-                      
-                HSLA ->
-                  "hsl(" ++ toString x 
-                  ++ "," ++ toString y ++ "%"
-                  ++ "," ++ toString z ++ "%"
-                  ++ "," ++ toString a
-                  ++ ")"
+               "rgba(" ++ toString (round x) 
+                 ++ "," ++ toString (round y) 
+                 ++ "," ++ toString (round z) 
+                 ++ "," ++ toString a
+                 ++ ")"
 
 
 -- private
@@ -1588,14 +1612,9 @@ propId prop =
 
           BackgroundPosition _ _ unit -> "background-position" ++ lenUnit unit
 
-          Color unit _ _ _    -> "color" ++ colorUnit unit
-          BackgroundColor unit _ _ _ -> "background-color" ++ colorUnit unit
-          BorderColor unit _ _ _ -> "border-color" ++ colorUnit unit
-
-          ColorA unit _ _ _ _ -> "color" ++ colorAUnit unit
-          BackgroundColorA unit _ _ _ _ -> "background-color" ++ colorAUnit unit
-          BorderColorA unit _ _ _ _ -> "border-color" ++ colorAUnit unit
-
+          Color _ _ _ _    -> "color"
+          BackgroundColor _ _ _ _ -> "background-color"
+          BorderColor _ _ _ _ -> "border-color"
 
           TransformOrigin _ _ _ unit -> "transform-origin" ++ lenUnit unit
           Matrix _ _ _ _ _ _ -> "matrix"
@@ -1617,22 +1636,6 @@ propId prop =
           SkewX _ unit     -> "skewx" ++ angleUnit unit
           SkewY _ unit     -> "skewy" ++ angleUnit unit
           Perspective _ -> "perspective"
-
-
-
--- private
-colorUnit : ColorFormat -> String
-colorUnit color =
-            case color of
-              RGB -> "rgb"
-              HSL -> "hsl"
-
--- private
-colorAUnit : ColorAlphaFormat -> String
-colorAUnit color =
-            case color of
-              RGBA -> "rgba"
-              HSLA -> "hsla"
 
 -- private
 lenUnit : Length -> String
