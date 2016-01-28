@@ -640,10 +640,12 @@ stay : Float -> Float -> Float
 stay from current = from 
 
 
+type alias ColorProperty = Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic
+
 {-| Animate a color-based property, given a color from the Color elm module.
 
 -}
-toColor : Color.Color -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toColor : Color.Color -> ColorProperty -> StyleProperty Dynamic
 toColor color almostColor = 
               let
                 rgba = Color.toRgb color
@@ -653,23 +655,38 @@ toColor color almostColor =
                             (to <| toFloat rgba.blue) 
                             (to rgba.alpha)
 
-{-| Animate a color-based style property to an rgb color.
+{-| Animate a color-based style property to an rgb color.  Note: this leaves the alpha channel where it is.
+
+     UI.animate 
+            |> UI.props 
+                [ UI.BackgroundColor 
+                      UI.toRGB 100 100 100  
+                ] 
+            |> UI.on model.style
 
 -}
-toRGB : Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRGB : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toRGB r g b prop = prop (to r) (to g) (to b) (to 1.0)
 
 {-| Animate a color-based style property to an rgba color.
 
+       UI.animate 
+            |> UI.props 
+                [ UI.BackgroundColor 
+                      UI.toRGBA 100 100 100 1.0  
+                ] 
+            |> UI.on model.style
+
+
 -}
-toRGBA : Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRGBA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toRGBA r g b a prop = prop (to r) (to g) (to b) (to a)
 
 
-{-| Animate a color-based style property to an hsl color.
+{-| Animate a color-based style property to an hsl color. Note: this leaves the alpha channel where it is.
 
 -}
-toHSL: Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHSL: Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toHSL h s l prop = 
               let
                 rgba = Color.toRgb <| Color.hsl h s l
@@ -682,7 +699,7 @@ toHSL h s l prop =
 {-| Animate a color-based style property to an hsla color.
 
 -}
-toHSLA: Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHSLA: Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toHSLA h s l a prop = 
               let
                 rgba = Color.toRgb <| Color.hsl h s l
@@ -696,7 +713,7 @@ toHSLA h s l a prop =
 {-| Fade a color to a specific alpha level
 
 -}
-fade : Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+fade : Float -> ColorProperty -> StyleProperty Dynamic
 fade alpha prop = prop stay stay stay (to alpha)
 
 
