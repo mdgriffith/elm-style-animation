@@ -32,19 +32,19 @@ update action model =
         (anim, fx) = 
             UI.animate 
                   |> UI.props 
-                      [ UI.BackgroundColorA 
-                            UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
+                      [ UI.BackgroundColor 
+                            |> UI.toRGBA 100 100 100 1.0  
                       ] 
               |> UI.andThen -- create a new keyframe
                   |> UI.duration (1*second)
                   |> UI.props 
-                      [ UI.BackgroundColorA 
-                            UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                      [ UI.BackgroundColor 
+                            |> UI.toRGBA 178 201 14 1.0 
                       ] 
               |> UI.andThen 
                   |> UI.props 
-                      [ UI.BackgroundColorA 
-                            UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
+                      [ UI.BackgroundColor 
+                            |> UI.toRGBA 58 40 69 1.0 
                       ] 
               |> UI.on model.style
 
@@ -88,7 +88,8 @@ view address model =
 init : ( Model, Effects Action )
 init = ( { style = 
               UI.init 
-                  [ UI.BackgroundColorA UI.RGBA 58 40 69 1.0 ]
+                  [ UI.BackgroundColor 
+                        |> UI.rgba 58 40 69 1.0 ]
          }
        , Effects.none )
 

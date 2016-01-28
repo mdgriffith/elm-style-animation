@@ -12,8 +12,8 @@ module Html.Animation
     , props, duration, delay, easing
     , andThen, forwardTo, forwardToAll
     , to, add, minus, stay
-    , toColor, toRgb, toRgba, toHsl, toHsla
-    , rgb, rgba, hsl, hsla, fromColor
+    , toColor, toRGB, toRGBA, toHSL, toHSLA
+    , fromColor, rgb, rgba, hsl, hsla
     ) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
@@ -45,7 +45,7 @@ Where the first argument is the existing property value and the second argument 
 Finally the function would return what the current value should be for the property.
 
 # Animating Colors
-@docs toColor, toRgb, toRgba, toHsl, toHsla
+@docs toColor, toRGB, toRGBA, toHSL, toHSLA
 
 
 # Render a Animation into CSS
@@ -530,18 +530,18 @@ easing ease action = updateOrCreate action (\a -> { a | ease = ease })
       UI.animate 
               |> UI.props 
                   [ UI.BackgroundColor 
-                        UI.toRgba 100 100 100 1.0  
+                        UI.toRGBA 100 100 100 1.0  
                   ] 
           |> UI.andThen -- create a new keyframe
               |> UI.duration (1*second)
               |> UI.props 
                   [ UI.BackgroundColor 
-                        UI.toRgba 178 201 14 1.0 
+                        UI.toRGBA 178 201 14 1.0 
                   ] 
           |> UI.andThen 
               |> UI.props 
                   [ UI.BackgroundColor 
-                        UI.RGBA 58 40 69 1.0 
+                        UI.toRGBA 58 40 69 1.0 
                   ] 
           |> UI.on model.style
 -}
@@ -637,21 +637,21 @@ toColor color almostColor =
 {-| Animate a color-based style property to an rgb color.
 
 -}
-toRgb : Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
-toRgb r g b prop = prop (to r) (to g) (to b) (to 1.0)
+toRGB : Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRGB r g b prop = prop (to r) (to g) (to b) (to 1.0)
 
 {-| Animate a color-based style property to an rgba color.
 
 -}
-toRgba : Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
-toRgba r g b a prop = prop (to r) (to g) (to b) (to a)
+toRGBA : Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRGBA r g b a prop = prop (to r) (to g) (to b) (to a)
 
 
 {-| Animate a color-based style property to an hsl color.
 
 -}
-toHsl: Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
-toHsl h s l prop = 
+toHSL: Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHSL h s l prop = 
               let
                 rgba = Color.toRgb <| Color.hsl h s l
               in
@@ -663,8 +663,8 @@ toHsl h s l prop =
 {-| Animate a color-based style property to an hsla color.
 
 -}
-toHsla: Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
-toHsla h s l a prop = 
+toHSLA: Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHSLA h s l a prop = 
               let
                 rgba = Color.toRgb <| Color.hsl h s l
               in
@@ -695,19 +695,19 @@ fromColor color almostColor =
                             (toFloat rgba.blue) 
                             (rgba.alpha)
 
-{-| Specify an initial Color-based property using RGB
+{-| Specify an initial Color-based property using rgb
 
 -}
 rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 rgb r g b prop = prop r g b 1.0 
 
-{-| Specify an initial Color-based property using RGBA
+{-| Specify an initial Color-based property using rgba
 
 -}
 rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 rgba r g b a prop = prop r g b a 
 
-{-| Specify an initial Color-based property using HSL
+{-| Specify an initial Color-based property using hsl
 
 -}
 hsl :  Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
@@ -720,7 +720,7 @@ hsl h s l prop =
                (toFloat rgba.green) 
                rgba.alpha
 
-{-| Specify an initial Color-based property using HSLA
+{-| Specify an initial Color-based property using hsla
 
 -}
 hsla :  Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static

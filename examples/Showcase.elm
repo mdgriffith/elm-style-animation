@@ -127,9 +127,9 @@ update action model =
                              -- is running and smoothely move to the new style
                       |> UI.props 
                           [ UI.BackgroundColor 
-                                |> UI.toRgba 100 100 100 1.0 
+                                |> UI.toRGBA 100 100 100 1.0 
                           , UI.BorderColor 
-                                |> UI.toRgba 100 100 100 1.0 
+                                |> UI.toRGBA 100 100 100 1.0 
                           ] 
                       |> forwardToWidget i model.widgets
                       
@@ -145,16 +145,16 @@ update action model =
                                  -- is running and smoothely move to the new style
                           |> UI.props 
                               [ UI.BackgroundColor
-                                    |> UI.toRgba 100 100 100 1.0 
+                                    |> UI.toRGBA 100 100 100 1.0 
                               , UI.BorderColor
-                                    |> UI.toRgba 100 100 100 1.0  
+                                    |> UI.toRGBA 100 100 100 1.0  
                               ] 
                       |> UI.andThen 
                           |> UI.props 
                               [ UI.BackgroundColor
-                                    |> UI.toRgba 178 201 14 1.0 
+                                    |> UI.toRGBA 178 201 14 1.0 
                               , UI.BorderColor
-                                    |> UI.toRgba 178 201 14 1.0 
+                                    |> UI.toRGBA 178 201 14 1.0 
                               ] 
                       |> forwardToWidget i model.widgets
 
