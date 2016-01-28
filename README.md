@@ -10,6 +10,7 @@ First have [Elm installed](http://elm-lang.org/install), then
 ```bash
 $ git clone https://github.com/mdgriffith/elm-html-animation.git
 $ cd elm-html-animation/examples
+$ elm package install
 $ elm-reactor
 ```
 
