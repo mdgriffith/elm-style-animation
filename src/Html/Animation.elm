@@ -279,10 +279,18 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 
 
-{-| Update an animation.  This is only used to 'forward' updates to a style.  So, it will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
+{-| Update an animation.  This will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
-update : InternalAction -> Animation -> ( Animation, Effects InternalAction )
-update action (A model) =
+update : Action -> Animation -> ( Animation, Effects Action )
+update action anim = 
+            let
+              (anim, fx) = internalUpdate (resolveStagger action 0) anim 
+            in
+              (anim, Effects.map Unstaggered fx)
+
+
+internalUpdate : InternalAction -> Animation -> ( Animation, Effects InternalAction )
+internalUpdate action (A model) =
        
         case action of
 
@@ -402,8 +410,8 @@ stagger = Staggered
          |> UI.on model.style
 
 -}
-on : Animation -> Action -> ( Animation, Effects InternalAction )
-on model action = update (resolveStagger action 0) model
+on : Animation -> Action -> ( Animation, Effects Action )
+on model action = update action model
 
 
 resolveStagger : Action -> Int -> InternalAction
@@ -454,7 +462,7 @@ forwardTo toInternalAction styleGet styleSet i widgets action =
                             (\j widget -> 
                                 if j == i then
                                   let
-                                    (newStyle, fx) = update (resolveStagger action i) (styleGet widget)
+                                    (newStyle, fx) = internalUpdate (resolveStagger action i) (styleGet widget)
                                   in
                                     (styleSet widget newStyle, Effects.map (\a -> toInternalAction i (Unstaggered a)) fx)
                                 else
@@ -474,7 +482,7 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
                           <| List.indexedMap 
                               (\i widget -> 
                                 let
-                                  (newStyle, fx) = update (resolveStagger action i) (styleGet widget)
+                                  (newStyle, fx) = internalUpdate (resolveStagger action i) (styleGet widget)
                                 in
                                   (styleSet widget newStyle, Effects.map (\a -> toInternalAction i (Unstaggered a)) fx)
                               ) widgets
