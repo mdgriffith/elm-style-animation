@@ -27,13 +27,13 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation, Action
 
 # Creating an animation
-@docs animate, queue, props, duration, easing, andThen, on
+@docs animate, queue, stagger, props, duration, delay, easing, andThen, on
 
 # Animating Properties
 
 These functions specify the value for a StyleProperty
 
-@docs to, add, minus
+@docs to, stay, add, minus
 
 You can substitute a custom function to use instead of `to`, `add` or `minus`.  This could be useful if to do something like animate along a path.
 
@@ -42,7 +42,7 @@ The function needs to have the following signature.
     Float -> Float -> Float
 
 Where the first argument is the existing property value and the second argument represents the current time (between 0.0 and 1.0).  
-Finally the function would return what the current value should be for the property.
+Finally the function returns what the current value should be for the property.
 
 # Animating Colors
 @docs toColor, toRGB, toRGBA, toHSL, toHSLA
@@ -393,7 +393,26 @@ queue = Unstaggered (Queue [])
 
 
 
+{-| Can be used to stagger animations on a list of widgets.
 
+     UI.stagger
+        (\i -> 
+           UI.animate
+             |> UI.delay (i * 0.05 * second) -- The delay is staggered based on list index
+             |> UI.duration (0.3 * second)
+             |> UI.props 
+                 [ UI.Left (UI.to 200) UI.Px
+                 ] 
+          |> UI.andThen
+             |> UI.delay (2.0 * second)
+             |> UI.duration (0.3 * second)
+             |> UI.props 
+                 [ UI.Left (UI.to -50) UI.Px
+                 ] 
+        )
+        |> forwardToAllWidgets model.widgets
+
+-}
 stagger : (Float -> Action) -> Action
 stagger = Staggered
           
