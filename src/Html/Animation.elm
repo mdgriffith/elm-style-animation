@@ -11,7 +11,7 @@ module Html.Animation
     , on
     , props, duration, delay, easing
     , andThen, forwardTo, forwardToAll
-    , to, add, minus
+    , to, add, minus, stay
     , toColor, toRgb, toRgba, toHsl, toHsla
     , rgb, rgba, hsl, hsla, fromColor
     ) where
@@ -413,7 +413,7 @@ stagger = Staggered
 on : Animation -> Action -> ( Animation, Effects Action )
 on model action = update action model
 
-
+-- private
 resolveStagger : Action -> Int -> InternalAction
 resolveStagger stag i =
                   let
@@ -614,6 +614,13 @@ minus mod from current =
         in
           to target from current
 
+{-| Keep an animation where it is!  This is useful for stacking transforms.
+
+-}
+stay : Float -> Float -> Float
+stay from current = from 
+
+
 {-| Animate a color-based property, given a color from the Color elm module.
 
 -}
@@ -665,6 +672,23 @@ toHsla h s l a prop =
                      (to <| toFloat rgba.green) 
                      (to <| toFloat rgba.blue) 
                      (to rgba.alpha)
+
+
+{-| 
+
+-}
+fade : Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+fade alpha prop = prop stay stay stay (to alpha)
+
+
+{-| 
+
+-}
+mapColor : (Color.Color -> Color.Color) -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+mapColor colorFn prop = prop stay stay stay stay
+
+
+
 
 {-| Specify an initial Color-based property using a Color from the elm core Color module.
 
@@ -726,7 +750,8 @@ findProp state prop propCount =
             let
               findBy fn xs = List.head 
                           <| List.drop propCount 
-                          <| List.filter fn xs
+                          <| List.filter fn
+                          <| xs
                               
               matchPropID a b = propId a == propId b
             in 
@@ -752,7 +777,7 @@ render (A model) =
                 transformsNprops = 
                     List.partition (\(name,_) -> name == "transform") rendered
 
-                combinedTransforms = ("transform", 
+                combinedTransforms = ("transform",
                       String.concat (List.intersperse " " 
                       (List.map (snd) (fst transformsNprops))))
               in
@@ -856,21 +881,21 @@ renderName styleProp =
 -- private
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
-           List.foldr
+           List.foldl
                     (\x acc ->
                       -- need to know the propIndex of x, meaning how many times it's shown up already. 
                       let
-                        xI = List.foldr 
-                                    (\x2 count -> 
-                                        if propId x == propId x2 then
-                                          count + 1
-                                        else
-                                          count
-                                    ) 0 acc
+                        xI = List.foldl 
+                                  (\x2 count -> 
+                                      if propId x == propId x2 then
+                                        count + 1
+                                      else
+                                        count
+                                  ) 0 acc
                       in
                         case findProp new x xI of
-                          Nothing ->   x :: acc 
-                          Just newX -> newX :: acc
+                          Nothing ->   acc ++ [x]
+                          Just newX -> acc ++ [newX]
                     ) [] existing
 
 -- private
@@ -885,11 +910,11 @@ bake elapsed anim prev =
                  anim.ease percentComplete
 
             style = 
-               List.foldr
+               List.foldl
                     (\x acc ->
                       -- need to know how many times x has shown up already. 
                       let
-                        xI = List.foldr 
+                        xI = List.foldl 
                                   (\x2 count -> 
                                       if propId x == propId x2 then
                                         count + 1
@@ -899,7 +924,8 @@ bake elapsed anim prev =
                       in
                         case findProp prev x xI of
                           Nothing ->   acc 
-                          Just prevX -> (bakeProp x prevX eased) :: acc
+                          Just prevX ->
+                               acc ++ [bakeProp x prevX eased]
                     ) [] anim.target
 
           in
