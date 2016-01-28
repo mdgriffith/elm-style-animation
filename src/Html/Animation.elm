@@ -3,16 +3,17 @@ module Html.Animation
     , Action
     , StyleProperty (..)
     , Length (..), Angle (..) 
-    , ColorFormat (..), ColorAlphaFormat (..)
     , init
     , update
     , render
-    , animate
-    , queue
+    , animate, queue
+    , stagger
     , on
-    , props, duration, easing
-    , andThen, forwardTo
-    , to, add, minus
+    , props, duration, delay, easing
+    , andThen, forwardTo, forwardToAll
+    , to, add, minus, stay
+    , toColor, toRGB, toRGBA, toHSL, toHSLA
+    , fromColor, rgb, rgba, hsl, hsla
     ) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
@@ -26,13 +27,13 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation, Action
 
 # Creating an animation
-@docs animate, queue, props, duration, easing, andThen, on
+@docs animate, queue, stagger, props, duration, delay, easing, andThen, on
 
 # Animating Properties
 
 These functions specify the value for a StyleProperty
 
-@docs to, add, minus
+@docs to, stay, add, minus
 
 You can substitute a custom function to use instead of `to`, `add` or `minus`.  This could be useful if to do something like animate along a path.
 
@@ -41,7 +42,10 @@ The function needs to have the following signature.
     Float -> Float -> Float
 
 Where the first argument is the existing property value and the second argument represents the current time (between 0.0 and 1.0).  
-Finally the function would return what the current value should be for the property.
+Finally the function returns what the current value should be for the property.
+
+# Animating Colors
+@docs toColor, toRGB, toRGBA, toHSL, toHSLA
 
 
 # Render a Animation into CSS
@@ -50,6 +54,9 @@ Finally the function would return what the current value should be for the prope
 # Setting the starting style
 @docs init
 
+# Initial Color Formats
+@docs fromColor, rgb, rgba, hsl, hsla
+
 # Update a Style
 @docs update
 
@@ -57,10 +64,10 @@ Finally the function would return what the current value should be for the prope
 @docs StyleProperty
 
 # Units
-@docs Length, Angle, ColorFormat, ColorAlphaFormat
+@docs Length, Angle
 
 # Managing a list of styled widgets
-@docs forwardTo
+@docs forwardTo, forwardToAll
 
 -}
 
@@ -69,7 +76,7 @@ import Effects exposing (Effects)
 import Time exposing (Time, second)
 import String exposing (concat)
 import List 
-
+import Color
 
 type alias Model =
             { start : Maybe Time
@@ -86,7 +93,7 @@ type Animation = A Model
 type alias Static = Float
 
 
-type alias Dynamic 
+type alias Dynamic
          = (Float -> Float -> Float)
 
 {-| Represent a CSS style as a list of style properties with concrete values.
@@ -101,6 +108,7 @@ it has a function that takes the previous value, the current time, and provides 
 type alias StyleKeyframe =
             { target : List (StyleProperty Dynamic)
             , duration : Time
+            , delay : Time
             , ease : (Float -> Float)
             }
 
@@ -147,13 +155,9 @@ type StyleProperty a
 
 
         -- Color
-        | Color ColorFormat a a a
-        | BackgroundColor ColorFormat a a a
-        | BorderColor ColorFormat a a a
-
-        | ColorA ColorAlphaFormat a a a a
-        | BackgroundColorA ColorAlphaFormat a a a a
-        | BorderColorA ColorAlphaFormat a a a a
+        | Color a a a a
+        | BackgroundColor a a a a
+        | BorderColor a a a a
 
         | TransformOrigin a a a Length
 
@@ -206,29 +210,28 @@ type Angle
       | Rad
       | Turn
 
-{-| Units representing color.  Hex codes aren't currently supported, but may be in the future if they're wanted.
+{-| Units representing color. 
 -}
-type ColorFormat
-      = RGB
-      | HSL
+--type ColorFormat
+--      = RGBA
+--      | HSLA
 
-
-{-| Units representing color that has an alpha channel.
--}
-type ColorAlphaFormat
-        = RGBA
-        | HSLA
+{-|-}
+type InternalAction 
+        = Queue (List StyleKeyframe)
+        | Interrupt (List StyleKeyframe)
+        | Tick Time
 
 
 {-| Actions to be run on an animation. 
 You won't be constructing using this type directly, though it may show up in your type signatures.
 
-To start animations you'll be using the `animate` and `queue` functions
+To start animations you'll be using the `animate`, `queue`, and `stagger` functions
 -}
 type Action 
-        = Queue (List StyleKeyframe)
-        | Interrupt (List StyleKeyframe)
-        | Tick Time
+      = Staggered (Float -> Action)
+      | Unstaggered InternalAction
+
 
 -- private
 empty : Model
@@ -240,11 +243,11 @@ empty = { elapsed = 0.0
 
 -- private
 emptyKeyframe : StyleKeyframe
-emptyKeyframe =
-                 { target = []
-                 , duration = defaultDuration
-                 , ease = defaultEasing 
-                 }
+emptyKeyframe = { target = []
+                , duration = defaultDuration
+                , ease = defaultEasing 
+                , delay = 0.0
+                }
 
 {-| Create an initial style for your init model.
 
@@ -276,10 +279,18 @@ defaultEasing x = (1 - cos (pi*x))/2
 
 
 
-{-| Update an animation.  This is only used to 'forward' updates to a style.  So, it will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
+{-| Update an animation.  This will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
 update : Action -> Animation -> ( Animation, Effects Action )
-update action (A model) =
+update action anim = 
+            let
+              (anim, fx) = internalUpdate (resolveStagger action 0) anim 
+            in
+              (anim, Effects.map Unstaggered fx)
+
+
+internalUpdate : InternalAction -> Animation -> ( Animation, Effects InternalAction )
+internalUpdate action (A model) =
        
         case action of
 
@@ -324,7 +335,7 @@ update action (A model) =
                    , Effects.none )
 
                 Just current ->
-                  if newElapsed >= current.duration then
+                  if newElapsed >= (current.duration + current.delay) then
                     let
                       anims = 
                         case remaining of
@@ -332,10 +343,10 @@ update action (A model) =
                           Just a -> a
 
                       previous = 
-                          bake current.duration current model.previous
+                          bake (current.duration + current.delay) current model.previous
 
                       resetElapsed = 
-                          newElapsed - current.duration
+                          newElapsed - (current.duration + current.delay)
                               
                     in
                       ( A { model | elapsed = resetElapsed
@@ -363,7 +374,7 @@ update action (A model) =
 
 -}
 animate : Action
-animate = Interrupt []
+animate = Unstaggered (Interrupt [])
 
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
@@ -378,7 +389,34 @@ animate = Interrupt []
 
 -}
 queue : Action
-queue = Queue []
+queue = Unstaggered (Queue [])
+
+
+
+{-| Can be used to stagger animations on a list of widgets.
+
+     UI.stagger
+        (\i -> 
+           UI.animate
+             |> UI.delay (i * 0.05 * second) -- The delay is staggered based on list index
+             |> UI.duration (0.3 * second)
+             |> UI.props 
+                 [ UI.Left (UI.to 200) UI.Px
+                 ] 
+          |> UI.andThen
+             |> UI.delay (2.0 * second)
+             |> UI.duration (0.3 * second)
+             |> UI.props 
+                 [ UI.Left (UI.to -50) UI.Px
+                 ] 
+        )
+        |> forwardToAllWidgets model.widgets
+
+-}
+stagger : (Float -> Action) -> Action
+stagger = Staggered
+          
+
 
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
 
@@ -394,7 +432,15 @@ queue = Queue []
 on : Animation -> Action -> ( Animation, Effects Action )
 on model action = update action model
 
-
+-- private
+resolveStagger : Action -> Int -> InternalAction
+resolveStagger stag i =
+                  let
+                    f = toFloat i
+                  in
+                    case stag of
+                      Unstaggered a -> a
+                      Staggered s -> resolveStagger (s f) i
 
 {-|  Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
 you can forward the update to a specific element in a list that has a Animation model.
@@ -426,35 +472,41 @@ Which you can then use to apply an animation to a widget in a list.
                 -- Where i is the index of the widget to update.
 
 -}
-forwardTo : (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> (List a, Effects Action)
-forwardTo styleGet styleSet i widgets action = 
+forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> (List a, Effects b)
+forwardTo toInternalAction styleGet styleSet i widgets action = 
               let
-                applied = 
-                  List.indexedMap 
-                        (\j w -> 
-                            if j == i then
-                              let
-                                (newStyle, fx) = update action (styleGet w)
-                              in
-                                (styleSet w newStyle, fx)
-                            else
-                              (w, Effects.none)
-                        ) widgets
-
-                combineEffects ef1 ef2 =
-                          if ef1 == Effects.none then
-                            ef2
-                          else
-                            ef1
+                (widgets, effects) = 
+                    List.unzip 
+                      <| List.indexedMap 
+                            (\j widget -> 
+                                if j == i then
+                                  let
+                                    (newStyle, fx) = internalUpdate (resolveStagger action i) (styleGet widget)
+                                  in
+                                    (styleSet widget newStyle, Effects.map (\a -> toInternalAction i (Unstaggered a)) fx)
+                                else
+                                  (widget, Effects.none)
+                            ) widgets
               in
-                 List.foldr 
-                      (\x acc ->
-                          case acc of
-                            (ws, eff1) ->
-                              case x of
-                                (w, eff2) ->
-                                  (w::ws, combineEffects eff1 eff2)
-                      ) ([], Effects.none) applied
+                (widgets, Effects.batch effects)
+
+{-|  Same as `forwardTo`, except it applies an update to every member of the list.
+
+-}
+forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> (List a, Effects b)
+forwardToAll toInternalAction styleGet styleSet widgets action = 
+              let
+                (widgets, effects) = 
+                        List.unzip 
+                          <| List.indexedMap 
+                              (\i widget -> 
+                                let
+                                  (newStyle, fx) = internalUpdate (resolveStagger action i) (styleGet widget)
+                                in
+                                  (styleSet widget newStyle, Effects.map (\a -> toInternalAction i (Unstaggered a)) fx)
+                              ) widgets
+              in
+                (widgets, Effects.batch effects)
 
 
 
@@ -477,7 +529,13 @@ props p action = updateOrCreate action (\a -> { a | target = p})
 -}
 duration : Time -> Action -> Action
 duration dur action = updateOrCreate action (\a -> { a | duration = dur })
-      
+  
+
+{-| Optionally specify a delay.  The default is 0.
+-}
+delay : Time -> Action -> Action
+delay dur action = updateOrCreate action (\a -> { a | delay = dur })
+
 
 {-| Opitionally specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
@@ -490,51 +548,61 @@ easing ease action = updateOrCreate action (\a -> { a | ease = ease })
 
       UI.animate 
               |> UI.props 
-                  [ UI.BackgroundColorA 
-                        UI.RGBA (UI.to 100) (UI.to 100) (UI.to 100) (UI.to 1.0)  
+                  [ UI.BackgroundColor 
+                        UI.toRGBA 100 100 100 1.0  
                   ] 
           |> UI.andThen -- create a new keyframe
               |> UI.duration (1*second)
               |> UI.props 
-                  [ UI.BackgroundColorA 
-                        UI.RGBA (UI.to 178) (UI.to 201) (UI.to 14) (UI.to 1.0) 
+                  [ UI.BackgroundColor 
+                        UI.toRGBA 178 201 14 1.0 
                   ] 
           |> UI.andThen 
               |> UI.props 
-                  [ UI.BackgroundColorA 
-                        UI.RGBA (UI.to 58) (UI.to 40) (UI.to 69) (UI.to 1.0) 
+                  [ UI.BackgroundColor 
+                        UI.toRGBA 58 40 69 1.0 
                   ] 
           |> UI.on model.style
 -}
 andThen : Action -> Action
-andThen action = 
-          case action of
-              Tick _ -> action
+andThen stag = 
+          case stag of 
+            Staggered s -> Staggered s
 
-              Interrupt frames -> 
-                Interrupt (frames ++ [emptyKeyframe])
+            Unstaggered action ->
+              case action of
+                  Tick _ -> Unstaggered action
 
-              Queue frames -> 
-                Queue (frames ++ [emptyKeyframe])
+                  Interrupt frames -> 
+                    Unstaggered <|
+                      Interrupt (frames ++ [emptyKeyframe])
+
+                  Queue frames -> 
+                    Unstaggered <|
+                      Queue (frames ++ [emptyKeyframe])
 
 
 -- private
 updateOrCreate : Action -> (StyleKeyframe -> StyleKeyframe) -> Action
-updateOrCreate action fn =
-                let
-                  update frames = 
-                    case List.reverse frames of
-                      [] -> [fn emptyKeyframe] 
-                      cur::rem -> List.reverse ((fn cur)::rem)
-                in
-                 case action of
-                    Tick _ -> action
+updateOrCreate stag fn =
+                case stag of 
+                  Staggered s -> Staggered s
 
-                    Interrupt frames -> 
-                      Interrupt (update frames)
+                  Unstaggered action ->
+                    let
+                      update frames = 
+                        case List.reverse frames of
+                          [] -> [fn emptyKeyframe] 
+                          cur::rem -> List.reverse ((fn cur)::rem)
+                    in
+                     case action of
+                        Tick _ -> Unstaggered action
 
-                    Queue frames -> 
-                      Queue (update frames)
+                        Interrupt frames -> 
+                          Unstaggered <| Interrupt (update frames)
+
+                        Queue frames -> 
+                          Unstaggered <| Queue (update frames)
 
 
 
@@ -565,6 +633,124 @@ minus mod from current =
         in
           to target from current
 
+{-| Keep an animation where it is!  This is useful for stacking transforms.
+
+-}
+stay : Float -> Float -> Float
+stay from current = from 
+
+
+{-| Animate a color-based property, given a color from the Color elm module.
+
+-}
+toColor : Color.Color -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toColor color almostColor = 
+              let
+                rgba = Color.toRgb color
+              in
+                almostColor (to <| toFloat rgba.red) 
+                            (to <| toFloat rgba.green) 
+                            (to <| toFloat rgba.blue) 
+                            (to rgba.alpha)
+
+{-| Animate a color-based style property to an rgb color.
+
+-}
+toRGB : Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRGB r g b prop = prop (to r) (to g) (to b) (to 1.0)
+
+{-| Animate a color-based style property to an rgba color.
+
+-}
+toRGBA : Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toRGBA r g b a prop = prop (to r) (to g) (to b) (to a)
+
+
+{-| Animate a color-based style property to an hsl color.
+
+-}
+toHSL: Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHSL h s l prop = 
+              let
+                rgba = Color.toRgb <| Color.hsl h s l
+              in
+                prop (to <| toFloat rgba.red) 
+                     (to <| toFloat rgba.green) 
+                     (to <| toFloat rgba.blue) 
+                     (to rgba.alpha)
+
+{-| Animate a color-based style property to an hsla color.
+
+-}
+toHSLA: Float -> Float -> Float -> Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+toHSLA h s l a prop = 
+              let
+                rgba = Color.toRgb <| Color.hsl h s l
+              in
+                prop (to <| toFloat rgba.red) 
+                     (to <| toFloat rgba.green) 
+                     (to <| toFloat rgba.blue) 
+                     (to rgba.alpha)
+
+
+{-| Fade a color to a specific alpha level
+
+-}
+fade : Float -> (Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic) -> StyleProperty Dynamic
+fade alpha prop = prop stay stay stay (to alpha)
+
+
+
+{-| Specify an initial Color-based property using a Color from the elm core Color module.
+
+-}
+fromColor : Color.Color -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+fromColor color almostColor = 
+              let
+                rgba = Color.toRgb color
+              in
+                almostColor (toFloat rgba.red) 
+                            (toFloat rgba.green) 
+                            (toFloat rgba.blue) 
+                            (rgba.alpha)
+
+{-| Specify an initial Color-based property using rgb
+
+-}
+rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+rgb r g b prop = prop r g b 1.0 
+
+{-| Specify an initial Color-based property using rgba
+
+-}
+rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+rgba r g b a prop = prop r g b a 
+
+{-| Specify an initial Color-based property using hsl
+
+-}
+hsl :  Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+hsl h s l prop = 
+        let
+          rgba = Color.toRgb <| Color.hsl h s l
+        in
+          prop (toFloat rgba.red) 
+               (toFloat rgba.blue) 
+               (toFloat rgba.green) 
+               rgba.alpha
+
+{-| Specify an initial Color-based property using hsla
+
+-}
+hsla :  Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+hsla h s l a prop = 
+        let
+          rgba = Color.toRgb <| Color.hsla h s l a
+        in
+          prop (toFloat rgba.red) 
+               (toFloat rgba.blue) 
+               (toFloat rgba.green) 
+               rgba.alpha
 
 
 -- private
@@ -575,7 +761,8 @@ findProp state prop propCount =
             let
               findBy fn xs = List.head 
                           <| List.drop propCount 
-                          <| List.filter fn xs
+                          <| List.filter fn
+                          <| xs
                               
               matchPropID a b = propId a == propId b
             in 
@@ -601,7 +788,7 @@ render (A model) =
                 transformsNprops = 
                     List.partition (\(name,_) -> name == "transform") rendered
 
-                combinedTransforms = ("transform", 
+                combinedTransforms = ("transform",
                       String.concat (List.intersperse " " 
                       (List.map (snd) (fst transformsNprops))))
               in
@@ -678,13 +865,9 @@ renderName styleProp =
 
               TransformOrigin _ _ _ _ -> "transform-origin"
 
-              Color _ _ _ _    -> "color"
+              Color _ _ _ _   -> "color"
               BackgroundColor _ _ _ _ -> "background-color"
               BorderColor _ _ _ _ -> "border-color"
-
-              ColorA _ _ _ _ _ -> "color"
-              BackgroundColorA _ _ _ _ _ -> "background-color"
-              BorderColorA _ _ _ _ _ -> "border-color"
 
               Matrix _ _ _ _ _ _ -> "transform"
               Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ -> "transform"
@@ -709,21 +892,21 @@ renderName styleProp =
 -- private
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
-           List.foldr
+           List.foldl
                     (\x acc ->
                       -- need to know the propIndex of x, meaning how many times it's shown up already. 
                       let
-                        xI = List.foldr 
-                                    (\x2 count -> 
-                                        if propId x == propId x2 then
-                                          count + 1
-                                        else
-                                          count
-                                    ) 0 acc
+                        xI = List.foldl 
+                                  (\x2 count -> 
+                                      if propId x == propId x2 then
+                                        count + 1
+                                      else
+                                        count
+                                  ) 0 acc
                       in
                         case findProp new x xI of
-                          Nothing ->   x :: acc 
-                          Just newX -> newX :: acc
+                          Nothing ->   acc ++ [x]
+                          Just newX -> acc ++ [newX]
                     ) [] existing
 
 -- private
@@ -732,17 +915,17 @@ bake : Time -> StyleKeyframe -> Style -> Style
 bake elapsed anim prev = 
           let
             percentComplete = 
-                 elapsed / anim.duration
+                 (elapsed - anim.delay) / anim.duration
 
             eased = 
                  anim.ease percentComplete
 
             style = 
-               List.foldr
+               List.foldl
                     (\x acc ->
                       -- need to know how many times x has shown up already. 
                       let
-                        xI = List.foldr 
+                        xI = List.foldl 
                                   (\x2 count -> 
                                       if propId x == propId x2 then
                                         count + 1
@@ -752,14 +935,18 @@ bake elapsed anim prev =
                       in
                         case findProp prev x xI of
                           Nothing ->   acc 
-                          Just prevX -> (bakeProp x prevX eased) :: acc
+                          Just prevX ->
+                               acc ++ [bakeProp x prevX eased]
                     ) [] anim.target
 
           in
-            -- If properties are in previous
-            -- but not in the current animation
-            -- copy them over as is
-            fill style prev
+            if percentComplete > 0.0 then
+              -- If properties are in previous
+              -- but not in the current animation
+              -- copy them over as is
+              fill style prev
+            else
+              prev
 
 -- private
 bakeProp : StyleProperty Dynamic -> StyleProperty Static -> Float -> StyleProperty Static
@@ -1064,65 +1251,34 @@ bakeProp prop prev current =
                               BackgroundPosition (val xFrom x) (val yFrom y) unit
                         _ -> 
                           BackgroundPosition (val 0.0 x) (val 0.0 y) unit
-                 
 
-
-                Color unit x y z    -> 
-                  let
-                    (xFrom, yFrom, zFrom) =
-                      case prev of
-                        Color _ x1 y1 z1 -> (x1, y1, z1)
-                        _ -> (0.0, 0.0, 0.0)
-                  in
-                    Color unit (val xFrom x) (val yFrom y) (val zFrom z)
-
-                BorderColor unit x y z    -> 
-                  let
-                    (xFrom, yFrom, zFrom) =
-                      case prev of
-                        BorderColor _ x1 y1 z1 -> (x1, y1, z1)
-                        _ -> (0.0, 0.0, 0.0)
-                  in
-                    BorderColor unit (val xFrom x) (val yFrom y) (val zFrom z)
-
-
-                BackgroundColor unit x y z -> 
-                  let
-                    (xFrom, yFrom, zFrom) =
-                      case prev of
-                        BackgroundColor _ x1 y1 z1 -> (x1, y1, z1)
-                        _ -> (0.0, 0.0, 0.0)
-                  in
-                    BackgroundColor unit (val xFrom x) (val yFrom y) (val zFrom z)
-
-
-                ColorA unit x y z a -> 
+                Color x y z a -> 
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        ColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        Color x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
-                    ColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    Color (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
-                BorderColorA unit x y z a -> 
+                BorderColor x y z a -> 
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        BorderColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        BorderColor x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
-                    BorderColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    BorderColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
 
-                BackgroundColorA unit x y z a -> 
+                BackgroundColor x y z a -> 
                   let
                     (xFrom, yFrom, zFrom, aFrom) =
                       case prev of
-                        BackgroundColorA _ x1 y1 z1 a1 -> (x1, y1, z1, a1)
+                        BackgroundColor x1 y1 z1 a1 -> (x1, y1, z1, a1)
                         _ -> (0.0, 0.0, 0.0, 0.0)
                   in
-                    BackgroundColorA unit (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+                    BackgroundColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
 
                 TransformOrigin x y z unit ->
@@ -1383,24 +1539,14 @@ renderValue prop  =
                                     ++ " " ++ renderLength z unit
 
 
+                Color x y z a -> 
+                      renderColor x y z a
 
-                Color unit x y z    -> 
-                      renderColor unit x y z
+                BackgroundColor x y z a -> 
+                      renderColor x y z a
 
-                BackgroundColor unit x y z -> 
-                       renderColor unit x y z
-
-                BorderColor unit x y z -> 
-                       renderColor unit x y z
-
-                ColorA unit x y z a -> 
-                      renderAlphaColor unit x y z a
-
-                BackgroundColorA unit x y z a -> 
-                      renderAlphaColor unit x y z a
-
-                BorderColorA unit x y z a -> 
-                      renderAlphaColor unit x y z a
+                BorderColor x y z a -> 
+                      renderColor x y z a
 
                 Translate a1 a2 unit -> 
                         "translate(" ++ (renderLength a1 unit) 
@@ -1452,8 +1598,9 @@ renderValue prop  =
                            
 
 
-renderColor : ColorFormat -> Float -> Float -> Float -> String
-renderColor format x y z =
+
+renderColor :  Float -> Float -> Float -> Float -> String
+renderColor x y z a =
             let
               renderList xs = "(" ++ (String.concat 
                               <| List.intersperse "," 
@@ -1461,40 +1608,11 @@ renderColor format x y z =
 
               renderIntList xs = renderList <| List.map round xs
             in
-                case format of
-                  RGB ->
-                    "rgb" ++ renderIntList [x,y,z]
-
-                  HSL ->
-                    "hsl(" ++ toString x 
-                   ++ "," ++ toString y ++ "%"
-                   ++ "," ++ toString z ++ "%"
-                   ++ ")"
-
-
-renderAlphaColor : ColorAlphaFormat -> Float -> Float -> Float -> Float -> String
-renderAlphaColor format x y z a =
-            let
-              renderList xs = "(" ++ (String.concat 
-                              <| List.intersperse "," 
-                              <| List.map toString xs) ++ ")"
-
-              renderIntList xs = renderList <| List.map round xs
-            in
-              case format of
-                RGBA ->
-                   "rgba(" ++ toString (round x) 
-                     ++ "," ++ toString (round y) 
-                     ++ "," ++ toString (round z) 
-                     ++ "," ++ toString a
-                     ++ ")"
-                      
-                HSLA ->
-                  "hsl(" ++ toString x 
-                  ++ "," ++ toString y ++ "%"
-                  ++ "," ++ toString z ++ "%"
-                  ++ "," ++ toString a
-                  ++ ")"
+               "rgba(" ++ toString (round x) 
+                 ++ "," ++ toString (round y) 
+                 ++ "," ++ toString (round z) 
+                 ++ "," ++ toString a
+                 ++ ")"
 
 
 -- private
@@ -1539,14 +1657,9 @@ propId prop =
 
           BackgroundPosition _ _ unit -> "background-position" ++ lenUnit unit
 
-          Color unit _ _ _    -> "color" ++ colorUnit unit
-          BackgroundColor unit _ _ _ -> "background-color" ++ colorUnit unit
-          BorderColor unit _ _ _ -> "border-color" ++ colorUnit unit
-
-          ColorA unit _ _ _ _ -> "color" ++ colorAUnit unit
-          BackgroundColorA unit _ _ _ _ -> "background-color" ++ colorAUnit unit
-          BorderColorA unit _ _ _ _ -> "border-color" ++ colorAUnit unit
-
+          Color _ _ _ _    -> "color"
+          BackgroundColor _ _ _ _ -> "background-color"
+          BorderColor _ _ _ _ -> "border-color"
 
           TransformOrigin _ _ _ unit -> "transform-origin" ++ lenUnit unit
           Matrix _ _ _ _ _ _ -> "matrix"
@@ -1568,22 +1681,6 @@ propId prop =
           SkewX _ unit     -> "skewx" ++ angleUnit unit
           SkewY _ unit     -> "skewy" ++ angleUnit unit
           Perspective _ -> "perspective"
-
-
-
--- private
-colorUnit : ColorFormat -> String
-colorUnit color =
-            case color of
-              RGB -> "rgb"
-              HSL -> "hsl"
-
--- private
-colorAUnit : ColorAlphaFormat -> String
-colorAUnit color =
-            case color of
-              RGBA -> "rgba"
-              HSLA -> "hsla"
 
 -- private
 lenUnit : Length -> String

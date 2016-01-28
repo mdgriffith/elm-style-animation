@@ -3,9 +3,9 @@
     "summary": "Html Example Animations",
     "repository": "https://github.com/user/project.git",
     "license": "BSD3",
-    "source-directories": [
-        "../src"
-      , "."
+    "source-directories": [ 
+        "."
+      , "../src"
     ],
     "exposed-modules": [],
     "dependencies": {
