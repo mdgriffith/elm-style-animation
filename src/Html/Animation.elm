@@ -299,7 +299,8 @@ defaultEasing x =
     (1 - cos (pi * x)) / 2
 
 
-{-| Update an animation.  This will probably only show up once in your code.  See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
+{-| Update an animation.  This will probably only show up once in your code.
+See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
 update : Action -> Animation -> ( Animation, Effects Action )
 update action anim =
@@ -389,7 +390,7 @@ internalUpdate action (A model) =
                                         | elapsed = resetElapsed
                                         , start = Just (now - resetElapsed)
                                         , previous = previous
-                                        , anim = anims
+                                        , anim = updateCurrentSpring resetElapsed anims
                                     }
                                 , Effects.tick Tick
                                 )
@@ -398,6 +399,7 @@ internalUpdate action (A model) =
                                 { model
                                     | elapsed = newElapsed
                                     , start = Just start
+                                    , anim = updateCurrentSpring newElapsed model.anim
                                 }
                             , Effects.tick Tick
                             )
@@ -516,12 +518,14 @@ applySpring keyframe =
 
         Just spring ->
             let
-                ( duration, easing ) =
-                    springDurationAndEasing spring
+                --( duration, easing ) =
+                --    springDurationAndEasing spring
+                duration = springDuration spring
             in
                 { keyframe
-                    | duration = duration
-                    , ease = easing
+                    | duration =
+                        duration
+                        --, ease = easing
                 }
 
 
@@ -1216,7 +1220,12 @@ bake elapsed anim prev =
             (elapsed - anim.delay) / anim.duration
 
         eased =
-            anim.ease percentComplete
+            case anim.spring of
+                Nothing ->
+                    anim.ease percentComplete
+
+                Just spring ->
+                    spring.position
 
         style =
             List.foldl
@@ -2425,9 +2434,6 @@ angleUnit unit =
 -- Spring Functionality --
 
 
-epsilon =
-    1.0e-4
-
 
 type alias Spring =
     { stiffness : Float
@@ -2435,6 +2441,7 @@ type alias Spring =
     , position : Float
     , velocity : Float
     , destination : Float
+    , lastUpdate : Float
     }
 
 
@@ -2449,6 +2456,7 @@ createSpring almost =
     { stiffness = almost.stiffness
     , damping = almost.damping
     , position = 0
+    , lastUpdate = 0
     , velocity = 0
     , destination = 1
     }
@@ -2490,15 +2498,39 @@ stiff =
     }
 
 
-springAtRest : Spring -> Bool
-springAtRest spring =
-    spring.position == spring.destination && spring.velocity == 0
-
-
-springDtValue : Time -> Spring -> Spring
-springDtValue fpms spring =
+updateCurrentSpring : Time -> List StyleKeyframe -> List StyleKeyframe
+updateCurrentSpring newTime frames =
     let
-        frameRate = fpms / 1000
+        updateFrame i frame =
+            if i == 0 then
+                let
+                    normalizedTime = (newTime - frame.delay) / frame.duration
+                in
+                    if normalizedTime > 0.0 then
+                        case frame.spring of
+                            Nothing ->
+                                frame
+
+                            Just spring ->
+                                { frame
+                                    | spring =
+                                        Just
+                                            <| updateSpring normalizedTime spring
+                                }
+                    else
+                        frame
+            else
+                frame
+    in
+        List.indexedMap updateFrame frames
+
+tolerance =
+    1.0e-4
+
+updateSpring : Time -> Spring -> Spring
+updateSpring current spring =
+    let
+        dt = current - spring.lastUpdate
 
         fspring = -spring.stiffness * (spring.position - spring.destination)
 
@@ -2506,42 +2538,29 @@ springDtValue fpms spring =
 
         a = fspring + fdamper
 
-        newV = spring.velocity + a * frameRate
+        newV = spring.velocity + a * dt
 
-        newX = spring.position + newV * frameRate
+        newX = spring.position + newV * dt
     in
         if
-            abs (newV - spring.velocity) < epsilon && abs (newX - spring.position) < epsilon
+            abs (newV - spring.velocity) < tolerance && abs (newX - spring.position) < tolerance
         then
             { spring
                 | position = spring.destination
                 , velocity = 0
+                , lastUpdate = current
             }
         else
             { spring
                 | position = newX
                 , velocity = newV
+                , lastUpdate = current
             }
 
 
-{-|
-Time needs to be given in ms
--}
-springValue : Time -> Spring -> Spring
-springValue time spring =
-    fst
-        <| List.foldl
-            (\t ( spg, d ) ->
-                let
-                    dt = toFloat t - d
-                in
-                    if springAtRest spg then
-                        ( spring, d )
-                    else
-                        ( springDtValue dt spg, toFloat t )
-            )
-            ( spring, 0 )
-            [1..(round time)]
+springAtRest : Spring -> Bool
+springAtRest spring =
+    spring.position == spring.destination && spring.velocity == 0
 
 
 springDuration : Spring -> Time
@@ -2549,44 +2568,10 @@ springDuration spring =
     snd
         <| List.foldl
             (\t ( spg, d ) ->
-                let
-                    time = t - d
-                in
-                    if springAtRest spg then
-                        ( spg, d )
-                    else
-                         ( springDtValue time spg, t )
+                if springAtRest spg then
+                    ( spg, d )
+                else
+                    ( updateSpring t spg, t )
             )
             ( spring, 0 )
             [1..1000]
-
-
-springDurationAndEasing : Spring -> ( Time, Float -> Float )
-springDurationAndEasing spring =
-    let
-        durationInMs =
-            snd
-                <| List.foldl
-                    (\t ( spg, d ) ->
-                        let
-                            dt = toFloat t - d
-                        in
-                            if springAtRest spg then
-                                ( spg, d )
-                            else
-                                ( springDtValue dt spg, toFloat t )
-                    )
-                    ( spring, 0 )
-                    [1..1000]
-
-        easing d = 
-          (\ x ->
-            let
-                x' = x * d
-
-                currentSpring = springValue x' spring
-            in
-                currentSpring.position
-          )
-    in
-        ( durationInMs, easing durationInMs )
