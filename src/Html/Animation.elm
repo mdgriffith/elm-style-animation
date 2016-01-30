@@ -104,7 +104,7 @@ type alias StyleKeyframe =
     , duration : Time
     , delay : Time
     , ease : Float -> Float
-    , spring : Maybe Spring
+    , spring : Maybe FullSpring
     }
 
 
@@ -196,16 +196,6 @@ type Angle
     | Turn
 
 
-{-| Units representing color.
--}
-
-
-
---type ColorFormat
---      = RGBA
---      | HSLA
-
-
 {-| -}
 type InternalAction
     = Queue (List StyleKeyframe)
@@ -287,7 +277,7 @@ init sty =
 
 defaultDuration : Float
 defaultDuration =
-    0.4 * second
+    0.35 * second
 
 
 
@@ -310,6 +300,27 @@ update action anim =
         ( anim, Effects.map Unstaggered fx )
 
 
+finalStyle : Style -> List StyleKeyframe -> Style
+finalStyle style keyframes = 
+                List.foldl 
+                      (\frame st -> 
+                        bake (frame.delay + frame.duration) frame st
+                      ) style keyframes
+
+
+equivalentAnim : Style -> List StyleKeyframe -> List StyleKeyframe -> Bool
+equivalentAnim style frame1 frame2 = 
+                        if List.length frame1 == 0 || List.length frame2 == 0 then
+                          False
+                        else
+                          let
+                            final1 = finalStyle style frame1
+                            final2 = finalStyle style frame2
+                          in
+                            final1 == final2
+
+
+
 internalUpdate : InternalAction -> Animation -> ( Animation, Effects InternalAction )
 internalUpdate action (A model) =
     case action of
@@ -319,26 +330,30 @@ internalUpdate action (A model) =
             )
 
         Interrupt anims ->
-            let
-                currentAnim = List.head model.anim
+            -- Only interrupt if anims end in different states.
+            if equivalentAnim model.previous model.anim anims then
+                ( A model, Effects.none )
+            else
+              let
+                  currentAnim = List.head model.anim
 
-                previous =
-                    case currentAnim of
-                        Nothing ->
-                            model.previous
+                  previous =
+                      case currentAnim of
+                          Nothing ->
+                              model.previous
 
-                        Just a ->
-                            bake model.elapsed a model.previous
-            in
-                ( A
-                    { model
-                        | anim = anims
-                        , elapsed = 0.0
-                        , start = Nothing
-                        , previous = previous
-                    }
-                , Effects.tick Tick
-                )
+                          Just a ->
+                              bake model.elapsed a model.previous
+              in
+                  ( A
+                      { model
+                          | anim = anims
+                          , elapsed = 0.0
+                          , start = Nothing
+                          , previous = previous
+                      }
+                  , Effects.tick Tick
+                  )
 
         Tick now ->
             let
@@ -629,37 +644,60 @@ props p action =
     updateOrCreate action (\a -> { a | target = p })
 
 
-{-| Optionally specify a duration.  The default is 400ms.
+{-| Specify a duration.  If not specified, the default is 350ms.
+
+   UI.animate
+         |> UI.duration (0.4*second)
+         |> UI.props
+             [ UI.Left UI.Px (UI.to 0)
+             , UI.Opacity (UI.to 1)
+             ]
+         |> UI.on model.style
 -}
 duration : Time -> Action -> Action
 duration dur action =
     updateOrCreate action (\a -> { a | duration = dur })
 
 
-{-| Optionally specify a delay.  The default is 0.
+{-| Specify a delay.  If not specified, the default is 0.
+
+   UI.animate
+         |> UI.duration (0.4*second)
+         |> UI.delay (0.5*second)
+         |> UI.props
+             [ UI.Left UI.Px (UI.to 0)
+             , UI.Opacity (UI.to 1)
+             ]
+         |> UI.on model.style
 -}
 delay : Time -> Action -> Action
 delay dur action =
     updateOrCreate action (\a -> { a | delay = dur })
 
 
-{-| Optionally specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
+{-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
+
 -}
 easing : (Float -> Float) -> Action -> Action
 easing ease action =
     updateOrCreate action (\a -> { a | ease = ease })
 
 
-{-| Optionally animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
+{-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
 
 
+__Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
 
-
-
-__Note:__ This will cause both `duration` and `easing` to be ignored as they are now specified by the spring.
+   UI.animate
+         |> UI.spring UI.noWobble
+         |> UI.props
+             [ UI.Left UI.Px (UI.to 0)
+             , UI.Opacity (UI.to 1)
+             ]
+         |> UI.on model.style
 -}
-spring : AlmostSpring -> Action -> Action
+spring : Spring -> Action -> Action
 spring almost action =
     updateOrCreate action (\a -> { a | spring = Just <| createSpring almost })
 
@@ -705,9 +743,8 @@ andThen stag =
 
 
 
--- private
-
-
+{-| Update the last StyleKeyframe in the queue.  If the queue is empty, create a new StyleKeyframe and update that.
+-}
 updateOrCreate : Action -> (StyleKeyframe -> StyleKeyframe) -> Action
 updateOrCreate stag fn =
     case stag of
@@ -2435,7 +2472,7 @@ angleUnit unit =
 
 
 
-type alias Spring =
+type alias FullSpring =
     { stiffness : Float
     , damping : Float
     , position : Float
@@ -2445,13 +2482,13 @@ type alias Spring =
     }
 
 
-type alias AlmostSpring =
+type alias Spring =
     { stiffness : Float
     , damping : Float
     }
 
 
-createSpring : AlmostSpring -> Spring
+createSpring : Spring -> FullSpring
 createSpring almost =
     { stiffness = almost.stiffness
     , damping = almost.damping
@@ -2464,7 +2501,7 @@ createSpring almost =
 
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
-noWobble : AlmostSpring
+noWobble : Spring
 noWobble =
     { stiffness = 170
     , damping = 26
@@ -2473,7 +2510,7 @@ noWobble =
 
 {-| A spring preset.
 -}
-gentle : AlmostSpring
+gentle : Spring
 gentle =
     { stiffness = 120
     , damping = 14
@@ -2482,7 +2519,7 @@ gentle =
 
 {-| A spring preset.
 -}
-wobbly : AlmostSpring
+wobbly : Spring
 wobbly =
     { stiffness = 180
     , damping = 12
@@ -2491,7 +2528,7 @@ wobbly =
 
 {-| A spring preset.
 -}
-stiff : AlmostSpring
+stiff : Spring
 stiff =
     { stiffness = 210
     , damping = 20
@@ -2527,7 +2564,7 @@ updateCurrentSpring newTime frames =
 tolerance =
     1.0e-4
 
-updateSpring : Time -> Spring -> Spring
+updateSpring : Time -> FullSpring -> FullSpring
 updateSpring current spring =
     let
         dt = current - spring.lastUpdate
@@ -2558,12 +2595,12 @@ updateSpring current spring =
             }
 
 
-springAtRest : Spring -> Bool
+springAtRest : FullSpring -> Bool
 springAtRest spring =
     spring.position == spring.destination && spring.velocity == 0
 
 
-springDuration : Spring -> Time
+springDuration : FullSpring -> Time
 springDuration spring =
     snd
         <| List.foldl
