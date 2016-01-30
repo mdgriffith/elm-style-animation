@@ -132,7 +132,7 @@ In the above code, these are commented out, which means the defaults are used.
 
 | Option   | Default |
 |----------|---------|
-| duration | 400ms   |
+| duration | 350ms   |
 | delay    | 0       |
 | easing   | _sinusoidal in-out_ |
 
