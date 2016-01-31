@@ -17,6 +17,7 @@ import Html.Animation as UI
 
 type alias Model = 
             { widgets : List Widget
+            , open : Bool
             }
 
 type alias Widget = 
@@ -25,6 +26,8 @@ type alias Widget =
 -- UPDATE
 
 type Action = Show 
+            | Hide
+            | Toggle
             | Animate Target UI.Action
 
 type Target = OnWidget Int
@@ -45,6 +48,13 @@ forwardToAllWidgets = UI.forwardToAll
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
+
+    Toggle ->
+      if model.open then
+        update Hide model
+      else
+        update Show model
+
     Show ->
       let 
         (widgets, fx) = 
@@ -52,22 +62,33 @@ update action model =
                 (\i -> 
                    UI.animate
                      |> UI.delay (i * 0.05 * second)
-                     |> UI.duration (0.3 * second)
+                     |> UI.spring UI.fastAndLoose
                      |> UI.props 
-                         [ UI.Left (UI.to 200) UI.Px
-                         ] 
-                  |> UI.andThen
-                     |> UI.delay (2.0 * second)
-                     |> UI.duration (0.3 * second)
-                     |> UI.props 
-                         [ UI.Left (UI.to -50) UI.Px
+                         [ UI.Left (UI.to 100) UI.Px
                          ] 
                 )
                 |> forwardToAllWidgets model.widgets
 
       in
-        ( { model | widgets = widgets }
+        ( { model | widgets = widgets 
+                  , open = True }
         , fx )
+
+    Hide ->
+      let 
+        (widgets, fx) = 
+                UI.animate
+                   |> UI.spring UI.fastAndLoose
+                   |> UI.props 
+                       [ UI.Left (UI.to -70) UI.Px
+                       ] 
+                |> forwardToAllWidgets model.widgets
+
+      in
+        ( { model | widgets = widgets
+                  , open = False }
+        , fx )
+
 
     Animate target action ->
       case target of
@@ -97,7 +118,7 @@ view address model =
                              , ("cursor", "pointer")
                             ]
             in
-              div [ onClick address Show
+              div [ onClick address Toggle
                   , style triggerStyle  
                   ]
 
@@ -128,7 +149,9 @@ viewWidget address model =
 
 
 init : ( Model, Effects Action )
-init = ( { widgets = List.map (\i -> initWidget i) [0..10]  }
+init = ( { widgets = List.map (\i -> initWidget i) [0..10]
+         , open = False  
+         }
        , Effects.none )
 
 initWidget i = 
