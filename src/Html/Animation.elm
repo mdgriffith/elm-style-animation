@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props, duration, delay, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props, duration, delay, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -30,7 +30,7 @@ Finally the function returns what the current value should be for the property.
 
 
 # Spring Presets
-@docs noWobble, gentle, wobbly, stiff
+@docs noWobble, gentle, wobbly, stiff, fastAndLoose
 
 
 # Animating Colors
@@ -300,27 +300,6 @@ update action anim =
         ( anim, Effects.map Unstaggered fx )
 
 
-finalStyle : Style -> List StyleKeyframe -> Style
-finalStyle style keyframes = 
-                List.foldl 
-                      (\frame st -> 
-                        bake (frame.delay + frame.duration) frame st
-                      ) style keyframes
-
-
-equivalentAnim : Style -> List StyleKeyframe -> List StyleKeyframe -> Bool
-equivalentAnim style frame1 frame2 = 
-                        if List.length frame1 == 0 || List.length frame2 == 0 then
-                          False
-                        else
-                          let
-                            final1 = finalStyle style frame1
-                            final2 = finalStyle style frame2
-                          in
-                            final1 == final2
-
-
-
 internalUpdate : InternalAction -> Animation -> ( Animation, Effects InternalAction )
 internalUpdate action (A model) =
     case action of
@@ -335,15 +314,16 @@ internalUpdate action (A model) =
                 ( A model, Effects.none )
             else
               let
-                  currentAnim = List.head model.anim
+                currentAnim = List.head model.anim
 
-                  previous =
-                      case currentAnim of
-                          Nothing ->
-                              model.previous
+                previous =
+                    case currentAnim of
+                        Nothing ->
+                            model.previous
 
-                          Just a ->
-                              bake model.elapsed a model.previous
+                        Just a ->
+                            bake model.elapsed a model.previous
+
               in
                   ( A
                       { model
@@ -397,7 +377,7 @@ internalUpdate action (A model) =
                                 previous =
                                     bake (current.duration + current.delay) current model.previous
 
-                                resetElapsed =
+                                resetElapsed = 
                                     newElapsed - (current.duration + current.delay)
                             in
                                 ( A
@@ -418,6 +398,26 @@ internalUpdate action (A model) =
                                 }
                             , Effects.tick Tick
                             )
+
+
+finalStyle : Style -> List StyleKeyframe -> Style
+finalStyle style keyframes = 
+                List.foldl 
+                      (\frame st -> 
+                        bakeFinal frame st
+                      ) style keyframes
+
+
+equivalentAnim : Style -> List StyleKeyframe -> List StyleKeyframe -> Bool
+equivalentAnim style frame1 frame2 = 
+                        if List.length frame1 == 0 then
+                          False
+                        else
+                          let
+                            final1 = finalStyle style frame1
+                            final2 = finalStyle style frame2
+                          in
+                            final1 == final2
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -533,14 +533,12 @@ applySpring keyframe =
 
         Just spring ->
             let
-                --( duration, easing ) =
-                --    springDurationAndEasing spring
+               
                 duration = springDuration spring
             in
                 { keyframe
                     | duration =
                         duration
-                        --, ease = easing
                 }
 
 
@@ -607,6 +605,18 @@ forwardTo toInternalAction styleGet styleSet i widgets action =
 forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Effects b )
 forwardToAll toInternalAction styleGet styleSet widgets action =
     let
+        largestDuration = List.map 
+                              (\i -> 
+                                case resolve action i of
+                                  Queue frames -> getFullDuration frames
+                                  Interrupt frames -> getFullDuration frames
+                                  _ -> 0.0
+                              ) 
+                              [1..List.length widgets] 
+                        |> List.maximum
+                        |> Maybe.withDefault 0.0
+
+
         ( widgets, effects ) =
             List.unzip
                 <| List.indexedMap
@@ -614,7 +624,7 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
                         let
                             ( newStyle, fx ) =
                                 internalUpdate
-                                    (resolve action i)
+                                    (normalizedDuration largestDuration (resolve action i))
                                     (styleGet widget)
                         in
                             ( styleSet widget newStyle
@@ -626,6 +636,47 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
                     widgets
     in
         ( widgets, Effects.batch effects )
+
+
+
+
+normalizedDuration : Time -> InternalAction -> InternalAction
+normalizedDuration desiredDuration action =
+                            case action of
+                                Queue frames -> 
+                                    Queue <| addBufferDuration frames desiredDuration
+
+                                Interrupt frames -> 
+                                    Interrupt <| addBufferDuration frames desiredDuration
+
+                                _ -> action
+
+
+{-| Adds a blank keyframe with a duration that makes the keyframes fill all the time until Time.
+
+-}
+addBufferDuration : List StyleKeyframe -> Time -> List StyleKeyframe
+addBufferDuration frames desiredDuration = 
+                let
+                  dur = getFullDuration frames
+                  delta = desiredDuration - dur
+                in
+                  if dur >= desiredDuration then
+                    frames
+                  else
+                    frames ++ [{ emptyKeyframe | duration = delta }]
+
+
+
+{-|
+-}
+getFullDuration : List StyleKeyframe -> Time
+getFullDuration frames = 
+                    List.foldl 
+                        (\frame total -> 
+                            total + frame.delay + frame.duration
+                        )
+                        0 frames
 
 
 {-| Specify the properties that should be animated
@@ -1243,6 +1294,43 @@ fill new existing =
         )
         []
         existing
+
+
+
+
+
+bakeFinal : StyleKeyframe -> Style -> Style
+bakeFinal anim prev =
+    let
+        eased = 1.0
+
+        style =
+            List.foldl
+                (\x acc ->
+                    -- need to know how many times x has shown up already.
+                    let
+                        xI =
+                            List.foldl
+                                (\x2 count ->
+                                    if propId x == propId x2 then
+                                        count + 1
+                                    else
+                                        count
+                                )
+                                0
+                                acc
+                    in
+                        case findProp prev x xI of
+                            Nothing ->
+                                acc
+
+                            Just prevX ->
+                                acc ++ [ bakeProp x prevX eased ]
+                )
+                []
+                anim.target
+    in
+      fill style prev
 
 
 
@@ -2534,6 +2622,12 @@ stiff =
     , damping = 20
     }
 
+fastAndLoose : Spring
+fastAndLoose = 
+    { stiffness = 320
+    , damping = 17 }
+
+
 
 updateCurrentSpring : Time -> List StyleKeyframe -> List StyleKeyframe
 updateCurrentSpring newTime frames =
@@ -2579,20 +2673,11 @@ updateSpring current spring =
 
         newX = spring.position + newV * dt
     in
-        if
-            abs (newV - spring.velocity) < tolerance && abs (newX - spring.position) < tolerance
-        then
-            { spring
-                | position = spring.destination
-                , velocity = 0
-                , lastUpdate = current
-            }
-        else
-            { spring
-                | position = newX
-                , velocity = newV
-                , lastUpdate = current
-            }
+        { spring
+            | position = newX
+            , velocity = newV
+            , lastUpdate = current
+        }
 
 
 springAtRest : FullSpring -> Bool
