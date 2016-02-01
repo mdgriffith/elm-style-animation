@@ -15,27 +15,18 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 # Animating Properties
 
-These functions specify the value for a StyleProperty
+These functions specify the value for a StyleProperty.  
+
+After taking an argument, these functions have `Float -> Float -> Float` as their signature. 
+This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
 
 @docs to, stay, add, minus
-
-You can substitute a custom function to use instead of `to`, `add` or `minus`.  This could be useful if to do something like animate along a path.
-
-The function needs to have the following signature.
-
-    Float -> Float -> Float
-
-Where the first argument is the existing property value and the second argument represents the current time (between 0.0 and 1.0).
-Finally the function returns what the current value should be for the property.
-
 
 # Spring Presets
 @docs noWobble, gentle, wobbly, stiff, fastAndLoose
 
-
 # Animating Colors
 @docs toColor, toRGB, toRGBA, toHSL, toHSLA
-
 
 # Render a Animation into CSS
 @docs render
