@@ -38,6 +38,7 @@ type Action = Rotate Int
             | ChangeMultipleColors Int
             | FadeInFadeOut Int
             | Loopty Int
+            | Spring Int
             | Animate Int UI.Action
 
 
@@ -117,6 +118,26 @@ update action model =
       in
         ( { model | widgets = widgets }
         , fx )
+
+
+    Spring i ->
+      let 
+        (widgets, fx) = 
+                UI.queue 
+                    |> UI.spring UI.noWobble
+                    |> UI.props 
+                        [ UI.Scale (UI.to 1.5)
+                        ] 
+                  |> UI.andThen
+                    |> UI.spring UI.wobbly
+                    |> UI.props 
+                        [ UI.Scale (UI.to 1.0)
+                        ] 
+                  |> forwardToWidget i model.widgets 
+      in
+        ( { model | widgets = widgets }
+        , fx )
+
 
 
 
@@ -285,6 +306,11 @@ init = (
               , style = initialWidgetStyle
               , action = Loopty
               }
+          , 
+            { label = "Use a Spring"
+            , style = initialWidgetStyle
+            , action = Spring
+            }
           ]
       }, 
     Effects.none )

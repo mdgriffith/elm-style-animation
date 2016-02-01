@@ -126,13 +126,13 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
 
 Notice we are programming declaratively by defining what style property should be by using `UI.to`.  
 
-We also have the option of defining a _duration_, a _delay_, and an easing function. 
+We also have the option of defining a _duration_, a _delay_, and an _easing function_. 
 
 In the above code, these are commented out, which means the defaults are used.  
 
 | Option   | Default |
 |----------|---------|
-| duration | 400ms   |
+| duration | 350ms   |
 | delay    | 0       |
 | easing   | _sinusoidal in-out_ |
 
@@ -143,6 +143,26 @@ Finally, we have to `map` the resulting animation Effect, `fx`, to the Animate a
 Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
 
 However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queue` instead of `UI.animate`
+
+> ### Spring-based Animation
+> Instead of using a duration and an easing function, you also have the option of animating by using a __spring__.  Using the math that models real-world springs, we can create organic animations by just defining two numbers, _stiffness_ and _damping_.  Here's an example of using a spring:
+>
+  ```elm
+    (anim, fx) = 
+           UI.animate 
+               |> UI.spring { stiffness = 180
+                            , damping = 12
+                            }
+               |> UI.props 
+                   [ UI.Left (UI.to 0) UI.Px
+                   , UI.Opacity (UI.to 1)
+                   ] 
+               |> UI.on model.style
+  ```
+>  __Note:__ If you provide a spring, it will override any duration or easing you may have specified. 
+>
+> A number of spring presets are provided in the library.
+
 
 
 # Example 2: Chaining Animations Together
