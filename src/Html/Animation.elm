@@ -2613,6 +2613,8 @@ stiff =
     , damping = 20
     }
 
+{-| A spring preset.
+-}
 fastAndLoose : Spring
 fastAndLoose = 
     { stiffness = 320
