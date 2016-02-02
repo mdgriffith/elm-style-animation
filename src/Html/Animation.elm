@@ -92,10 +92,25 @@ it has a function that takes the previous value, the current time, and provides 
 -}
 type alias StyleKeyframe =
     { target : List (StyleProperty Dynamic)
-    , duration : Time
+    --, duration : Time
     , delay : Time
-    , ease : Float -> Float
-    , spring : Maybe FullSpring
+    --, ease : Float -> Float
+    --, spring : Maybe FullSpring
+    }
+
+
+type alias Physics a =
+    { target : a
+    , velocity : Float
+    , position : Float
+    , spring : Spring
+    , easing : Maybe Easing
+    }
+
+type alias Easing = 
+    { ease : (Float -> Float)
+    , counter : Maybe Spring
+    , duration : Time
     }
 
 
