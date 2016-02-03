@@ -51,11 +51,9 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List
 import Color
-
 import Html.Animation.Properties exposing (..)
 import Html.Animation.Render as Render
 import Html.Animation.Spring as Spring
-
 
 
 type alias Model =
@@ -71,8 +69,10 @@ type alias Model =
 type Animation
   = A Model
 
+
 type alias DynamicTarget =
   Float -> Float -> Float
+
 
 type alias Physics a =
   { target : a
@@ -106,12 +106,11 @@ type alias StyleKeyframe =
 
 
 type alias KeyframeWithOptions =
-        { frame : StyleKeyframe
-        , duration : Maybe Time
-        , easing : Maybe (Float -> Float)
-        , spring : Maybe Spring.Properties
-        }
-
+  { frame : StyleKeyframe
+  , duration : Maybe Time
+  , easing : Maybe (Float -> Float)
+  , spring : Maybe Spring.Properties
+  }
 
 
 {-| -}
@@ -126,17 +125,17 @@ You won't be constructing using this type directly, though it may show up in you
 
 To start animations you'll be using the `animate`, `queue`, and `stagger` functions
 -}
-
-type alias PreAction = 
-        { frames : List KeyframeWithOptions
-        , action : (List StyleKeyframe -> InternalAction)
-        }
+type alias PreAction =
+  { frames : List KeyframeWithOptions
+  , action : List StyleKeyframe -> InternalAction
+  }
 
 
 type Action
-      = Staggered (Float -> Action)
-      | Unstaggered PreAction
-      | Internal InternalAction
+  = Staggered (Float -> Action)
+  | Unstaggered PreAction
+  | Internal InternalAction
+
 
 
 -- private
@@ -557,11 +556,11 @@ propDone time prop =
 
 -}
 animate : Action
-animate = Unstaggered <|
-    { frames = []
-    , action = Interrupt
-    }
-
+animate =
+  Unstaggered
+    <| { frames = []
+       , action = Interrupt
+       }
 
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
@@ -576,10 +575,11 @@ animate = Unstaggered <|
 
 -}
 queue : Action
-queue = Unstaggered <|
-    { frames = []
-    , action = Queue
-    }
+queue =
+  Unstaggered
+    <| { frames = []
+       , action = Queue
+       }
 
 
 {-| Can be used to stagger animations on a list of widgets.
@@ -634,10 +634,10 @@ resolve stag i =
   in
     case stag of
       Unstaggered preaction ->
-        preaction.action <| 
-            List.map 
-                applyKeyframeOptions
-                    preaction.frames
+        preaction.action
+          <| List.map
+              applyKeyframeOptions
+              preaction.frames
 
       Staggered s ->
         resolve (s f) i
@@ -647,41 +647,43 @@ resolve stag i =
 
 
 applyKeyframeOptions : KeyframeWithOptions -> StyleKeyframe
-applyKeyframeOptions options = 
-                let
-                    frame = options.frame
-                    applyOpt prop =
-                        let
-                            addOptions a = 
-                                let
-                                    newSpring = 
-                                        case options.spring of
-                                            Nothing ->
-                                                a.spring
-                                            Just partialSpring ->
-                                                let
-                                                    oldSpring = a.spring
-                                                in
-                                                    { oldSpring 
-                                                        | stiffness = partialSpring.stiffness
-                                                        , damping = partialSpring.damping
-                                                    }
-                                in
-                                    { a | spring = newSpring }
-                        in
-                            mapProp addOptions prop
+applyKeyframeOptions options =
+  let
+    frame =
+      options.frame
 
+    applyOpt prop =
+      let
+        addOptions a =
+          let
+            newSpring =
+              case options.spring of
+                Nothing ->
+                  a.spring
 
-                in
-                    { frame | target = List.map applyOpt frame.target }
+                Just partialSpring ->
+                  let
+                    oldSpring =
+                      a.spring
+                  in
+                    { oldSpring
+                      | stiffness = partialSpring.stiffness
+                      , damping = partialSpring.damping
+                    }
+          in
+            { a | spring = newSpring }
+      in
+        mapProp addOptions prop
+  in
+    { frame | target = List.map applyOpt frame.target }
+
 
 emptyKeyframeWithOptions =
-        { frame = emptyKeyframe
-        , duration = Nothing
-        , easing = Nothing
-        , spring = Nothing
-        }
-
+  { frame = emptyKeyframe
+  , duration = Nothing
+  , easing = Nothing
+  , spring = Nothing
+  }
 
 
 {-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
@@ -835,13 +837,18 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
 -}
 props : List (StyleProperty (Physics DynamicTarget)) -> Action -> Action
 props p action =
-  updateOrCreate action (\a -> 
-                            let
-                                frame = a.frame
-                                updatedFrame = { frame | target = p }
-                            in
-                                { a | frame = updatedFrame }
-                        )
+  updateOrCreate
+    action
+    (\a ->
+      let
+        frame =
+          a.frame
+
+        updatedFrame =
+          { frame | target = p }
+      in
+        { a | frame = updatedFrame }
+    )
 
 
 {-| Specify a duration.  If not specified, the default is 350ms.
@@ -856,7 +863,7 @@ props p action =
 -}
 duration : Time -> Action -> Action
 duration dur action =
-    updateOrCreate action (\a -> { a | duration = Just dur })
+  updateOrCreate action (\a -> { a | duration = Just dur })
 
 
 {-| Specify a delay.  If not specified, the default is 0.
@@ -872,13 +879,19 @@ duration dur action =
 -}
 delay : Time -> Action -> Action
 delay delay action =
-    updateOrCreate action (\a -> 
-                            let
-                                frame = a.frame
-                                updatedFrame = { frame | delay = delay }
-                            in
-                                { a | frame = updatedFrame }
-                        )
+  updateOrCreate
+    action
+    (\a ->
+      let
+        frame =
+          a.frame
+
+        updatedFrame =
+          { frame | delay = delay }
+      in
+        { a | frame = updatedFrame }
+    )
+
 
 {-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
@@ -886,11 +899,7 @@ in-out.
 -}
 easing : (Float -> Float) -> Action -> Action
 easing ease action =
-    updateOrCreate action (\a -> { a | easing = Just ease })
-
-
-
-
+  updateOrCreate action (\a -> { a | easing = Just ease })
 
 
 {-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
@@ -935,39 +944,38 @@ andThen : Action -> Action
 andThen stag =
   case stag of
     Internal ia ->
-              Internal ia
+      Internal ia
 
     Staggered s ->
       Staggered s
 
     Unstaggered preaction ->
-        Unstaggered <|
-            { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
-
+      Unstaggered
+        <| { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
 
 
 {-| Update the last StyleKeyframe in the queue.  If the queue is empty, create a new StyleKeyframe and update that.
 -}
 updateOrCreate : Action -> (KeyframeWithOptions -> KeyframeWithOptions) -> Action
 updateOrCreate action fn =
-          case action of
-            Internal ia ->
-              Internal ia
+  case action of
+    Internal ia ->
+      Internal ia
 
-            Staggered s ->
-              Staggered s
+    Staggered s ->
+      Staggered s
 
-            Unstaggered preaction ->
-                Unstaggered <|
-                  { preaction 
-                        | frames = 
-                                  case List.reverse preaction.frames of
-                                    [] ->
-                                      [ fn emptyKeyframeWithOptions ]
+    Unstaggered preaction ->
+      Unstaggered
+        <| { preaction
+            | frames =
+                case List.reverse preaction.frames of
+                  [] ->
+                    [ fn emptyKeyframeWithOptions ]
 
-                                    cur :: rem ->
-                                      List.reverse ((fn cur) :: rem)
-                  }
+                  cur :: rem ->
+                    List.reverse ((fn cur) :: rem)
+           }
 
 
 {-| Animate a StyleProperty to a value.
@@ -975,33 +983,35 @@ updateOrCreate action fn =
 -}
 to : Float -> Physics DynamicTarget
 to target =
-  emptyPhysics <| 
-    (\from current -> ((target - from) * current) + from)
+  emptyPhysics
+    <| (\from current -> ((target - from) * current) + from)
+
 
 {-| Animate a StyleProperty by adding to its existing value
 
 -}
 add : Float -> Physics DynamicTarget
 add target =
-  emptyPhysics <| 
-    (\from current -> ((target - from) * current) + from)
+  emptyPhysics
+    <| (\from current -> ((target - from) * current) + from)
+
 
 {-| Animate a StyleProperty by subtracting to its existing value
 
 -}
 minus : Float -> Physics DynamicTarget
 minus target =
-  emptyPhysics <| 
-    (\from current -> ((target - from) * current) + from)
+  emptyPhysics
+    <| (\from current -> ((target - from) * current) + from)
+
 
 {-| Keep an animation where it is!  This is useful for stacking transforms.
 
 -}
 stay : Float -> Physics DynamicTarget
 stay target =
-  emptyPhysics <| 
-    (\from current -> from)
-
+  emptyPhysics
+    <| (\from current -> from)
 
 
 type alias ColorProperty =
@@ -1247,9 +1257,6 @@ renderProp prop =
   ( Render.name prop
   , Render.value prop
   )
-
-
-
 
 
 
@@ -1528,7 +1535,6 @@ stepProp prop prev current dt =
               physics.target from eased
           in
             physics
-
   in
     case prop of
       Prop name to unit ->
@@ -2213,7 +2219,6 @@ stepProp prop prev current dt =
               (val 0.0 p)
 
 
-
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
 noWobble : Spring.Properties
@@ -2269,6 +2274,3 @@ mapTo i fn xs =
         x
   in
     List.indexedMap update xs
-
-
-
