@@ -34,7 +34,7 @@ update action model =
       let 
         (anim, fx) = 
               UI.animate 
-                 |> UI.duration (0.4*second)
+                 --|> UI.duration (0.4*second)
                  |> UI.props 
                      [ UI.Left (UI.to 0) UI.Px
                      , UI.Opacity (UI.to 1)
@@ -50,7 +50,7 @@ update action model =
       let 
         (anim, fx) = 
             UI.animate
-               |> UI.duration (0.4*second)
+               --|> UI.duration (0.4*second)
                |> UI.props 
                       [ UI.Left (UI.to -350) UI.Px
                       , UI.Opacity (UI.to 0)

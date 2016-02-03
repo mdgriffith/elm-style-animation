@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props, duration, delay, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props,  delay, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -11,7 +11,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation, Action
 
 # Creating an animation
-@docs animate, queue, stagger, props, delay, duration, easing, spring, andThen, on
+@docs animate, queue, stagger, props, delay, andThen, on
 
 # Animating Properties
 
@@ -61,6 +61,7 @@ import Color
 type alias Model =
     { start : Maybe Time
     , elapsed : Time
+    , lastUpdated : Time
     , anim : List StyleKeyframe
     , previous : Style
     }
@@ -76,8 +77,24 @@ type alias Static =
     Float
 
 
-type alias Dynamic =
-    Float -> Float -> Float
+type alias DynamicTarget = 
+            Float -> Float -> Float
+
+type alias Physics a =
+     { target : a
+     --, velocity : Float
+     --, position : Float
+     , spring : FullSpring
+     , easing : Maybe Easing
+     }
+
+type alias Easing = 
+    { ease : (Float -> Float)
+    , counter : Maybe FullSpring
+    , duration : Time
+    }
+
+
 
 
 {-| Represent a CSS style as a list of style properties with concrete values.
@@ -91,27 +108,10 @@ This is a list of StylePropertys, but instead of having a static value like '5',
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
 type alias StyleKeyframe =
-    { target : List (StyleProperty Dynamic)
-    --, duration : Time
+    { target : List (StyleProperty (Physics DynamicTarget))
     , delay : Time
-    --, ease : Float -> Float
-    --, spring : Maybe FullSpring
     }
 
-
-type alias Physics a =
-    { target : a
-    , velocity : Float
-    , position : Float
-    , spring : Spring
-    , easing : Maybe Easing
-    }
-
-type alias Easing = 
-    { ease : (Float -> Float)
-    , counter : Maybe Spring
-    , duration : Time
-    }
 
 
 {-| All currently animatable properties.
@@ -229,6 +229,7 @@ empty =
     , start = Nothing
     , anim = []
     , previous = []
+    , lastUpdated = 0.0
     }
 
 
@@ -239,11 +240,23 @@ empty =
 emptyKeyframe : StyleKeyframe
 emptyKeyframe =
     { target = []
-    , duration = defaultDuration
-    , ease = defaultEasing
     , delay = 0.0
-    , spring = Nothing
     }
+
+emptyPhysics : a -> Physics a
+emptyPhysics target = 
+    { target = target
+    , spring = { velocity = 0
+               , position = 0
+               , stiffness = noWobble.stiffness
+               , damping = noWobble.damping
+               , destination = 1
+               }
+    , easing = Nothing
+    }
+
+
+
 
 
 {-| Create an initial style for your init model.
@@ -328,7 +341,7 @@ internalUpdate action (A model) =
                             model.previous
 
                         Just a ->
-                            bake model.elapsed a model.previous
+                            bake a
 
               in
                   ( A
@@ -370,7 +383,7 @@ internalUpdate action (A model) =
                         )
 
                     Just current ->
-                        if newElapsed >= (current.duration + current.delay) then
+                        if done newElapsed current then
                             let
                                 anims =
                                     case remaining of
@@ -381,17 +394,17 @@ internalUpdate action (A model) =
                                             a
 
                                 previous =
-                                    bake (current.duration + current.delay) current model.previous
+                                    bake current
 
-                                resetElapsed = 
-                                    newElapsed - (current.duration + current.delay)
+                                resetElapsed = newElapsed
+                                    --newElapsed - (current.duration + current.delay)
                             in
                                 ( A
                                     { model
                                         | elapsed = resetElapsed
                                         , start = Just (now - resetElapsed)
                                         , previous = previous
-                                        , anim = updateCurrentSpring resetElapsed anims
+                                        , anim = mapTo 0 (\a -> step a previous resetElapsed (resetElapsed - model.lastUpdated)) anims
                                     }
                                 , Effects.tick Tick
                                 )
@@ -400,7 +413,7 @@ internalUpdate action (A model) =
                                 { model
                                     | elapsed = newElapsed
                                     , start = Just start
-                                    , anim = updateCurrentSpring newElapsed model.anim
+                                    , anim = mapTo 0 (\a -> step a model.previous newElapsed (newElapsed - model.lastUpdated)) model.anim
                                 }
                             , Effects.tick Tick
                             )
@@ -424,6 +437,200 @@ equivalentAnim style frame1 frame2 =
                             final2 = finalStyle style frame2
                           in
                             final1 == final2
+
+
+
+done : Time -> StyleKeyframe -> Bool
+done time frame = 
+        --let
+        --    propDone prop =
+        --        case prop.ease of
+        --            Nothing ->
+        --                springAtRest prop.spring
+
+        --            Just easing ->
+        --                easing.ease (time - frame.delay) == 1.0
+        --             && easing.counter == Nothing
+
+        --in
+            List.all (propDone time) frame.target
+
+
+propDone : Time -> StyleProperty (Physics DynamicTarget) -> Bool
+propDone time prop =
+        let
+          isDone prop =
+            case prop.easing of
+                Nothing ->
+                    springAtRest prop.spring
+
+                Just easing ->
+                    easing.ease time == 1.0
+                 && easing.counter == Nothing
+        in
+          case prop of
+            Prop _ a _ ->
+                isDone a
+
+            Opacity a ->
+                isDone a
+
+            Height a _ ->
+                isDone a
+
+            Width a _ ->
+                isDone a
+
+            Left a _ ->
+                isDone a
+
+            Top a _ ->
+                isDone a
+
+            Right a _ ->
+                isDone a
+
+            Bottom a _ ->
+                isDone a
+
+            MaxHeight a _ ->
+                isDone a
+
+            MaxWidth a _ ->
+                isDone a
+
+            MinHeight a _ ->
+                isDone a
+
+            MinWidth a _ ->
+                isDone a
+
+            Padding a _ ->
+                isDone a
+
+            PaddingLeft a _ ->
+                isDone a
+
+            PaddingRight a _ ->
+                isDone a
+
+            PaddingTop a _ ->
+                isDone a
+
+            PaddingBottom a _ ->
+                isDone a
+
+            Margin a _ ->
+                isDone a
+
+            MarginLeft a _ ->
+                isDone a
+
+            MarginRight a _ ->
+                isDone a
+
+            MarginTop a _ ->
+                isDone a
+
+            MarginBottom a _ ->
+                isDone a
+
+            BorderWidth a _ ->
+                isDone a
+
+            BorderRadius a _ ->
+                isDone a
+
+            BorderTopLeftRadius a _ ->
+                isDone a
+
+            BorderTopRightRadius a _ ->
+                isDone a
+
+            BorderBottomLeftRadius a _ ->
+                isDone a
+
+            BorderBottomRightRadius a _ ->
+                isDone a
+
+            LetterSpacing a _ ->
+                isDone a
+
+            LineHeight a _ ->
+                isDone a
+
+            BackgroundPosition x y _ ->
+                isDone x && isDone y
+
+            TransformOrigin x y z _ ->
+               isDone x && isDone y && isDone z
+
+            Color x y z a ->
+                isDone x && isDone y && isDone z && isDone a
+
+            BackgroundColor x y z a ->
+                isDone x && isDone y && isDone z && isDone a
+
+            BorderColor x y z a ->
+                isDone x && isDone y && isDone z && isDone a
+
+            Translate a1 a2 _ ->
+                isDone a1 && isDone a2
+
+            Translate3d a1 a2 a3 _ ->
+                isDone a1 && isDone a2 && isDone a3
+
+            TranslateX a _ ->
+                isDone a
+
+            TranslateY a _ ->
+                isDone a
+
+            Scale a1 ->
+                isDone a1
+
+            Scale3d a1 a2 a3 ->
+                isDone a1 && isDone a2 && isDone a3
+
+            ScaleX a ->
+                 isDone a
+
+            ScaleY a ->
+                 isDone a
+
+            ScaleZ a ->
+                 isDone a
+
+            Rotate a _ ->
+                 isDone a
+
+            Rotate3d a1 a2 a3 a4 _ ->
+                isDone a1 && isDone a2 && isDone a3 && isDone a4
+
+            RotateX a _ ->
+                isDone a
+
+            RotateY a _ ->
+                isDone a
+
+            Skew a1 a2 _ ->
+               isDone a1 && isDone a2
+
+            SkewX a _ ->
+                isDone a
+
+            SkewY a _ ->
+                isDone a
+
+            Perspective a ->
+                isDone a
+
+            Matrix a b c x y z ->
+                List.all isDone [ a, b, c, x, y, z ]
+
+            Matrix3d a b c d e f g h i j k l m n o p ->
+                List.all isDone [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p ]
+
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -509,10 +716,10 @@ resolve stag i =
     in
         case internal of
             Queue frames ->
-                Queue <| List.map applySpring frames
+                Queue <| frames
 
             Interrupt frames ->
-                Interrupt <| List.map applySpring frames
+                Interrupt <| frames
 
             Tick n ->
                 internal
@@ -531,21 +738,6 @@ resolveStagger stag i =
                 resolveStagger (s f) i
 
 
-applySpring : StyleKeyframe -> StyleKeyframe
-applySpring keyframe =
-    case keyframe.spring of
-        Nothing ->
-            keyframe
-
-        Just spring ->
-            let
-               
-                duration = springDuration spring
-            in
-                { keyframe
-                    | duration =
-                        duration
-                }
 
 
 {-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
@@ -611,16 +803,16 @@ forwardTo toInternalAction styleGet styleSet i widgets action =
 forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Effects b )
 forwardToAll toInternalAction styleGet styleSet widgets action =
     let
-        largestDuration = List.map 
-                              (\i -> 
-                                case resolve action i of
-                                  Queue frames -> getFullDuration frames
-                                  Interrupt frames -> getFullDuration frames
-                                  _ -> 0.0
-                              ) 
-                              [1..List.length widgets] 
-                        |> List.maximum
-                        |> Maybe.withDefault 0.0
+        --largestDuration = List.map 
+        --                      (\i -> 
+        --                        case resolve action i of
+        --                          Queue frames -> getFullDuration frames
+        --                          Interrupt frames -> getFullDuration frames
+        --                          _ -> 0.0
+        --                      ) 
+        --                      [1..List.length widgets] 
+        --                |> List.maximum
+        --                |> Maybe.withDefault 0.0
 
 
         ( widgets, effects ) =
@@ -630,7 +822,8 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
                         let
                             ( newStyle, fx ) =
                                 internalUpdate
-                                    (normalizedDuration largestDuration (resolve action i))
+                                    --(normalizedDuration largestDuration (resolve action i))
+                                    (resolve action i)
                                     (styleGet widget)
                         in
                             ( styleSet widget newStyle
@@ -646,43 +839,43 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
 
 
 
-normalizedDuration : Time -> InternalAction -> InternalAction
-normalizedDuration desiredDuration action =
-                            case action of
-                                Queue frames -> 
-                                    Queue <| addBufferDuration frames desiredDuration
+--normalizedDuration : Time -> InternalAction -> InternalAction
+--normalizedDuration desiredDuration action =
+--                            case action of
+--                                Queue frames -> 
+--                                    Queue <| addBufferDuration frames desiredDuration
 
-                                Interrupt frames -> 
-                                    Interrupt <| addBufferDuration frames desiredDuration
+--                                Interrupt frames -> 
+--                                    Interrupt <| addBufferDuration frames desiredDuration
 
-                                _ -> action
+--                                _ -> action
 
 
 {-| Adds a blank keyframe with a duration that makes the keyframes fill all the time until Time.
 
 -}
-addBufferDuration : List StyleKeyframe -> Time -> List StyleKeyframe
-addBufferDuration frames desiredDuration = 
-                let
-                  dur = getFullDuration frames
-                  delta = desiredDuration - dur
-                in
-                  if dur >= desiredDuration then
-                    frames
-                  else
-                    frames ++ [{ emptyKeyframe | duration = delta }]
+--addBufferDuration : List StyleKeyframe -> Time -> List StyleKeyframe
+--addBufferDuration frames desiredDuration = 
+--                let
+--                  dur = getFullDuration frames
+--                  delta = desiredDuration - dur
+--                in
+--                  if dur >= desiredDuration then
+--                    frames
+--                  else
+--                    frames ++ [{ emptyKeyframe | duration = delta }]
 
 
 
 {-|
 -}
-getFullDuration : List StyleKeyframe -> Time
-getFullDuration frames = 
-                    List.foldl 
-                        (\frame total -> 
-                            total + frame.delay + frame.duration
-                        )
-                        0 frames
+--getFullDuration : List StyleKeyframe -> Time
+--getFullDuration frames = 
+--                    List.foldl 
+--                        (\frame total -> 
+--                            total + frame.delay + frame.duration
+--                        )
+--                        0 frames
 
 
 {-| Specify the properties that should be animated
@@ -696,7 +889,7 @@ getFullDuration frames =
          |> UI.on model.style
 
 -}
-props : List (StyleProperty Dynamic) -> Action -> Action
+props : List (StyleProperty (Physics DynamicTarget)) -> Action -> Action
 props p action =
     updateOrCreate action (\a -> { a | target = p })
 
@@ -711,9 +904,9 @@ props p action =
              ]
          |> UI.on model.style
 -}
-duration : Time -> Action -> Action
-duration dur action =
-    updateOrCreate action (\a -> { a | duration = dur })
+--duration : Time -> Action -> Action
+--duration dur action =
+--    updateOrCreate action (\a -> { a | duration = dur })
 
 
 {-| Specify a delay.  If not specified, the default is 0.
@@ -736,9 +929,9 @@ delay dur action =
 in-out.
 
 -}
-easing : (Float -> Float) -> Action -> Action
-easing ease action =
-    updateOrCreate action (\a -> { a | ease = ease })
+--easing : (Float -> Float) -> Action -> Action
+--easing ease action =
+--    updateOrCreate action (\a -> { a | ease = ease })
 
 
 {-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
@@ -754,9 +947,9 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
              ]
          |> UI.on model.style
 -}
-spring : Spring -> Action -> Action
-spring almost action =
-    updateOrCreate action (\a -> { a | spring = Just <| createSpring almost })
+--spring : Spring -> Action -> Action
+--spring almost action =
+--    updateOrCreate action (\a -> { a | spring = Just <| createSpring almost })
 
 
 {-| Append another keyframe.  This is used for multistage animations.  For example, to cycle through colors, we'd use the following:
@@ -832,49 +1025,72 @@ updateOrCreate stag fn =
 {-| Animate a StyleProperty to a value.
 
 -}
-to : Float -> Float -> Float -> Float
-to target from current =
-    ((target - from) * current) + from
+--to : Float -> Float -> Float -> Float
+--to target from current =
+--    ((target - from) * current) + from
+
+
+to : Float -> Physics DynamicTarget
+to target = emptyPhysics <| (\from current -> ((target - from) * current) + from)
+
+
+add : Float -> Physics DynamicTarget
+add target = emptyPhysics <| (\from current -> ((target - from) * current) + from)
+
+
+
+minus : Float -> Physics DynamicTarget
+minus target = emptyPhysics <| (\from current -> ((target - from) * current) + from)
+
+
+
+stay : Float -> Physics DynamicTarget
+stay target = emptyPhysics <| (\from current -> from)
+
+
+
+
+
 
 
 {-| Animate a StyleProperty by adding to its existing value
 
 -}
-add : Float -> Float -> Float -> Float
-add mod from current =
-    let
-        target = from + mod
-    in
-        to target from current
+--add : Float -> Float -> Float -> Float
+--add mod from current =
+--    let
+--        target = from + mod
+--    in
+--        to target from current
 
 
 {-| Animate a StyleProperty by subtracting to its existing value
 
 -}
-minus : Float -> Float -> Float -> Float
-minus mod from current =
-    let
-        target = from - mod
-    in
-        to target from current
+--minus : Float -> Float -> Float -> Float
+--minus mod from current =
+--    let
+--        target = from - mod
+--    in
+--        to target from current
 
 
 {-| Keep an animation where it is!  This is useful for stacking transforms.
 
 -}
-stay : Float -> Float -> Float
-stay from current =
-    from
+--stay : Float -> Float -> Float
+--stay from current =
+--    from
 
 
 type alias ColorProperty =
-    Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic
+    (Physics DynamicTarget) -> (Physics DynamicTarget) -> (Physics DynamicTarget) -> (Physics DynamicTarget) -> StyleProperty (Physics DynamicTarget)
 
 
 {-| Animate a color-based property, given a color from the Color elm module.
 
 -}
-toColor : Color.Color -> ColorProperty -> StyleProperty Dynamic
+toColor : Color.Color -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toColor color almostColor =
     let
         rgba = Color.toRgb color
@@ -896,7 +1112,7 @@ toColor color almostColor =
             |> UI.on model.style
 
 -}
-toRGB : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
+toRGB : Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toRGB r g b prop =
     prop (to r) (to g) (to b) (to 1.0)
 
@@ -912,7 +1128,7 @@ toRGB r g b prop =
 
 
 -}
-toRGBA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
+toRGBA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toRGBA r g b a prop =
     prop (to r) (to g) (to b) (to a)
 
@@ -920,7 +1136,7 @@ toRGBA r g b a prop =
 {-| Animate a color-based style property to an hsl color. Note: this leaves the alpha channel where it is.
 
 -}
-toHSL : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
+toHSL : Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toHSL h s l prop =
     let
         rgba = Color.toRgb <| Color.hsl h s l
@@ -935,7 +1151,7 @@ toHSL h s l prop =
 {-| Animate a color-based style property to an hsla color.
 
 -}
-toHSLA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
+toHSLA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toHSLA h s l a prop =
     let
         rgba = Color.toRgb <| Color.hsl h s l
@@ -950,9 +1166,9 @@ toHSLA h s l a prop =
 {-| Fade a color to a specific alpha level
 
 -}
-fade : Float -> ColorProperty -> StyleProperty Dynamic
-fade alpha prop =
-    prop stay stay stay (to alpha)
+--fade : Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
+--fade alpha prop =
+--    prop stay stay stay (to alpha)
 
 
 {-| Specify an initial Color-based property using a Color from the elm core Color module.
@@ -1069,7 +1285,7 @@ render (A model) =
             Just anim ->
                 -- Combine all transform properties
                 let
-                    baked = bake model.elapsed anim model.previous
+                    baked = bake anim
 
                     rendered =
                         List.map renderProp baked
@@ -1276,39 +1492,96 @@ renderName styleProp =
 
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
-    List.foldl
-        (\x acc ->
-            -- need to know the propIndex of x, meaning how many times it's shown up already.
-            let
-                xI =
-                    List.foldl
-                        (\x2 count ->
-                            if propId x == propId x2 then
-                                count + 1
-                            else
-                                count
-                        )
-                        0
-                        acc
-            in
-                case findProp new x xI of
-                    Nothing ->
-                        acc ++ [ x ]
+   
+        List.foldl
+            (\x acc ->
+                -- need to know the propIndex of x, meaning how many times it's shown up already.
+                let
+                    xI =
+                        List.foldl
+                            (\x2 count ->
+                                if propId x == propId x2 then
+                                    count + 1
+                                else
+                                    count
+                            )
+                            0
+                            acc
+                in
+                    case findProp new x xI of
+                        Nothing ->
+                            acc ++ [ x ]
 
-                    Just newX ->
-                        acc ++ [ newX ]
-        )
-        []
-        existing
+                        Just newX ->
+                            acc ++ [ newX ]
+            )
+            []
+            existing
 
 
 
 
 
 bakeFinal : StyleKeyframe -> Style -> Style
-bakeFinal anim prev =
+bakeFinal frame style = style
+--bakeFinal anim prev =
+--    let
+--        eased = 1.0
+
+--        style =
+--            List.foldl
+--                (\x acc ->
+--                    -- need to know how many times x has shown up already.
+--                    let
+--                        xI =
+--                            List.foldl
+--                                (\x2 count ->
+--                                    if propId x == propId x2 then
+--                                        count + 1
+--                                    else
+--                                        count
+--                                )
+--                                0
+--                                acc
+--                    in
+--                        case findProp prev x xI of
+--                            Nothing ->
+--                                acc
+
+--                            Just prevX ->
+--                                acc ++ [ bakeProp x prevX eased ]
+--                )
+--                []
+--                anim.target
+--    in
+--      fill style prev
+
+
+
+bake : StyleKeyframe -> Style
+bake frame = 
+        []
+
+
+
+--mapProps : List (StyleProperty a) -> (StyleProperty a -> StyleProperty b) -> List (StyleProperty b)
+--mapProps props fn = 
+
+
+-- Update 
+step : StyleKeyframe -> Style -> Time -> Time -> StyleKeyframe
+step frame prev current dt =
     let
-        eased = 1.0
+        --percentComplete =
+        --    (dt - anim.delay) / anim.duration
+
+        --eased =
+        --    case anim.spring of
+        --        Nothing ->
+        --            anim.ease percentComplete
+
+        --        Just spring ->
+        --            spring.position
 
         style =
             List.foldl
@@ -1331,76 +1604,68 @@ bakeFinal anim prev =
                                 acc
 
                             Just prevX ->
-                                acc ++ [ bakeProp x prevX eased ]
+                                acc ++ [ stepProp x prevX current dt ]
                 )
                 []
-                anim.target
+                frame.target
     in
-      fill style prev
-
-
-
--- private
--- Converts an animation into a Style that can be rendered.
-
-
-bake : Time -> StyleKeyframe -> Style -> Style
-bake elapsed anim prev =
-    let
-        percentComplete =
-            (elapsed - anim.delay) / anim.duration
-
-        eased =
-            case anim.spring of
-                Nothing ->
-                    anim.ease percentComplete
-
-                Just spring ->
-                    spring.position
-
-        style =
-            List.foldl
-                (\x acc ->
-                    -- need to know how many times x has shown up already.
-                    let
-                        xI =
-                            List.foldl
-                                (\x2 count ->
-                                    if propId x == propId x2 then
-                                        count + 1
-                                    else
-                                        count
-                                )
-                                0
-                                acc
-                    in
-                        case findProp prev x xI of
-                            Nothing ->
-                                acc
-
-                            Just prevX ->
-                                acc ++ [ bakeProp x prevX eased ]
-                )
-                []
-                anim.target
-    in
-        if percentComplete > 0.0 then
+        --if percentComplete > 0.0 then
             -- If properties are in previous
             -- but not in the current animation
             -- copy them over as is
-            fill style prev
-        else
-            prev
+        { frame | target = style }
+         --{ frame | target = fill style prev }
+        --else
+        --    prev
 
 
 
 -- private
 
 
-bakeProp : StyleProperty Dynamic -> StyleProperty Static -> Float -> StyleProperty Static
-bakeProp prop prev current =
+
+--type alias Physics a =
+--     { target : a
+--     , velocity : Float
+--     , position : Float
+--     , spring : Spring
+--     , easing : Maybe Easing
+--     }
+
+--type alias Easing = 
+--    { ease : (Float -> Float)
+--    , counter : Maybe FullSpring
+--    , duration : Time
+--    }
+
+
+
+
+stepProp : StyleProperty (Physics DynamicTarget) -> StyleProperty Static -> Time -> Time -> StyleProperty (Physics DynamicTarget)
+stepProp prop prev current dt =
     let
-        val from fn = fn from current
+        --val from fn = fn from current
+        val from physics =
+            case physics.easing of 
+                Nothing ->
+                    let
+                        target = physics.target from current
+                        --{ velocity, position } = 
+                    in
+                        { physics | spring = updateSpring dt physics.spring }
+                  
+                    
+                Just easing ->
+                    let
+                        eased = easing.ease (current/easing.duration)
+                        position = physics.target from eased
+                        --newSpring = physics.spring
+                    in
+                        physics
+                        --{ physics | position = position
+                        --          , velocity = 0 }
+
+
     in
         case prop of
             Prop name to unit ->
@@ -1426,6 +1691,7 @@ bakeProp prop prev current =
                                 0.0
                 in
                     Opacity (val from to)
+                    --Opacity ()
 
             Height to unit ->
                 let
@@ -2572,7 +2838,6 @@ type alias FullSpring =
     , position : Float
     , velocity : Float
     , destination : Float
-    , lastUpdate : Float
     }
 
 
@@ -2587,7 +2852,6 @@ createSpring almost =
     { stiffness = almost.stiffness
     , damping = almost.damping
     , position = 0
-    , lastUpdate = 0
     , velocity = 0
     , destination = 1
     }
@@ -2637,39 +2901,61 @@ fastAndLoose =
 
 
 
-updateCurrentSpring : Time -> List StyleKeyframe -> List StyleKeyframe
-updateCurrentSpring newTime frames =
-    let
-        updateFrame i frame =
-            if i == 0 then
-                let
-                    normalizedTime = (newTime - frame.delay) / frame.duration
-                in
-                    if normalizedTime > 0.0 then
-                        case frame.spring of
-                            Nothing ->
-                                frame
+mapTo : Int -> (a -> a) -> List a -> List a
+mapTo i fn xs = 
+        let
+            update j x = 
+                if j == i then
+                    fn x
+                else
+                    x
+        in
+            List.indexedMap update xs
 
-                            Just spring ->
-                                { frame
-                                    | spring =
-                                        Just
-                                            <| updateSpring normalizedTime spring
-                                }
-                    else
-                        frame
-            else
-                frame
-    in
-        List.indexedMap updateFrame frames
+
+--updateCurrentSpring : Time -> List StyleKeyframe -> List StyleKeyframe
+--updateCurrentSpring newTime frames =
+    --let
+    --    updateFrame i frame =
+    --        if i == 0 then
+    --            let
+    --                normalizedTime = (newTime - frame.delay) / frame.duration
+    --            in
+    --                if normalizedTime > 0.0 then
+    --                    case frame.spring of
+    --                        Nothing ->
+    --                            frame
+
+    --                        Just spring ->
+    --                            { frame
+    --                                | spring =
+    --                                    Just
+    --                                        <| updateSpring normalizedTime spring
+    --                            }
+    --                else
+    --                    frame
+    --        else
+    --            frame
+    --in
+    --    List.indexedMap updateFrame frames
 
 tolerance =
     1.0e-4
 
+
+--
+--type alias Physics a =
+--     { target : a
+--     , velocity : Float
+--     , position : Float
+--     , spring : Spring
+--     , easing : Maybe Easing
+--     }
+
 updateSpring : Time -> FullSpring -> FullSpring
-updateSpring current spring =
+updateSpring dt spring =
     let
-        dt = current - spring.lastUpdate
+        --dt = current - spring.lastUpdate
 
         fspring = -spring.stiffness * (spring.position - spring.destination)
 
@@ -2684,7 +2970,6 @@ updateSpring current spring =
         { spring
             | position = newX
             , velocity = newV
-            , lastUpdate = current
         }
 
 
