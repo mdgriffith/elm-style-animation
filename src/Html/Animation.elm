@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props,  delay, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props, delay, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -15,9 +15,9 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 # Animating Properties
 
-These functions specify the value for a StyleProperty.  
+These functions specify the value for a StyleProperty.
 
-After taking an argument, these functions have `Float -> Float -> Float` as their signature. 
+After taking an argument, these functions have `Float -> Float -> Float` as their signature.
 This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
 
 @docs to, stay, add, minus
@@ -59,46 +59,46 @@ import Color
 
 
 type alias Model =
-    { start : Maybe Time
-    , elapsed : Time
-    , anim : List StyleKeyframe
-    , previous : Style
-    }
+  { start : Maybe Time
+  , elapsed : Time
+  , anim : List StyleKeyframe
+  , previous : Style
+  }
 
 
 {-| An Animation of CSS properties.
 -}
 type Animation
-    = A Model
+  = A Model
 
 
 type alias Static =
-    Float
+  Float
 
 
-type alias DynamicTarget = 
-            Float -> Float -> Float
+type alias DynamicTarget =
+  Float -> Float -> Float
+
 
 type alias Physics a =
-     { target : a
-     , position : Float
-     , spring : FullSpring
-     , easing : Maybe Easing
-     }
-
-type alias Easing = 
-    { ease : (Float -> Float)
-    , counter : Maybe FullSpring
-    , duration : Time
-    }
+  { target : a
+  , position : Float
+  , spring : FullSpring
+  , easing : Maybe Easing
+  }
 
 
+type alias Easing =
+  { ease : Float -> Float
+  , counter : Maybe FullSpring
+  , duration : Time
+  }
 
 
 {-| Represent a CSS style as a list of style properties with concrete values.
 -}
 type alias Style =
-    List (StyleProperty Static)
+  List (StyleProperty Static)
 
 
 {-| Represent a style animation.
@@ -106,105 +106,111 @@ This is a list of StylePropertys, but instead of having a static value like '5',
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
 type alias StyleKeyframe =
-    { target : List (StyleProperty (Physics DynamicTarget))
-    , delay : Time
-    }
+  { target : List (StyleProperty (Physics DynamicTarget))
+  , delay : Time
+  }
 
 
+type alias KeyframeWithOptions =
+        { frame : StyleKeyframe
+        , duration : Maybe Time
+        , easing : Maybe (Float -> Float)
+        , spring : Maybe Spring
+        }
 
 {-| All currently animatable properties.
 -}
 type StyleProperty a
-    = Prop String a String
-    | Opacity a
-    | Height a Length
-    | Width a Length
-    | Left a Length
-    | Top a Length
-    | Right a Length
-    | Bottom a Length
-    | MaxHeight a Length
-    | MaxWidth a Length
-    | MinHeight a Length
-    | MinWidth a Length
-    | Padding a Length
-    | PaddingLeft a Length
-    | PaddingRight a Length
-    | PaddingTop a Length
-    | PaddingBottom a Length
-    | Margin a Length
-    | MarginLeft a Length
-    | MarginRight a Length
-    | MarginTop a Length
-    | MarginBottom a Length
-    | BorderWidth a Length
-    | BorderRadius a Length
-    | BorderTopLeftRadius a Length
-    | BorderTopRightRadius a Length
-    | BorderBottomLeftRadius a Length
-    | BorderBottomRightRadius a Length
-    | LetterSpacing a Length
-    | LineHeight a Length
-    | BackgroundPosition a a Length
-    | Color a a a a
-    | BackgroundColor a a a a
-    | BorderColor a a a a
-    | TransformOrigin a a a Length
-    | Matrix a a a a a a
-    | Matrix3d a a a a a a a a a a a a a a a a
-    | Translate a a Length
-    | Translate3d a a a Length
-    | TranslateX a Length
-    | TranslateY a Length
-    | Scale a
-    | Scale3d a a a
-    | ScaleX a
-    | ScaleY a
-    | ScaleZ a
-    | Rotate a Angle
-    | Rotate3d a a a a Angle
-    | RotateX a Angle
-    | RotateY a Angle
-    | Skew a a Angle
-    | SkewX a Angle
-    | SkewY a Angle
-    | Perspective a
+  = Prop String a String
+  | Opacity a
+  | Height a Length
+  | Width a Length
+  | Left a Length
+  | Top a Length
+  | Right a Length
+  | Bottom a Length
+  | MaxHeight a Length
+  | MaxWidth a Length
+  | MinHeight a Length
+  | MinWidth a Length
+  | Padding a Length
+  | PaddingLeft a Length
+  | PaddingRight a Length
+  | PaddingTop a Length
+  | PaddingBottom a Length
+  | Margin a Length
+  | MarginLeft a Length
+  | MarginRight a Length
+  | MarginTop a Length
+  | MarginBottom a Length
+  | BorderWidth a Length
+  | BorderRadius a Length
+  | BorderTopLeftRadius a Length
+  | BorderTopRightRadius a Length
+  | BorderBottomLeftRadius a Length
+  | BorderBottomRightRadius a Length
+  | LetterSpacing a Length
+  | LineHeight a Length
+  | BackgroundPosition a a Length
+  | Color a a a a
+  | BackgroundColor a a a a
+  | BorderColor a a a a
+  | TransformOrigin a a a Length
+  | Matrix a a a a a a
+  | Matrix3d a a a a a a a a a a a a a a a a
+  | Translate a a Length
+  | Translate3d a a a Length
+  | TranslateX a Length
+  | TranslateY a Length
+  | Scale a
+  | Scale3d a a a
+  | ScaleX a
+  | ScaleY a
+  | ScaleZ a
+  | Rotate a Angle
+  | Rotate3d a a a a Angle
+  | RotateX a Angle
+  | RotateY a Angle
+  | Skew a a Angle
+  | SkewX a Angle
+  | SkewY a Angle
+  | Perspective a
 
 
 {-| Units representing length.
 -}
 type Length
-    = Px
-    | Percent
-    | Rem
-    | Em
-    | Ex
-    | Ch
-    | Vh
-    | Vw
-    | Vmin
-    | Vmax
-    | Mm
-    | Cm
-    | In
-    | Pt
-    | Pc
+  = Px
+  | Percent
+  | Rem
+  | Em
+  | Ex
+  | Ch
+  | Vh
+  | Vw
+  | Vmin
+  | Vmax
+  | Mm
+  | Cm
+  | In
+  | Pt
+  | Pc
 
 
 {-| Units representing angles.
 -}
 type Angle
-    = Deg
-    | Grad
-    | Rad
-    | Turn
+  = Deg
+  | Grad
+  | Rad
+  | Turn
 
 
 {-| -}
 type InternalAction
-    = Queue (List StyleKeyframe)
-    | Interrupt (List StyleKeyframe)
-    | Tick Time
+  = Queue (List StyleKeyframe)
+  | Interrupt (List StyleKeyframe)
+  | Tick Time
 
 
 {-| Actions to be run on an animation.
@@ -212,22 +218,36 @@ You won't be constructing using this type directly, though it may show up in you
 
 To start animations you'll be using the `animate`, `queue`, and `stagger` functions
 -}
+
+type alias PreAction = 
+        { frames : List KeyframeWithOptions
+        , action : (List StyleKeyframe -> InternalAction)
+        }
+
+
 type Action
-    = Staggered (Float -> Action)
-    | Unstaggered InternalAction
+      = Staggered (Float -> Action)
+      | Unstaggered PreAction
+      | Internal InternalAction
 
 
+--type alias WithDefaults =
+--            { internalAction : InternalAction
+--            , spring : Maybe Spring
+--            , easing : Maybe (Float -> Float)
+--            , duration : Maybe Float
+--            }
 
 -- private
 
 
 empty : Model
 empty =
-    { elapsed = 0.0
-    , start = Nothing
-    , anim = []
-    , previous = []
-    }
+  { elapsed = 0.0
+  , start = Nothing
+  , anim = []
+  , previous = []
+  }
 
 
 
@@ -236,25 +256,24 @@ empty =
 
 emptyKeyframe : StyleKeyframe
 emptyKeyframe =
-    { target = []
-    , delay = 0.0
-    }
+  { target = []
+  , delay = 0.0
+  }
+
 
 emptyPhysics : a -> Physics a
-emptyPhysics target = 
-    { target = target
-    , position = 0
-    , spring = { velocity = 0
-               , position = 0
-               , stiffness = noWobble.stiffness
-               , damping = noWobble.damping
-               , destination = 1
-               }
-    , easing = Nothing
-    }
-
-
-
+emptyPhysics target =
+  { target = target
+  , position = 0
+  , spring =
+      { velocity = 0
+      , position = 0
+      , stiffness = noWobble.stiffness
+      , damping = noWobble.damping
+      , destination = 1
+      }
+  , easing = Nothing
+  }
 
 
 {-| Create an initial style for your init model.
@@ -264,28 +283,28 @@ __Note__ All properties that you animate must be present in the init or else tha
 -}
 init : Style -> Animation
 init sty =
-    let
-        deduped =
-            List.foldr
-                (\x acc ->
-                    if
-                        List.any
-                            (\y ->
-                                propId x
-                                    == propId y
-                                    && renderName x
-                                    /= "transform"
-                            )
-                            acc
-                    then
-                        acc
-                    else
-                        x :: acc
-                )
-                []
-                sty
-    in
-        A { empty | previous = deduped }
+  let
+    deduped =
+      List.foldr
+        (\x acc ->
+          if
+            List.any
+              (\y ->
+                propId x
+                  == propId y
+                  && renderName x
+                  /= "transform"
+              )
+              acc
+          then
+            acc
+          else
+            x :: acc
+        )
+        []
+        sty
+  in
+    A { empty | previous = deduped }
 
 
 
@@ -294,7 +313,7 @@ init sty =
 
 defaultDuration : Float
 defaultDuration =
-    0.35 * second
+  0.35 * second
 
 
 
@@ -303,7 +322,7 @@ defaultDuration =
 
 defaultEasing : Float -> Float
 defaultEasing x =
-    (1 - cos (pi * x)) / 2
+  (1 - cos (pi * x)) / 2
 
 
 {-| Update an animation.  This will probably only show up once in your code.
@@ -311,122 +330,127 @@ See any of the examples at [https://github.com/mdgriffith/elm-html-animation](ht
 -}
 update : Action -> Animation -> ( Animation, Effects Action )
 update action anim =
-    let
-        ( anim, fx ) = internalUpdate (resolve action 0) anim
-    in
-        ( anim, Effects.map Unstaggered fx )
+  let
+    ( anim, fx ) =
+      internalUpdate (resolve action 0) anim
+  in
+    ( anim, Effects.map Internal fx )
 
 
 internalUpdate : InternalAction -> Animation -> ( Animation, Effects InternalAction )
 internalUpdate action (A model) =
-    case action of
-        Queue anims ->
-            ( A { model | anim = model.anim ++ anims }
-            , Effects.tick Tick
+  case action of
+    Queue anims ->
+      ( A { model | anim = model.anim ++ anims }
+      , Effects.tick Tick
+      )
+
+    Interrupt anims ->
+      -- Only interrupt if anims end in different states.
+      --if equivalentAnim model.previous model.anim anims then
+      --    ( A model, Effects.none )
+      --else
+      let
+        currentAnim =
+          List.head model.anim
+
+        previous =
+          case currentAnim of
+            Nothing ->
+              model.previous
+
+            Just frame ->
+              bake frame model.previous
+      in
+        ( A
+            { model
+              | anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
+              , elapsed = 0.0
+              , start = Nothing
+              , previous = previous
+            }
+        , Effects.tick Tick
+        )
+
+    Tick now ->
+      let
+        start =
+          case model.start of
+            Nothing ->
+              now
+
+            Just t ->
+              t
+
+        newElapsed =
+          now - start
+
+        currentAnim =
+          List.head model.anim
+
+        remaining =
+          List.tail model.anim
+      in
+        case currentAnim of
+          Nothing ->
+            ( A
+                { model
+                  | elapsed = 0.0
+                  , start = Nothing
+                  , previous = model.previous
+                  , anim = model.anim
+                }
+            , Effects.none
             )
 
-        Interrupt anims ->
-            -- Only interrupt if anims end in different states.
-            --if equivalentAnim model.previous model.anim anims then
-            --    ( A model, Effects.none )
-            --else
+          Just current ->
+            if done newElapsed current then
               let
-                currentAnim = List.head model.anim
+                anims =
+                  case remaining of
+                    Nothing ->
+                      []
+
+                    Just a ->
+                      a
 
                 previous =
-                    case currentAnim of
-                        Nothing ->
-                            model.previous
+                  bake current model.previous
 
-                        Just frame ->
-                            bake frame model.previous
+                resetElapsed =
+                  newElapsed
 
+                --newElapsed - (current.duration + current.delay)
               in
-                  ( A
-                      { model
-                          | anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
-                          , elapsed = 0.0
-                          , start = Nothing
-                          , previous = previous
-                      }
-                  , Effects.tick Tick
-                  )
+                ( A
+                    { model
+                      | elapsed = resetElapsed
+                      , start = Just (now - resetElapsed)
+                      , previous = previous
+                      , anim = mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
+                    }
+                , Effects.tick Tick
+                )
+            else
+              ( A
+                  { model
+                    | elapsed = newElapsed
+                    , start = Just start
+                    , anim = mapTo 0 (\a -> step a model.previous newElapsed (newElapsed - model.elapsed)) model.anim
+                  }
+              , Effects.tick Tick
+              )
 
-        Tick now ->
-            let
-                start =
-                    case model.start of
-                        Nothing ->
-                            now
-
-                        Just t ->
-                            t
-
-                newElapsed = now - start
-
-                currentAnim = List.head model.anim
-
-                remaining = List.tail model.anim
-            in
-                case currentAnim of
-                    Nothing ->
-                        ( A
-                            { model
-                                | elapsed = 0.0
-                                , start = Nothing
-                                , previous = model.previous
-                                , anim = model.anim
-                            }
-                        , Effects.none
-                        )
-
-                    Just current ->
-                        if done newElapsed current then
-                            let
-                                anims =
-                                    case remaining of
-                                        Nothing ->
-                                            []
-
-                                        Just a ->
-                                            a
-
-                                previous =
-                                    bake current model.previous
-
-                                resetElapsed = newElapsed
-                                    --newElapsed - (current.duration + current.delay)
-                            in
-                                ( A
-                                    { model
-                                        | elapsed = resetElapsed
-                                        , start = Just (now - resetElapsed)
-                                        , previous = previous
-                                        , anim = mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
-                                    }
-                                , Effects.tick Tick
-                                )
-                        else
-                            ( A
-                                { model
-                                    | elapsed = newElapsed
-                                    , start = Just start
-                                    , anim = mapTo 0 (\a -> step a model.previous newElapsed (newElapsed - model.elapsed)) model.anim
-                                }
-                            , Effects.tick Tick
-                            )
 
 
 --finalStyle : Style -> List StyleKeyframe -> Style
---finalStyle style keyframes = 
---                List.foldl 
---                      (\frame st -> 
+--finalStyle style keyframes =
+--                List.foldl
+--                      (\frame st ->
 --                        bakeFinal frame st
 --                      ) style keyframes
-
-
 --equivalentAnim : Style -> List StyleKeyframe -> List StyleKeyframe -> Bool
---equivalentAnim style frame1 frame2 = 
+--equivalentAnim style frame1 frame2 =
 --                        if List.length frame1 == 0 then
 --                          False
 --                        else
@@ -437,187 +461,187 @@ internalUpdate action (A model) =
 --                            final1 == final2
 
 
-
 done : Time -> StyleKeyframe -> Bool
-done time frame = 
-            List.all (propDone time) frame.target
+done time frame =
+  List.all (propDone time) frame.target
 
 
 propDone : Time -> StyleProperty (Physics DynamicTarget) -> Bool
 propDone time prop =
-        let
-          isDone prop =
-            case prop.easing of
-                Nothing -> 
-                    springAtRest prop.spring
+  let
+    isDone prop =
+      case prop.easing of
+        Nothing ->
+          springAtRest prop.spring
 
-                Just easing -> 
-                    easing.ease time == 1.0
-                 && easing.counter == Nothing
-        in
-          case prop of
-            Prop _ a _ ->
-                isDone a
+        Just easing ->
+          easing.ease time
+            == 1.0
+            && easing.counter
+            == Nothing
+  in
+    case prop of
+      Prop _ a _ ->
+        isDone a
 
-            Opacity a ->
-                isDone a
+      Opacity a ->
+        isDone a
 
-            Height a _ ->
-                isDone a
+      Height a _ ->
+        isDone a
 
-            Width a _ ->
-                isDone a
+      Width a _ ->
+        isDone a
 
-            Left a _ ->
-                isDone a
+      Left a _ ->
+        isDone a
 
-            Top a _ ->
-                isDone a
+      Top a _ ->
+        isDone a
 
-            Right a _ ->
-                isDone a
+      Right a _ ->
+        isDone a
 
-            Bottom a _ ->
-                isDone a
+      Bottom a _ ->
+        isDone a
 
-            MaxHeight a _ ->
-                isDone a
+      MaxHeight a _ ->
+        isDone a
 
-            MaxWidth a _ ->
-                isDone a
+      MaxWidth a _ ->
+        isDone a
 
-            MinHeight a _ ->
-                isDone a
+      MinHeight a _ ->
+        isDone a
 
-            MinWidth a _ ->
-                isDone a
+      MinWidth a _ ->
+        isDone a
 
-            Padding a _ ->
-                isDone a
+      Padding a _ ->
+        isDone a
 
-            PaddingLeft a _ ->
-                isDone a
+      PaddingLeft a _ ->
+        isDone a
 
-            PaddingRight a _ ->
-                isDone a
+      PaddingRight a _ ->
+        isDone a
 
-            PaddingTop a _ ->
-                isDone a
+      PaddingTop a _ ->
+        isDone a
 
-            PaddingBottom a _ ->
-                isDone a
+      PaddingBottom a _ ->
+        isDone a
 
-            Margin a _ ->
-                isDone a
+      Margin a _ ->
+        isDone a
 
-            MarginLeft a _ ->
-                isDone a
+      MarginLeft a _ ->
+        isDone a
 
-            MarginRight a _ ->
-                isDone a
+      MarginRight a _ ->
+        isDone a
 
-            MarginTop a _ ->
-                isDone a
+      MarginTop a _ ->
+        isDone a
 
-            MarginBottom a _ ->
-                isDone a
+      MarginBottom a _ ->
+        isDone a
 
-            BorderWidth a _ ->
-                isDone a
+      BorderWidth a _ ->
+        isDone a
 
-            BorderRadius a _ ->
-                isDone a
+      BorderRadius a _ ->
+        isDone a
 
-            BorderTopLeftRadius a _ ->
-                isDone a
+      BorderTopLeftRadius a _ ->
+        isDone a
 
-            BorderTopRightRadius a _ ->
-                isDone a
+      BorderTopRightRadius a _ ->
+        isDone a
 
-            BorderBottomLeftRadius a _ ->
-                isDone a
+      BorderBottomLeftRadius a _ ->
+        isDone a
 
-            BorderBottomRightRadius a _ ->
-                isDone a
+      BorderBottomRightRadius a _ ->
+        isDone a
 
-            LetterSpacing a _ ->
-                isDone a
+      LetterSpacing a _ ->
+        isDone a
 
-            LineHeight a _ ->
-                isDone a
+      LineHeight a _ ->
+        isDone a
 
-            BackgroundPosition x y _ ->
-                isDone x && isDone y
+      BackgroundPosition x y _ ->
+        isDone x && isDone y
 
-            TransformOrigin x y z _ ->
-               isDone x && isDone y && isDone z
+      TransformOrigin x y z _ ->
+        isDone x && isDone y && isDone z
 
-            Color x y z a ->
-                isDone x && isDone y && isDone z && isDone a
+      Color x y z a ->
+        isDone x && isDone y && isDone z && isDone a
 
-            BackgroundColor x y z a ->
-                isDone x && isDone y && isDone z && isDone a
+      BackgroundColor x y z a ->
+        isDone x && isDone y && isDone z && isDone a
 
-            BorderColor x y z a ->
-                isDone x && isDone y && isDone z && isDone a
+      BorderColor x y z a ->
+        isDone x && isDone y && isDone z && isDone a
 
-            Translate a1 a2 _ ->
-                isDone a1 && isDone a2
+      Translate a1 a2 _ ->
+        isDone a1 && isDone a2
 
-            Translate3d a1 a2 a3 _ ->
-                isDone a1 && isDone a2 && isDone a3
+      Translate3d a1 a2 a3 _ ->
+        isDone a1 && isDone a2 && isDone a3
 
-            TranslateX a _ ->
-                isDone a
+      TranslateX a _ ->
+        isDone a
 
-            TranslateY a _ ->
-                isDone a
+      TranslateY a _ ->
+        isDone a
 
-            Scale a1 ->
-                isDone a1
+      Scale a1 ->
+        isDone a1
 
-            Scale3d a1 a2 a3 ->
-                isDone a1 && isDone a2 && isDone a3
+      Scale3d a1 a2 a3 ->
+        isDone a1 && isDone a2 && isDone a3
 
-            ScaleX a ->
-                 isDone a
+      ScaleX a ->
+        isDone a
 
-            ScaleY a ->
-                 isDone a
+      ScaleY a ->
+        isDone a
 
-            ScaleZ a ->
-                 isDone a
+      ScaleZ a ->
+        isDone a
 
-            Rotate a _ ->
-                 isDone a
+      Rotate a _ ->
+        isDone a
 
-            Rotate3d a1 a2 a3 a4 _ ->
-                isDone a1 && isDone a2 && isDone a3 && isDone a4
+      Rotate3d a1 a2 a3 a4 _ ->
+        isDone a1 && isDone a2 && isDone a3 && isDone a4
 
-            RotateX a _ ->
-                isDone a
+      RotateX a _ ->
+        isDone a
 
-            RotateY a _ ->
-                isDone a
+      RotateY a _ ->
+        isDone a
 
-            Skew a1 a2 _ ->
-               isDone a1 && isDone a2
+      Skew a1 a2 _ ->
+        isDone a1 && isDone a2
 
-            SkewX a _ ->
-                isDone a
+      SkewX a _ ->
+        isDone a
 
-            SkewY a _ ->
-                isDone a
+      SkewY a _ ->
+        isDone a
 
-            Perspective a ->
-                isDone a
+      Perspective a ->
+        isDone a
 
-            Matrix a b c x y z ->
-                List.all isDone [ a, b, c, x, y, z ]
+      Matrix a b c x y z ->
+        List.all isDone [ a, b, c, x, y, z ]
 
-            Matrix3d a b c d e f g h i j k l m n o p ->
-                List.all isDone [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p ]
-
+      Matrix3d a b c d e f g h i j k l m n o p ->
+        List.all isDone [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p ]
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -632,8 +656,11 @@ propDone time prop =
 
 -}
 animate : Action
-animate =
-    Unstaggered (Interrupt [])
+animate = Unstaggered <|
+    { frames = []
+    , action = Interrupt
+    }
+
 
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
@@ -648,8 +675,10 @@ animate =
 
 -}
 queue : Action
-queue =
-    Unstaggered (Queue [])
+queue = Unstaggered <|
+    { frames = []
+    , action = Queue
+    }
 
 
 {-| Can be used to stagger animations on a list of widgets.
@@ -674,7 +703,7 @@ queue =
 -}
 stagger : (Float -> Action) -> Action
 stagger =
-    Staggered
+  Staggered
 
 
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
@@ -690,7 +719,7 @@ stagger =
 -}
 on : Animation -> Action -> ( Animation, Effects Action )
 on model action =
-    update action model
+  update action model
 
 
 {-| Resolve the stagger if there is one, and apply springs if present.
@@ -698,32 +727,101 @@ on model action =
 -}
 resolve : Action -> Int -> InternalAction
 resolve stag i =
-    let
-        internal = resolveStagger stag i
-    in
-        case internal of
-            Queue frames ->
-                Queue <| frames
+  let
+    f =
+      toFloat i
+  in
+    case stag of
+      Unstaggered preaction ->
+        preaction.action <| 
+            List.map 
+                applyKeyframeOptions
+                    preaction.frames
 
-            Interrupt frames ->
-                Interrupt <| frames
+      Staggered s ->
+        resolve (s f) i
 
-            Tick n ->
-                internal
+      Internal ia ->
+        ia
 
 
-resolveStagger : Action -> Int -> InternalAction
-resolveStagger stag i =
-    let
-        f = toFloat i
-    in
-        case stag of
-            Unstaggered a ->
-                a
+applyKeyframeOptions : KeyframeWithOptions -> StyleKeyframe
+applyKeyframeOptions options = 
+                let
+                    frame = options.frame
+                    applyOpt prop =
+                        let
+                            addOptions a = 
+                                let
+                                    newSpring = 
+                                        case options.spring of
+                                            Nothing ->
+                                                a.spring
+                                            Just partialSpring ->
+                                                let
+                                                    oldSpring = a.spring
+                                                in
+                                                    { oldSpring 
+                                                        | stiffness = partialSpring.stiffness
+                                                        , damping = partialSpring.damping
+                                                    }
+                                in
+                                    { a | spring = newSpring }
+                        in
+                            mapProp addOptions prop
 
-            Staggered s ->
-                resolveStagger (s f) i
 
+                in
+                    { frame | target = List.map applyOpt frame.target }
+
+emptyKeyframeWithOptions =
+        { frame = emptyKeyframe
+        , duration = Nothing
+        , easing = Nothing
+        , spring = Nothing
+        }
+
+--type alias KeyframeWithOptions =
+--        { frame : StyleKeyframe
+--        , duration : Maybe Time
+--        , easing : Maybe (Float -> Float)
+--        , spring : Maybe Spring
+--        }
+
+--type alias Action = 
+--        { frames : Staggered
+--        , action = (List StyleKeyframe -> InternalAction)
+--        }
+
+
+--type Staggered
+--      = Staggered (Float -> List KeyframeWithOptions)
+--      | Unstaggered (List KeyframeWithOptions)
+
+
+--type alias StyleKeyframe =
+--  { target : List (StyleProperty (Physics DynamicTarget))
+--  , delay : Time
+--  }
+
+
+--type alias Physics a =
+--  { target : a
+--  , position : Float
+--  , spring : FullSpring
+--  , easing : Maybe Easing
+--  }
+
+
+--type alias PreAction = 
+--        { frames : List KeyframeWithOptions
+--        , action : (List StyleKeyframe -> InternalAction)
+--        }
+
+
+--type Action
+--      = Staggered (Float -> Action)
+--      | Unstaggered PreAction
 
 
 
@@ -759,29 +857,29 @@ Which you can then use to apply an animation to a widget in a list.
 -}
 forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
 forwardTo toInternalAction styleGet styleSet i widgets action =
-    let
-        ( widgets, effects ) =
-            List.unzip
-                <| List.indexedMap
-                    (\j widget ->
-                        if j == i then
-                            let
-                                ( newStyle, fx ) =
-                                    internalUpdate
-                                        (resolve action i)
-                                        (styleGet widget)
-                            in
-                                ( styleSet widget newStyle
-                                , Effects.map
-                                    (\a -> toInternalAction i (Unstaggered a))
-                                    fx
-                                )
-                        else
-                            ( widget, Effects.none )
-                    )
-                    widgets
-    in
-        ( widgets, Effects.batch effects )
+  let
+    ( widgets, effects ) =
+      List.unzip
+        <| List.indexedMap
+            (\j widget ->
+              if j == i then
+                let
+                  ( newStyle, fx ) =
+                    internalUpdate
+                      (resolve action i)
+                      (styleGet widget)
+                in
+                  ( styleSet widget newStyle
+                  , Effects.map
+                      (\a -> toInternalAction i (Internal a))
+                      fx
+                  )
+              else
+                ( widget, Effects.none )
+            )
+            widgets
+  in
+    ( widgets, Effects.batch effects )
 
 
 {-| Same as `forwardTo`, except it applies an update to every member of the list.
@@ -789,60 +887,58 @@ forwardTo toInternalAction styleGet styleSet i widgets action =
 -}
 forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Effects b )
 forwardToAll toInternalAction styleGet styleSet widgets action =
-    let
-        --largestDuration = List.map 
-        --                      (\i -> 
-        --                        case resolve action i of
-        --                          Queue frames -> getFullDuration frames
-        --                          Interrupt frames -> getFullDuration frames
-        --                          _ -> 0.0
-        --                      ) 
-        --                      [1..List.length widgets] 
-        --                |> List.maximum
-        --                |> Maybe.withDefault 0.0
-
-
-        ( widgets, effects ) =
-            List.unzip
-                <| List.indexedMap
-                    (\i widget ->
-                        let
-                            ( newStyle, fx ) =
-                                internalUpdate
-                                    --(normalizedDuration largestDuration (resolve action i))
-                                    (resolve action i)
-                                    (styleGet widget)
-                        in
-                            ( styleSet widget newStyle
-                            , Effects.map
-                                (\a -> toInternalAction i (Unstaggered a))
-                                fx
-                            )
-                    )
-                    widgets
-    in
-        ( widgets, Effects.batch effects )
-
+  let
+    --largestDuration = List.map
+    --                      (\i ->
+    --                        case resolve action i of
+    --                          Queue frames -> getFullDuration frames
+    --                          Interrupt frames -> getFullDuration frames
+    --                          _ -> 0.0
+    --                      )
+    --                      [1..List.length widgets]
+    --                |> List.maximum
+    --                |> Maybe.withDefault 0.0
+    ( widgets, effects ) =
+      List.unzip
+        <| List.indexedMap
+            (\i widget ->
+              let
+                ( newStyle, fx ) =
+                  internalUpdate
+                    --(normalizedDuration largestDuration (resolve action i))
+                    (resolve action i)
+                    (styleGet widget)
+              in
+                ( styleSet widget newStyle
+                , Effects.map
+                    (\a -> toInternalAction i (Internal a))
+                    fx
+                )
+            )
+            widgets
+  in
+    ( widgets, Effects.batch effects )
 
 
 
 --normalizedDuration : Time -> InternalAction -> InternalAction
 --normalizedDuration desiredDuration action =
 --                            case action of
---                                Queue frames -> 
+--                                Queue frames ->
 --                                    Queue <| addBufferDuration frames desiredDuration
-
---                                Interrupt frames -> 
+--                                Interrupt frames ->
 --                                    Interrupt <| addBufferDuration frames desiredDuration
-
 --                                _ -> action
 
 
 {-| Adds a blank keyframe with a duration that makes the keyframes fill all the time until Time.
 
 -}
+
+
+
 --addBufferDuration : List StyleKeyframe -> Time -> List StyleKeyframe
---addBufferDuration frames desiredDuration = 
+--addBufferDuration frames desiredDuration =
 --                let
 --                  dur = getFullDuration frames
 --                  delta = desiredDuration - dur
@@ -853,13 +949,15 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
 --                    frames ++ [{ emptyKeyframe | duration = delta }]
 
 
-
 {-|
 -}
+
+
+
 --getFullDuration : List StyleKeyframe -> Time
---getFullDuration frames = 
---                    List.foldl 
---                        (\frame total -> 
+--getFullDuration frames =
+--                    List.foldl
+--                        (\frame total ->
 --                            total + frame.delay + frame.duration
 --                        )
 --                        0 frames
@@ -878,7 +976,13 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
 -}
 props : List (StyleProperty (Physics DynamicTarget)) -> Action -> Action
 props p action =
-    updateOrCreate action (\a -> { a | target = p })
+  updateOrCreate action (\a -> 
+                            let
+                                frame = a.frame
+                                updatedFrame = { frame | target = p }
+                            in
+                                { a | frame = updatedFrame }
+                        )
 
 
 {-| Specify a duration.  If not specified, the default is 350ms.
@@ -891,9 +995,9 @@ props p action =
              ]
          |> UI.on model.style
 -}
---duration : Time -> Action -> Action
---duration dur action =
---    updateOrCreate action (\a -> { a | duration = dur })
+duration : Time -> Action -> Action
+duration dur action =
+    updateOrCreate action (\a -> { a | duration = Just dur })
 
 
 {-| Specify a delay.  If not specified, the default is 0.
@@ -908,17 +1012,26 @@ props p action =
          |> UI.on model.style
 -}
 delay : Time -> Action -> Action
-delay dur action =
-    updateOrCreate action (\a -> { a | delay = dur })
-
+delay delay action =
+    updateOrCreate action (\a -> 
+                            let
+                                frame = a.frame
+                                updatedFrame = { frame | delay = delay }
+                            in
+                                { a | frame = updatedFrame }
+                        )
 
 {-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
 in-out.
 
 -}
---easing : (Float -> Float) -> Action -> Action
---easing ease action =
---    updateOrCreate action (\a -> { a | ease = ease })
+easing : (Float -> Float) -> Action -> Action
+easing ease action =
+    updateOrCreate action (\a -> { a | easing = Just ease })
+
+
+
+
 
 
 {-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
@@ -934,9 +1047,9 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
              ]
          |> UI.on model.style
 -}
---spring : Spring -> Action -> Action
---spring almost action =
---    updateOrCreate action (\a -> { a | spring = Just <| createSpring almost })
+spring : Spring -> Action -> Action
+spring almost action =
+  updateOrCreate action (\a -> { a | spring = Just almost })
 
 
 {-| Append another keyframe.  This is used for multistage animations.  For example, to cycle through colors, we'd use the following:
@@ -961,88 +1074,76 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
 -}
 andThen : Action -> Action
 andThen stag =
-    case stag of
-        Staggered s ->
-            Staggered s
+  case stag of
+    Internal ia ->
+              Internal ia
+              
+    Staggered s ->
+      Staggered s
 
-        Unstaggered action ->
-            case action of
-                Tick _ ->
-                    Unstaggered action
-
-                Interrupt frames ->
-                    Unstaggered
-                        <| Interrupt (frames ++ [ emptyKeyframe ])
-
-                Queue frames ->
-                    Unstaggered
-                        <| Queue (frames ++ [ emptyKeyframe ])
+    Unstaggered preaction ->
+        Unstaggered <|
+            { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
 
 
 
 {-| Update the last StyleKeyframe in the queue.  If the queue is empty, create a new StyleKeyframe and update that.
 -}
-updateOrCreate : Action -> (StyleKeyframe -> StyleKeyframe) -> Action
-updateOrCreate stag fn =
-    case stag of
-        Staggered s ->
-            Staggered s
+updateOrCreate : Action -> (KeyframeWithOptions -> KeyframeWithOptions) -> Action
+updateOrCreate action fn =
+          case action of
+            Internal ia ->
+              Internal ia
 
-        Unstaggered action ->
-            let
-                update frames =
-                    case List.reverse frames of
-                        [] ->
-                            [ fn emptyKeyframe ]
+            Staggered s ->
+              Staggered s
 
-                        cur :: rem ->
-                            List.reverse ((fn cur) :: rem)
-            in
-                case action of
-                    Tick _ ->
-                        Unstaggered action
+            Unstaggered preaction ->
+                Unstaggered <|
+                  { preaction 
+                        | frames = 
+                                  case List.reverse preaction.frames of
+                                    [] ->
+                                      [ fn emptyKeyframeWithOptions ]
 
-                    Interrupt frames ->
-                        Unstaggered <| Interrupt (update frames)
-
-                    Queue frames ->
-                        Unstaggered <| Queue (update frames)
+                                    cur :: rem ->
+                                      List.reverse ((fn cur) :: rem)
+                  }
 
 
 {-| Animate a StyleProperty to a value.
 
 -}
---to : Float -> Float -> Float -> Float
---to target from current =
---    ((target - from) * current) + from
-
-
 to : Float -> Physics DynamicTarget
-to target = emptyPhysics <| (\from current -> ((target - from) * current) + from)
+to target =
+  emptyPhysics <| 
+    (\from current -> ((target - from) * current) + from)
 
 
 add : Float -> Physics DynamicTarget
-add target = emptyPhysics <| (\from current -> ((target - from) * current) + from)
-
+add target =
+  emptyPhysics <| 
+    (\from current -> ((target - from) * current) + from)
 
 
 minus : Float -> Physics DynamicTarget
-minus target = emptyPhysics <| (\from current -> ((target - from) * current) + from)
-
+minus target =
+  emptyPhysics <| 
+    (\from current -> ((target - from) * current) + from)
 
 
 stay : Float -> Physics DynamicTarget
-stay target = emptyPhysics <| (\from current -> from)
-
-
-
-
-
+stay target =
+  emptyPhysics <| 
+    (\from current -> from)
 
 
 {-| Animate a StyleProperty by adding to its existing value
 
 -}
+
+
+
 --add : Float -> Float -> Float -> Float
 --add mod from current =
 --    let
@@ -1054,6 +1155,9 @@ stay target = emptyPhysics <| (\from current -> from)
 {-| Animate a StyleProperty by subtracting to its existing value
 
 -}
+
+
+
 --minus : Float -> Float -> Float -> Float
 --minus mod from current =
 --    let
@@ -1065,13 +1169,16 @@ stay target = emptyPhysics <| (\from current -> from)
 {-| Keep an animation where it is!  This is useful for stacking transforms.
 
 -}
+
+
+
 --stay : Float -> Float -> Float
 --stay from current =
 --    from
 
 
 type alias ColorProperty =
-    (Physics DynamicTarget) -> (Physics DynamicTarget) -> (Physics DynamicTarget) -> (Physics DynamicTarget) -> StyleProperty (Physics DynamicTarget)
+  Physics DynamicTarget -> Physics DynamicTarget -> Physics DynamicTarget -> Physics DynamicTarget -> StyleProperty (Physics DynamicTarget)
 
 
 {-| Animate a color-based property, given a color from the Color elm module.
@@ -1079,14 +1186,15 @@ type alias ColorProperty =
 -}
 toColor : Color.Color -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toColor color almostColor =
-    let
-        rgba = Color.toRgb color
-    in
-        almostColor
-            (to <| toFloat rgba.red)
-            (to <| toFloat rgba.green)
-            (to <| toFloat rgba.blue)
-            (to rgba.alpha)
+  let
+    rgba =
+      Color.toRgb color
+  in
+    almostColor
+      (to <| toFloat rgba.red)
+      (to <| toFloat rgba.green)
+      (to <| toFloat rgba.blue)
+      (to rgba.alpha)
 
 
 {-| Animate a color-based style property to an rgb color.  Note: this leaves the alpha channel where it is.
@@ -1101,7 +1209,7 @@ toColor color almostColor =
 -}
 toRGB : Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toRGB r g b prop =
-    prop (to r) (to g) (to b) (to 1.0)
+  prop (to r) (to g) (to b) (to 1.0)
 
 
 {-| Animate a color-based style property to an rgba color.
@@ -1117,7 +1225,7 @@ toRGB r g b prop =
 -}
 toRGBA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toRGBA r g b a prop =
-    prop (to r) (to g) (to b) (to a)
+  prop (to r) (to g) (to b) (to a)
 
 
 {-| Animate a color-based style property to an hsl color. Note: this leaves the alpha channel where it is.
@@ -1125,14 +1233,15 @@ toRGBA r g b a prop =
 -}
 toHSL : Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toHSL h s l prop =
-    let
-        rgba = Color.toRgb <| Color.hsl h s l
-    in
-        prop
-            (to <| toFloat rgba.red)
-            (to <| toFloat rgba.green)
-            (to <| toFloat rgba.blue)
-            (to rgba.alpha)
+  let
+    rgba =
+      Color.toRgb <| Color.hsl h s l
+  in
+    prop
+      (to <| toFloat rgba.red)
+      (to <| toFloat rgba.green)
+      (to <| toFloat rgba.blue)
+      (to rgba.alpha)
 
 
 {-| Animate a color-based style property to an hsla color.
@@ -1140,19 +1249,23 @@ toHSL h s l prop =
 -}
 toHSLA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 toHSLA h s l a prop =
-    let
-        rgba = Color.toRgb <| Color.hsl h s l
-    in
-        prop
-            (to <| toFloat rgba.red)
-            (to <| toFloat rgba.green)
-            (to <| toFloat rgba.blue)
-            (to rgba.alpha)
+  let
+    rgba =
+      Color.toRgb <| Color.hsl h s l
+  in
+    prop
+      (to <| toFloat rgba.red)
+      (to <| toFloat rgba.green)
+      (to <| toFloat rgba.blue)
+      (to rgba.alpha)
 
 
 {-| Fade a color to a specific alpha level
 
 -}
+
+
+
 --fade : Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
 --fade alpha prop =
 --    prop stay stay stay (to alpha)
@@ -1163,14 +1276,15 @@ toHSLA h s l a prop =
 -}
 fromColor : Color.Color -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 fromColor color almostColor =
-    let
-        rgba = Color.toRgb color
-    in
-        almostColor
-            (toFloat rgba.red)
-            (toFloat rgba.green)
-            (toFloat rgba.blue)
-            (rgba.alpha)
+  let
+    rgba =
+      Color.toRgb color
+  in
+    almostColor
+      (toFloat rgba.red)
+      (toFloat rgba.green)
+      (toFloat rgba.blue)
+      (rgba.alpha)
 
 
 {-| Specify an initial Color-based property using rgb
@@ -1178,7 +1292,7 @@ fromColor color almostColor =
 -}
 rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 rgb r g b prop =
-    prop r g b 1.0
+  prop r g b 1.0
 
 
 {-| Specify an initial Color-based property using rgba
@@ -1186,7 +1300,7 @@ rgb r g b prop =
 -}
 rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 rgba r g b a prop =
-    prop r g b a
+  prop r g b a
 
 
 {-| Specify an initial Color-based property using hsl
@@ -1194,14 +1308,15 @@ rgba r g b a prop =
 -}
 hsl : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 hsl h s l prop =
-    let
-        rgba = Color.toRgb <| Color.hsl h s l
-    in
-        prop
-            (toFloat rgba.red)
-            (toFloat rgba.blue)
-            (toFloat rgba.green)
-            rgba.alpha
+  let
+    rgba =
+      Color.toRgb <| Color.hsl h s l
+  in
+    prop
+      (toFloat rgba.red)
+      (toFloat rgba.blue)
+      (toFloat rgba.green)
+      rgba.alpha
 
 
 {-| Specify an initial Color-based property using hsla
@@ -1209,14 +1324,15 @@ hsl h s l prop =
 -}
 hsla : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 hsla h s l a prop =
-    let
-        rgba = Color.toRgb <| Color.hsla h s l a
-    in
-        prop
-            (toFloat rgba.red)
-            (toFloat rgba.blue)
-            (toFloat rgba.green)
-            rgba.alpha
+  let
+    rgba =
+      Color.toRgb <| Color.hsla h s l a
+  in
+    prop
+      (toFloat rgba.red)
+      (toFloat rgba.blue)
+      (toFloat rgba.green)
+      rgba.alpha
 
 
 
@@ -1227,16 +1343,17 @@ hsla h s l a prop =
 
 findProp : Style -> StyleProperty a -> Int -> Maybe (StyleProperty Static)
 findProp state prop propCount =
-    let
-        findBy fn xs =
-            List.head
-                <| List.drop propCount
-                <| List.filter fn
-                <| xs
+  let
+    findBy fn xs =
+      List.head
+        <| List.drop propCount
+        <| List.filter fn
+        <| xs
 
-        matchPropID a b = propId a == propId b
-    in
-        findBy (matchPropID prop) state
+    matchPropID a b =
+      propId a == propId b
+  in
+    findBy (matchPropID prop) state
 
 
 {-| Render into concrete css that can be directly applied to 'style' in elm-html
@@ -1246,50 +1363,52 @@ findProp state prop propCount =
 -}
 render : Animation -> List ( String, String )
 render (A model) =
-    let
-        currentAnim = List.head model.anim
-    in
-        case currentAnim of
-            Nothing ->
-                let
-                    rendered =
-                        List.map renderProp model.previous
+  let
+    currentAnim =
+      List.head model.anim
+  in
+    case currentAnim of
+      Nothing ->
+        let
+          rendered =
+            List.map renderProp model.previous
 
-                    transformsNprops =
-                        List.partition (\( name, _ ) -> name == "transform") rendered
+          transformsNprops =
+            List.partition (\( name, _ ) -> name == "transform") rendered
 
-                    combinedTransforms =
-                        ( "transform"
-                        , String.concat
-                            (List.intersperse
-                                " "
-                                (List.map (snd) (fst transformsNprops))
-                            )
-                        )
-                in
-                    snd transformsNprops ++ [ combinedTransforms ]
+          combinedTransforms =
+            ( "transform"
+            , String.concat
+                (List.intersperse
+                  " "
+                  (List.map (snd) (fst transformsNprops))
+                )
+            )
+        in
+          snd transformsNprops ++ [ combinedTransforms ]
 
-            Just anim ->
-                -- Combine all transform properties
-                let
-                    baked = bake anim model.previous
+      Just anim ->
+        -- Combine all transform properties
+        let
+          baked =
+            bake anim model.previous
 
-                    rendered =
-                        List.map renderProp baked
+          rendered =
+            List.map renderProp baked
 
-                    transformsNprops =
-                        List.partition (\s -> fst s == "transform") rendered
+          transformsNprops =
+            List.partition (\s -> fst s == "transform") rendered
 
-                    combinedTransforms =
-                        ( "transform"
-                        , String.concat
-                            (List.intersperse
-                                " "
-                                (List.map (snd) (fst transformsNprops))
-                            )
-                        )
-                in
-                    snd transformsNprops ++ [ combinedTransforms ]
+          combinedTransforms =
+            ( "transform"
+            , String.concat
+                (List.intersperse
+                  " "
+                  (List.map (snd) (fst transformsNprops))
+                )
+            )
+        in
+          snd transformsNprops ++ [ combinedTransforms ]
 
 
 
@@ -1298,9 +1417,9 @@ render (A model) =
 
 renderProp : StyleProperty Static -> ( String, String )
 renderProp prop =
-    ( renderName prop
-    , renderValue prop
-    )
+  ( renderName prop
+  , renderValue prop
+  )
 
 
 
@@ -1309,168 +1428,168 @@ renderProp prop =
 
 renderName : StyleProperty a -> String
 renderName styleProp =
-    case styleProp of
-        Prop str _ _ ->
-            str
+  case styleProp of
+    Prop str _ _ ->
+      str
 
-        Opacity _ ->
-            "opacity"
+    Opacity _ ->
+      "opacity"
 
-        Height _ _ ->
-            "height"
+    Height _ _ ->
+      "height"
 
-        Width _ _ ->
-            "width"
+    Width _ _ ->
+      "width"
 
-        Left _ _ ->
-            "left"
+    Left _ _ ->
+      "left"
 
-        Right _ _ ->
-            "right"
+    Right _ _ ->
+      "right"
 
-        Bottom _ _ ->
-            "bottom"
+    Bottom _ _ ->
+      "bottom"
 
-        Top _ _ ->
-            "top"
+    Top _ _ ->
+      "top"
 
-        MaxHeight _ _ ->
-            "max-height"
+    MaxHeight _ _ ->
+      "max-height"
 
-        MaxWidth _ _ ->
-            "max-width"
+    MaxWidth _ _ ->
+      "max-width"
 
-        MinHeight _ _ ->
-            "min-height"
+    MinHeight _ _ ->
+      "min-height"
 
-        MinWidth _ _ ->
-            "min-width"
+    MinWidth _ _ ->
+      "min-width"
 
-        Padding _ _ ->
-            "padding"
+    Padding _ _ ->
+      "padding"
 
-        PaddingLeft _ _ ->
-            "padding-left"
+    PaddingLeft _ _ ->
+      "padding-left"
 
-        PaddingRight _ _ ->
-            "padding-right"
+    PaddingRight _ _ ->
+      "padding-right"
 
-        PaddingTop _ _ ->
-            "padding-top"
+    PaddingTop _ _ ->
+      "padding-top"
 
-        PaddingBottom _ _ ->
-            "padding-bottom"
+    PaddingBottom _ _ ->
+      "padding-bottom"
 
-        Margin _ _ ->
-            "margin"
+    Margin _ _ ->
+      "margin"
 
-        MarginLeft _ _ ->
-            "margin-left"
+    MarginLeft _ _ ->
+      "margin-left"
 
-        MarginRight _ _ ->
-            "margin-right"
+    MarginRight _ _ ->
+      "margin-right"
 
-        MarginTop _ _ ->
-            "margin-top"
+    MarginTop _ _ ->
+      "margin-top"
 
-        MarginBottom _ _ ->
-            "margin-bottom"
+    MarginBottom _ _ ->
+      "margin-bottom"
 
-        BorderWidth _ _ ->
-            "border-width"
+    BorderWidth _ _ ->
+      "border-width"
 
-        BorderRadius _ _ ->
-            "border-radius"
+    BorderRadius _ _ ->
+      "border-radius"
 
-        BorderTopLeftRadius _ _ ->
-            "border-top-left-radius"
+    BorderTopLeftRadius _ _ ->
+      "border-top-left-radius"
 
-        BorderTopRightRadius _ _ ->
-            "border-top-right-radius"
+    BorderTopRightRadius _ _ ->
+      "border-top-right-radius"
 
-        BorderBottomLeftRadius _ _ ->
-            "border-bottom-left-radius"
+    BorderBottomLeftRadius _ _ ->
+      "border-bottom-left-radius"
 
-        BorderBottomRightRadius _ _ ->
-            "border-bottom-right-radius"
+    BorderBottomRightRadius _ _ ->
+      "border-bottom-right-radius"
 
-        LetterSpacing _ _ ->
-            "letter-spacing"
+    LetterSpacing _ _ ->
+      "letter-spacing"
 
-        LineHeight _ _ ->
-            "line-height"
+    LineHeight _ _ ->
+      "line-height"
 
-        BackgroundPosition _ _ _ ->
-            "background-position"
+    BackgroundPosition _ _ _ ->
+      "background-position"
 
-        TransformOrigin _ _ _ _ ->
-            "transform-origin"
+    TransformOrigin _ _ _ _ ->
+      "transform-origin"
 
-        Color _ _ _ _ ->
-            "color"
+    Color _ _ _ _ ->
+      "color"
 
-        BackgroundColor _ _ _ _ ->
-            "background-color"
+    BackgroundColor _ _ _ _ ->
+      "background-color"
 
-        BorderColor _ _ _ _ ->
-            "border-color"
+    BorderColor _ _ _ _ ->
+      "border-color"
 
-        Matrix _ _ _ _ _ _ ->
-            "transform"
+    Matrix _ _ _ _ _ _ ->
+      "transform"
 
-        Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
-            "transform"
+    Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+      "transform"
 
-        Translate _ _ _ ->
-            "transform"
+    Translate _ _ _ ->
+      "transform"
 
-        Translate3d _ _ _ _ ->
-            "transform"
+    Translate3d _ _ _ _ ->
+      "transform"
 
-        TranslateX _ _ ->
-            "transform"
+    TranslateX _ _ ->
+      "transform"
 
-        TranslateY _ _ ->
-            "transform"
+    TranslateY _ _ ->
+      "transform"
 
-        Scale _ ->
-            "transform"
+    Scale _ ->
+      "transform"
 
-        Scale3d _ _ _ ->
-            "transform"
+    Scale3d _ _ _ ->
+      "transform"
 
-        ScaleX _ ->
-            "transform"
+    ScaleX _ ->
+      "transform"
 
-        ScaleY _ ->
-            "transform"
+    ScaleY _ ->
+      "transform"
 
-        ScaleZ _ ->
-            "transform"
+    ScaleZ _ ->
+      "transform"
 
-        Rotate _ _ ->
-            "transform"
+    Rotate _ _ ->
+      "transform"
 
-        Rotate3d _ _ _ _ _ ->
-            "transform"
+    Rotate3d _ _ _ _ _ ->
+      "transform"
 
-        RotateX _ _ ->
-            "transform"
+    RotateX _ _ ->
+      "transform"
 
-        RotateY _ _ ->
-            "transform"
+    RotateY _ _ ->
+      "transform"
 
-        Skew _ _ _ ->
-            "transform"
+    Skew _ _ _ ->
+      "transform"
 
-        SkewX _ _ ->
-            "transform"
+    SkewX _ _ ->
+      "transform"
 
-        SkewY _ _ ->
-            "transform"
+    SkewY _ _ ->
+      "transform"
 
-        Perspective _ ->
-            "transform"
+    Perspective _ ->
+      "transform"
 
 
 
@@ -1479,33 +1598,30 @@ renderName styleProp =
 
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
-   
-        List.foldl
-            (\x acc ->
-                -- need to know the propIndex of x, meaning how many times it's shown up already.
-                let
-                    xI =
-                        List.foldl
-                            (\x2 count ->
-                                if propId x == propId x2 then
-                                    count + 1
-                                else
-                                    count
-                            )
-                            0
-                            acc
-                in
-                    case findProp new x xI of
-                        Nothing ->
-                            acc ++ [ x ]
-
-                        Just newX ->
-                            acc ++ [ newX ]
+  List.foldl
+    (\x acc ->
+      -- need to know the propIndex of x, meaning how many times it's shown up already.
+      let
+        xI =
+          List.foldl
+            (\x2 count ->
+              if propId x == propId x2 then
+                count + 1
+              else
+                count
             )
-            []
-            existing
+            0
+            acc
+      in
+        case findProp new x xI of
+          Nothing ->
+            acc ++ [ x ]
 
-
+          Just newX ->
+            acc ++ [ newX ]
+    )
+    []
+    existing
 
 
 
@@ -1513,922 +1629,930 @@ fill new existing =
 --bakeFinal frame style = style
 
 
-
-
-
 bake : StyleKeyframe -> Style -> Style
-bake frame style = 
-            fill (List.map (mapProp toStatic) frame.target) style
-        
+bake frame style =
+  fill (List.map (mapProp toStatic) frame.target) style
+
 
 toStatic : Physics DynamicTarget -> Static
-toStatic physic = physic.position 
+toStatic physic =
+  physic.position
 
 
-mapProp :  (a -> b) -> StyleProperty a -> StyleProperty b
-mapProp fn prop = 
-          case prop of
-            Prop n a u ->
-                Prop n (fn a) u
+mapProp : (a -> b) -> StyleProperty a -> StyleProperty b
+mapProp fn prop =
+  case prop of
+    Prop n a u ->
+      Prop n (fn a) u
 
-            Opacity a ->
-                Opacity (fn a)
+    Opacity a ->
+      Opacity (fn a)
 
-            Height a u ->
-                Height (fn a) u
+    Height a u ->
+      Height (fn a) u
 
-            Width a u ->
-                Width (fn a) u
+    Width a u ->
+      Width (fn a) u
 
-            Left a u ->
-                Left (fn a) u
+    Left a u ->
+      Left (fn a) u
 
-            Top a u ->
-                Top (fn a) u
+    Top a u ->
+      Top (fn a) u
 
-            Right a u ->
-                Right (fn a) u
+    Right a u ->
+      Right (fn a) u
 
-            Bottom a u ->
-                Bottom (fn a) u
+    Bottom a u ->
+      Bottom (fn a) u
 
-            MaxHeight a u ->
-                MaxHeight (fn a) u
+    MaxHeight a u ->
+      MaxHeight (fn a) u
 
-            MaxWidth a u ->
-                MaxWidth (fn a) u
+    MaxWidth a u ->
+      MaxWidth (fn a) u
 
-            MinHeight a u ->
-                MinHeight (fn a) u
+    MinHeight a u ->
+      MinHeight (fn a) u
 
-            MinWidth a u ->
-                MinWidth (fn a) u
+    MinWidth a u ->
+      MinWidth (fn a) u
 
-            Padding a u ->
-                Padding (fn a) u
+    Padding a u ->
+      Padding (fn a) u
 
-            PaddingLeft a u ->
-                PaddingLeft (fn a) u
+    PaddingLeft a u ->
+      PaddingLeft (fn a) u
 
-            PaddingRight a u ->
-                PaddingRight (fn a) u
+    PaddingRight a u ->
+      PaddingRight (fn a) u
 
-            PaddingTop a u ->
-                PaddingTop (fn a) u
+    PaddingTop a u ->
+      PaddingTop (fn a) u
 
-            PaddingBottom a u ->
-                PaddingBottom (fn a) u
+    PaddingBottom a u ->
+      PaddingBottom (fn a) u
 
-            Margin a u ->
-                Margin (fn a) u
+    Margin a u ->
+      Margin (fn a) u
 
-            MarginLeft a u ->
-                MarginLeft (fn a) u
+    MarginLeft a u ->
+      MarginLeft (fn a) u
 
-            MarginRight a u ->
-                MarginRight (fn a) u
+    MarginRight a u ->
+      MarginRight (fn a) u
 
-            MarginTop a u ->
-                MarginTop (fn a) u
+    MarginTop a u ->
+      MarginTop (fn a) u
 
-            MarginBottom a u ->
-                MarginBottom (fn a) u
+    MarginBottom a u ->
+      MarginBottom (fn a) u
 
-            BorderWidth a u ->
-                BorderWidth (fn a) u
+    BorderWidth a u ->
+      BorderWidth (fn a) u
 
-            BorderRadius a u ->
-                BorderRadius (fn a) u
+    BorderRadius a u ->
+      BorderRadius (fn a) u
 
-            BorderTopLeftRadius a u ->
-                BorderTopLeftRadius (fn a) u
+    BorderTopLeftRadius a u ->
+      BorderTopLeftRadius (fn a) u
 
-            BorderTopRightRadius a u ->
-                BorderTopRightRadius (fn a) u
+    BorderTopRightRadius a u ->
+      BorderTopRightRadius (fn a) u
 
-            BorderBottomLeftRadius a u ->
-                BorderBottomLeftRadius (fn a) u
+    BorderBottomLeftRadius a u ->
+      BorderBottomLeftRadius (fn a) u
 
-            BorderBottomRightRadius a u ->
-                BorderBottomRightRadius (fn a) u
+    BorderBottomRightRadius a u ->
+      BorderBottomRightRadius (fn a) u
 
-            LetterSpacing a u ->
-                LetterSpacing (fn a) u
+    LetterSpacing a u ->
+      LetterSpacing (fn a) u
 
-            LineHeight a u ->
-                LineHeight (fn a) u
+    LineHeight a u ->
+      LineHeight (fn a) u
 
-            BackgroundPosition x y u ->
-                BackgroundPosition (fn x) (fn y) u
+    BackgroundPosition x y u ->
+      BackgroundPosition (fn x) (fn y) u
 
-            TransformOrigin x y z u ->
-               TransformOrigin (fn x) (fn y) (fn z) u
+    TransformOrigin x y z u ->
+      TransformOrigin (fn x) (fn y) (fn z) u
 
-            Color x y z a ->
-                Color (fn x) (fn y) (fn z) (fn a)
+    Color x y z a ->
+      Color (fn x) (fn y) (fn z) (fn a)
 
-            BackgroundColor x y z a ->
-                BackgroundColor (fn x) (fn y) (fn z) (fn a)
+    BackgroundColor x y z a ->
+      BackgroundColor (fn x) (fn y) (fn z) (fn a)
 
-            BorderColor x y z a ->
-                BorderColor (fn x) (fn y) (fn z) (fn a)
+    BorderColor x y z a ->
+      BorderColor (fn x) (fn y) (fn z) (fn a)
 
-            Translate a1 a2 u ->
-                Translate (fn a1) (fn a2) u
+    Translate a1 a2 u ->
+      Translate (fn a1) (fn a2) u
 
-            Translate3d a1 a2 a3 u ->
-                Translate3d (fn a1) (fn a2) (fn a3) u
+    Translate3d a1 a2 a3 u ->
+      Translate3d (fn a1) (fn a2) (fn a3) u
 
-            TranslateX a u ->
-                TranslateX (fn a) u
+    TranslateX a u ->
+      TranslateX (fn a) u
 
-            TranslateY a u ->
-                TranslateY (fn a) u
+    TranslateY a u ->
+      TranslateY (fn a) u
 
-            Scale a ->
-                Scale (fn a)
+    Scale a ->
+      Scale (fn a)
 
-            Scale3d a1 a2 a3 ->
-                Scale3d (fn a1) (fn a2) (fn a3)
+    Scale3d a1 a2 a3 ->
+      Scale3d (fn a1) (fn a2) (fn a3)
 
-            ScaleX a ->
-                 ScaleX (fn a)
+    ScaleX a ->
+      ScaleX (fn a)
 
-            ScaleY a ->
-                 ScaleY (fn a)
+    ScaleY a ->
+      ScaleY (fn a)
 
-            ScaleZ a ->
-                 ScaleZ (fn a)
+    ScaleZ a ->
+      ScaleZ (fn a)
 
-            Rotate a u ->
-                Rotate (fn a) u
+    Rotate a u ->
+      Rotate (fn a) u
 
-            Rotate3d a1 a2 a3 a4 u ->
-                Rotate3d (fn a1) (fn a2) (fn a3) (fn a4) u
+    Rotate3d a1 a2 a3 a4 u ->
+      Rotate3d (fn a1) (fn a2) (fn a3) (fn a4) u
 
-            RotateX a u ->
-                RotateX (fn a) u
+    RotateX a u ->
+      RotateX (fn a) u
 
-            RotateY a u ->
-                RotateY (fn a) u
+    RotateY a u ->
+      RotateY (fn a) u
 
-            Skew a1 a2 u ->
-               Skew (fn a1) (fn a2) u
+    Skew a1 a2 u ->
+      Skew (fn a1) (fn a2) u
 
-            SkewX a u ->
-                SkewX (fn a) u
+    SkewX a u ->
+      SkewX (fn a) u
 
-            SkewY a u ->
-                SkewY (fn a) u
+    SkewY a u ->
+      SkewY (fn a) u
 
-            Perspective a ->
-                 Perspective (fn a)
+    Perspective a ->
+      Perspective (fn a)
 
-            Matrix a b c x y z ->
-                Matrix (fn a) (fn b) (fn c) (fn x) (fn y) (fn z)
+    Matrix a b c x y z ->
+      Matrix (fn a) (fn b) (fn c) (fn x) (fn y) (fn z)
 
-            Matrix3d a b c d e f g h i j k l m n o p ->
-                Matrix3d (fn a) (fn b) (fn c) (fn d) (fn e) (fn f) (fn g) (fn h) (fn i) (fn j) (fn k) (fn l) (fn m) (fn n) (fn o) (fn p)
+    Matrix3d a b c d e f g h i j k l m n o p ->
+      Matrix3d (fn a) (fn b) (fn c) (fn d) (fn e) (fn f) (fn g) (fn h) (fn i) (fn j) (fn k) (fn l) (fn m) (fn n) (fn o) (fn p)
 
--- Update 
+
+
+-- Update
+
+
 step : StyleKeyframe -> Style -> Time -> Time -> StyleKeyframe
 step frame prev current dt =
-    let
-        style =
-            List.foldl
-                (\x acc ->
-                    -- need to know how many times x has shown up already.
-                    let
-                        xI =
-                            List.foldl
-                                (\x2 count ->
-                                    if propId x == propId x2 then
-                                        count + 1
-                                    else
-                                        count
-                                )
-                                0
-                                acc
-                    in
-                        case findProp prev x xI of
-                            Nothing ->
-                                acc
-
-                            Just prevX ->
-                                acc ++ [ stepProp x prevX current dt ]
+  let
+    style =
+      List.foldl
+        (\x acc ->
+          -- need to know how many times x has shown up already.
+          let
+            xI =
+              List.foldl
+                (\x2 count ->
+                  if propId x == propId x2 then
+                    count + 1
+                  else
+                    count
                 )
-                []
-                frame.target
-    in
-        { frame | target = style }
-       
+                0
+                acc
+          in
+            case findProp prev x xI of
+              Nothing ->
+                acc
+
+              Just prevX ->
+                acc ++ [ stepProp x prevX current dt ]
+        )
+        []
+        frame.target
+  in
+    { frame | target = style }
+
 
 stepProp : StyleProperty (Physics DynamicTarget) -> StyleProperty Static -> Time -> Time -> StyleProperty (Physics DynamicTarget)
 stepProp prop prev current dt =
-    let
-        val from physics =
-            case physics.easing of 
-                Nothing ->
-                    let
-                        target = physics.target from 1.0
-                        newSpring = updateSpring dt physics.spring
-                    in
-                        { physics | spring = newSpring
-                                  , position = ((target - from) * newSpring.position) + from }
-                  
-                    
-                Just easing ->
-                    let
-                        eased = easing.ease (current/easing.duration)
-                        position = physics.target from eased
-                    in
-                        physics
-                        --{ physics | position = position
-                        --          , velocity = 0 }
-
-
-    in
-        case prop of
-            Prop name to unit ->
-                let
-                    from =
-                        case prev of
-                            Prop _ x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Prop name (val from to) unit
-
-            Opacity to ->
-                let
-                    from =
-                        case prev of
-                            Opacity x ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Opacity (val from to)
-                    --Opacity ()
-
-            Height to unit ->
-                let
-                    from =
-                        case prev of
-                            Height x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Height (val from to) unit
-
-            Width to unit ->
-                let
-                    from =
-                        case prev of
-                            Width x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Width (val from to) unit
-
-            Left to unit ->
-                let
-                    from =
-                        case prev of
-                            Left x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Left (val from to) unit
-
-            Top to unit ->
-                let
-                    from =
-                        case prev of
-                            Top x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Top (val from to) unit
-
-            Right to unit ->
-                let
-                    from =
-                        case prev of
-                            Right x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Right (val from to) unit
-
-            Bottom to unit ->
-                let
-                    from =
-                        case prev of
-                            Bottom x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Bottom (val from to) unit
-
-            MaxHeight to unit ->
-                let
-                    from =
-                        case prev of
-                            MaxHeight x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MaxHeight (val from to) unit
-
-            MaxWidth to unit ->
-                let
-                    from =
-                        case prev of
-                            MaxWidth x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MaxWidth (val from to) unit
-
-            MinHeight to unit ->
-                let
-                    from =
-                        case prev of
-                            MinHeight x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MinHeight (val from to) unit
-
-            MinWidth to unit ->
-                let
-                    from =
-                        case prev of
-                            MinWidth x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MinWidth (val from to) unit
-
-            Padding to unit ->
-                let
-                    from =
-                        case prev of
-                            Padding x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Padding (val from to) unit
-
-            PaddingLeft to unit ->
-                let
-                    from =
-                        case prev of
-                            PaddingLeft x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    PaddingLeft (val from to) unit
-
-            PaddingRight to unit ->
-                let
-                    from =
-                        case prev of
-                            PaddingRight x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    PaddingRight (val from to) unit
-
-            PaddingTop to unit ->
-                let
-                    from =
-                        case prev of
-                            PaddingTop x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    PaddingTop (val from to) unit
-
-            PaddingBottom to unit ->
-                let
-                    from =
-                        case prev of
-                            PaddingBottom x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    PaddingBottom (val from to) unit
-
-            Margin to unit ->
-                let
-                    from =
-                        case prev of
-                            Margin x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Margin (val from to) unit
-
-            MarginLeft to unit ->
-                let
-                    from =
-                        case prev of
-                            MarginLeft x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MarginLeft (val from to) unit
-
-            MarginRight to unit ->
-                let
-                    from =
-                        case prev of
-                            MarginRight x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MarginRight (val from to) unit
-
-            MarginTop to unit ->
-                let
-                    from =
-                        case prev of
-                            MarginTop x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MarginTop (val from to) unit
-
-            MarginBottom to unit ->
-                let
-                    from =
-                        case prev of
-                            MarginBottom x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    MarginBottom (val from to) unit
-
-            BorderWidth to unit ->
-                let
-                    from =
-                        case prev of
-                            BorderWidth x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    BorderWidth (val from to) unit
-
-            BorderRadius to unit ->
-                let
-                    from =
-                        case prev of
-                            BorderRadius x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    BorderRadius (val from to) unit
-
-            BorderTopLeftRadius to unit ->
-                let
-                    from =
-                        case prev of
-                            BorderTopLeftRadius x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    BorderTopLeftRadius (val from to) unit
-
-            BorderTopRightRadius to unit ->
-                let
-                    from =
-                        case prev of
-                            BorderTopRightRadius x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    BorderTopRightRadius (val from to) unit
-
-            BorderBottomLeftRadius to unit ->
-                let
-                    from =
-                        case prev of
-                            BorderBottomLeftRadius x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    BorderBottomLeftRadius (val from to) unit
-
-            BorderBottomRightRadius to unit ->
-                let
-                    from =
-                        case prev of
-                            BorderBottomRightRadius x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    BorderBottomRightRadius (val from to) unit
-
-            LetterSpacing to unit ->
-                let
-                    from =
-                        case prev of
-                            LetterSpacing x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    LetterSpacing (val from to) unit
-
-            LineHeight to unit ->
-                let
-                    from =
-                        case prev of
-                            LineHeight x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    LineHeight (val from to) unit
-
-            BackgroundPosition x y unit ->
-                case prev of
-                    BackgroundPosition xFrom yFrom _ ->
-                        BackgroundPosition (val xFrom x) (val yFrom y) unit
-
-                    _ ->
-                        BackgroundPosition (val 0.0 x) (val 0.0 y) unit
-
-            Color x y z a ->
-                let
-                    ( xFrom, yFrom, zFrom, aFrom ) =
-                        case prev of
-                            Color x1 y1 z1 a1 ->
-                                ( x1, y1, z1, a1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0, 0.0 )
-                in
-                    Color (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
-
-            BorderColor x y z a ->
-                let
-                    ( xFrom, yFrom, zFrom, aFrom ) =
-                        case prev of
-                            BorderColor x1 y1 z1 a1 ->
-                                ( x1, y1, z1, a1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0, 0.0 )
-                in
-                    BorderColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
-
-            BackgroundColor x y z a ->
-                let
-                    ( xFrom, yFrom, zFrom, aFrom ) =
-                        case prev of
-                            BackgroundColor x1 y1 z1 a1 ->
-                                ( x1, y1, z1, a1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0, 0.0 )
-                in
-                    BackgroundColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
-
-            TransformOrigin x y z unit ->
-                let
-                    ( xFrom, yFrom, zFrom ) =
-                        case prev of
-                            TransformOrigin x1 y1 z1 _ ->
-                                ( x1, y1, z1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0 )
-                in
-                    TransformOrigin (val xFrom x) (val yFrom y) (val zFrom z) unit
-
-            Translate x y unit ->
-                let
-                    ( xFrom, yFrom ) =
-                        case prev of
-                            Translate x1 y1 _ ->
-                                ( x1, y1 )
-
-                            _ ->
-                                ( 0.0, 0.0 )
-                in
-                    Translate (val xFrom x) (val yFrom y) unit
-
-            Translate3d x y z unit ->
-                let
-                    ( xFrom, yFrom, zFrom ) =
-                        case prev of
-                            Translate3d x1 y1 z1 _ ->
-                                ( x1, y1, z1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0 )
-                in
-                    Translate3d (val xFrom x) (val yFrom y) (val zFrom z) unit
-
-            TranslateX to unit ->
-                let
-                    from =
-                        case prev of
-                            TranslateX x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    TranslateX (val from to) unit
-
-            TranslateY to unit ->
-                let
-                    from =
-                        case prev of
-                            TranslateY x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    TranslateY (val from to) unit
-
-            Scale to ->
-                let
-                    from =
-                        case prev of
-                            Scale x ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Scale (val from to)
-
-            Scale3d x y z ->
-                let
-                    ( xFrom, yFrom, zFrom ) =
-                        case prev of
-                            Scale3d x1 y1 z1 ->
-                                ( x1, y1, z1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0 )
-                in
-                    Scale3d (val xFrom x) (val yFrom y) (val zFrom z)
-
-            ScaleX to ->
-                let
-                    from =
-                        case prev of
-                            ScaleX x ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    ScaleX (val from to)
-
-            ScaleY to ->
-                let
-                    from =
-                        case prev of
-                            ScaleY x ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    ScaleY (val from to)
-
-            ScaleZ to ->
-                let
-                    from =
-                        case prev of
-                            ScaleZ x ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    ScaleZ (val from to)
-
-            Rotate to unit ->
-                let
-                    from =
-                        case prev of
-                            Rotate x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Rotate (val from to) unit
-
-            Rotate3d x y z a unit ->
-                let
-                    ( xFrom, yFrom, zFrom, aFrom ) =
-                        case prev of
-                            Rotate3d x1 y1 z1 a1 _ ->
-                                ( x1, y1, z1, a1 )
-
-                            _ ->
-                                ( 0.0, 0.0, 0.0, 0.0 )
-                in
-                    Rotate3d (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a) unit
-
-            RotateX to unit ->
-                let
-                    from =
-                        case prev of
-                            RotateX x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    RotateX (val from to) unit
-
-            RotateY to unit ->
-                let
-                    from =
-                        case prev of
-                            RotateY x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    RotateY (val from to) unit
-
-            Skew x y unit ->
-                let
-                    ( xFrom, yFrom ) =
-                        case prev of
-                            Skew x y _ ->
-                                ( x, y )
-
-                            _ ->
-                                ( 0.0, 0.0 )
-                in
-                    Skew (val xFrom x) (val yFrom y) unit
-
-            SkewX to unit ->
-                let
-                    from =
-                        case prev of
-                            SkewX x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    SkewX (val from to) unit
-
-            SkewY to unit ->
-                let
-                    from =
-                        case prev of
-                            SkewY x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    SkewY (val from to) unit
-
-            Perspective to ->
-                let
-                    from =
-                        case prev of
-                            SkewY x _ ->
-                                x
-
-                            _ ->
-                                0.0
-                in
-                    Perspective (val from to)
-
-            Matrix a b c x y z ->
-                case prev of
-                    Matrix aFrom bFrom cFrom xFrom yFrom zFrom ->
-                        Matrix
-                            (val aFrom a)
-                            (val bFrom b)
-                            (val cFrom c)
-                            (val xFrom x)
-                            (val yFrom y)
-                            (val zFrom z)
-
-                    _ ->
-                        Matrix
-                            (val 0.0 a)
-                            (val 0.0 b)
-                            (val 0.0 c)
-                            (val 0.0 x)
-                            (val 0.0 y)
-                            (val 0.0 z)
-
-            Matrix3d a b c d e f g h i j k l m n o p ->
-                case prev of
-                    Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2 ->
-                        Matrix3d
-                            (val a2 a)
-                            (val b2 b)
-                            (val c2 c)
-                            (val d2 d)
-                            (val e2 e)
-                            (val f2 f)
-                            (val g2 g)
-                            (val h2 h)
-                            (val i2 i)
-                            (val j2 j)
-                            (val k2 k)
-                            (val l2 l)
-                            (val m2 m)
-                            (val n2 n)
-                            (val o2 o)
-                            (val p2 p)
-
-                    _ ->
-                        Matrix3d
-                            (val 0.0 a)
-                            (val 0.0 b)
-                            (val 0.0 c)
-                            (val 0.0 d)
-                            (val 0.0 e)
-                            (val 0.0 f)
-                            (val 0.0 g)
-                            (val 0.0 h)
-                            (val 0.0 i)
-                            (val 0.0 j)
-                            (val 0.0 k)
-                            (val 0.0 l)
-                            (val 0.0 m)
-                            (val 0.0 n)
-                            (val 0.0 o)
-                            (val 0.0 p)
+  let
+    val from physics =
+      case physics.easing of
+        Nothing ->
+          let
+            target =
+              physics.target from 1.0
+
+            newSpring =
+              updateSpring dt physics.spring
+          in
+            { physics
+              | spring = newSpring
+              , position = ((target - from) * newSpring.position) + from
+            }
+
+        Just easing ->
+          let
+            eased =
+              easing.ease (current / easing.duration)
+
+            position =
+              physics.target from eased
+          in
+            physics
+
+    --{ physics | position = position
+    --          , velocity = 0 }
+  in
+    case prop of
+      Prop name to unit ->
+        let
+          from =
+            case prev of
+              Prop _ x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Prop name (val from to) unit
+
+      Opacity to ->
+        let
+          from =
+            case prev of
+              Opacity x ->
+                x
+
+              _ ->
+                0.0
+        in
+          Opacity (val from to)
+
+      --Opacity ()
+      Height to unit ->
+        let
+          from =
+            case prev of
+              Height x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Height (val from to) unit
+
+      Width to unit ->
+        let
+          from =
+            case prev of
+              Width x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Width (val from to) unit
+
+      Left to unit ->
+        let
+          from =
+            case prev of
+              Left x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Left (val from to) unit
+
+      Top to unit ->
+        let
+          from =
+            case prev of
+              Top x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Top (val from to) unit
+
+      Right to unit ->
+        let
+          from =
+            case prev of
+              Right x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Right (val from to) unit
+
+      Bottom to unit ->
+        let
+          from =
+            case prev of
+              Bottom x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Bottom (val from to) unit
+
+      MaxHeight to unit ->
+        let
+          from =
+            case prev of
+              MaxHeight x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MaxHeight (val from to) unit
+
+      MaxWidth to unit ->
+        let
+          from =
+            case prev of
+              MaxWidth x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MaxWidth (val from to) unit
+
+      MinHeight to unit ->
+        let
+          from =
+            case prev of
+              MinHeight x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MinHeight (val from to) unit
+
+      MinWidth to unit ->
+        let
+          from =
+            case prev of
+              MinWidth x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MinWidth (val from to) unit
+
+      Padding to unit ->
+        let
+          from =
+            case prev of
+              Padding x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Padding (val from to) unit
+
+      PaddingLeft to unit ->
+        let
+          from =
+            case prev of
+              PaddingLeft x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          PaddingLeft (val from to) unit
+
+      PaddingRight to unit ->
+        let
+          from =
+            case prev of
+              PaddingRight x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          PaddingRight (val from to) unit
+
+      PaddingTop to unit ->
+        let
+          from =
+            case prev of
+              PaddingTop x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          PaddingTop (val from to) unit
+
+      PaddingBottom to unit ->
+        let
+          from =
+            case prev of
+              PaddingBottom x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          PaddingBottom (val from to) unit
+
+      Margin to unit ->
+        let
+          from =
+            case prev of
+              Margin x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Margin (val from to) unit
+
+      MarginLeft to unit ->
+        let
+          from =
+            case prev of
+              MarginLeft x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MarginLeft (val from to) unit
+
+      MarginRight to unit ->
+        let
+          from =
+            case prev of
+              MarginRight x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MarginRight (val from to) unit
+
+      MarginTop to unit ->
+        let
+          from =
+            case prev of
+              MarginTop x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MarginTop (val from to) unit
+
+      MarginBottom to unit ->
+        let
+          from =
+            case prev of
+              MarginBottom x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          MarginBottom (val from to) unit
+
+      BorderWidth to unit ->
+        let
+          from =
+            case prev of
+              BorderWidth x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          BorderWidth (val from to) unit
+
+      BorderRadius to unit ->
+        let
+          from =
+            case prev of
+              BorderRadius x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          BorderRadius (val from to) unit
+
+      BorderTopLeftRadius to unit ->
+        let
+          from =
+            case prev of
+              BorderTopLeftRadius x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          BorderTopLeftRadius (val from to) unit
+
+      BorderTopRightRadius to unit ->
+        let
+          from =
+            case prev of
+              BorderTopRightRadius x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          BorderTopRightRadius (val from to) unit
+
+      BorderBottomLeftRadius to unit ->
+        let
+          from =
+            case prev of
+              BorderBottomLeftRadius x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          BorderBottomLeftRadius (val from to) unit
+
+      BorderBottomRightRadius to unit ->
+        let
+          from =
+            case prev of
+              BorderBottomRightRadius x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          BorderBottomRightRadius (val from to) unit
+
+      LetterSpacing to unit ->
+        let
+          from =
+            case prev of
+              LetterSpacing x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          LetterSpacing (val from to) unit
+
+      LineHeight to unit ->
+        let
+          from =
+            case prev of
+              LineHeight x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          LineHeight (val from to) unit
+
+      BackgroundPosition x y unit ->
+        case prev of
+          BackgroundPosition xFrom yFrom _ ->
+            BackgroundPosition (val xFrom x) (val yFrom y) unit
+
+          _ ->
+            BackgroundPosition (val 0.0 x) (val 0.0 y) unit
+
+      Color x y z a ->
+        let
+          ( xFrom, yFrom, zFrom, aFrom ) =
+            case prev of
+              Color x1 y1 z1 a1 ->
+                ( x1, y1, z1, a1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0, 0.0 )
+        in
+          Color (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+
+      BorderColor x y z a ->
+        let
+          ( xFrom, yFrom, zFrom, aFrom ) =
+            case prev of
+              BorderColor x1 y1 z1 a1 ->
+                ( x1, y1, z1, a1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0, 0.0 )
+        in
+          BorderColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+
+      BackgroundColor x y z a ->
+        let
+          ( xFrom, yFrom, zFrom, aFrom ) =
+            case prev of
+              BackgroundColor x1 y1 z1 a1 ->
+                ( x1, y1, z1, a1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0, 0.0 )
+        in
+          BackgroundColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
+
+      TransformOrigin x y z unit ->
+        let
+          ( xFrom, yFrom, zFrom ) =
+            case prev of
+              TransformOrigin x1 y1 z1 _ ->
+                ( x1, y1, z1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0 )
+        in
+          TransformOrigin (val xFrom x) (val yFrom y) (val zFrom z) unit
+
+      Translate x y unit ->
+        let
+          ( xFrom, yFrom ) =
+            case prev of
+              Translate x1 y1 _ ->
+                ( x1, y1 )
+
+              _ ->
+                ( 0.0, 0.0 )
+        in
+          Translate (val xFrom x) (val yFrom y) unit
+
+      Translate3d x y z unit ->
+        let
+          ( xFrom, yFrom, zFrom ) =
+            case prev of
+              Translate3d x1 y1 z1 _ ->
+                ( x1, y1, z1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0 )
+        in
+          Translate3d (val xFrom x) (val yFrom y) (val zFrom z) unit
+
+      TranslateX to unit ->
+        let
+          from =
+            case prev of
+              TranslateX x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          TranslateX (val from to) unit
+
+      TranslateY to unit ->
+        let
+          from =
+            case prev of
+              TranslateY x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          TranslateY (val from to) unit
+
+      Scale to ->
+        let
+          from =
+            case prev of
+              Scale x ->
+                x
+
+              _ ->
+                0.0
+        in
+          Scale (val from to)
+
+      Scale3d x y z ->
+        let
+          ( xFrom, yFrom, zFrom ) =
+            case prev of
+              Scale3d x1 y1 z1 ->
+                ( x1, y1, z1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0 )
+        in
+          Scale3d (val xFrom x) (val yFrom y) (val zFrom z)
+
+      ScaleX to ->
+        let
+          from =
+            case prev of
+              ScaleX x ->
+                x
+
+              _ ->
+                0.0
+        in
+          ScaleX (val from to)
+
+      ScaleY to ->
+        let
+          from =
+            case prev of
+              ScaleY x ->
+                x
+
+              _ ->
+                0.0
+        in
+          ScaleY (val from to)
+
+      ScaleZ to ->
+        let
+          from =
+            case prev of
+              ScaleZ x ->
+                x
+
+              _ ->
+                0.0
+        in
+          ScaleZ (val from to)
+
+      Rotate to unit ->
+        let
+          from =
+            case prev of
+              Rotate x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Rotate (val from to) unit
+
+      Rotate3d x y z a unit ->
+        let
+          ( xFrom, yFrom, zFrom, aFrom ) =
+            case prev of
+              Rotate3d x1 y1 z1 a1 _ ->
+                ( x1, y1, z1, a1 )
+
+              _ ->
+                ( 0.0, 0.0, 0.0, 0.0 )
+        in
+          Rotate3d (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a) unit
+
+      RotateX to unit ->
+        let
+          from =
+            case prev of
+              RotateX x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          RotateX (val from to) unit
+
+      RotateY to unit ->
+        let
+          from =
+            case prev of
+              RotateY x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          RotateY (val from to) unit
+
+      Skew x y unit ->
+        let
+          ( xFrom, yFrom ) =
+            case prev of
+              Skew x y _ ->
+                ( x, y )
+
+              _ ->
+                ( 0.0, 0.0 )
+        in
+          Skew (val xFrom x) (val yFrom y) unit
+
+      SkewX to unit ->
+        let
+          from =
+            case prev of
+              SkewX x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          SkewX (val from to) unit
+
+      SkewY to unit ->
+        let
+          from =
+            case prev of
+              SkewY x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          SkewY (val from to) unit
+
+      Perspective to ->
+        let
+          from =
+            case prev of
+              SkewY x _ ->
+                x
+
+              _ ->
+                0.0
+        in
+          Perspective (val from to)
+
+      Matrix a b c x y z ->
+        case prev of
+          Matrix aFrom bFrom cFrom xFrom yFrom zFrom ->
+            Matrix
+              (val aFrom a)
+              (val bFrom b)
+              (val cFrom c)
+              (val xFrom x)
+              (val yFrom y)
+              (val zFrom z)
+
+          _ ->
+            Matrix
+              (val 0.0 a)
+              (val 0.0 b)
+              (val 0.0 c)
+              (val 0.0 x)
+              (val 0.0 y)
+              (val 0.0 z)
+
+      Matrix3d a b c d e f g h i j k l m n o p ->
+        case prev of
+          Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2 ->
+            Matrix3d
+              (val a2 a)
+              (val b2 b)
+              (val c2 c)
+              (val d2 d)
+              (val e2 e)
+              (val f2 f)
+              (val g2 g)
+              (val h2 h)
+              (val i2 i)
+              (val j2 j)
+              (val k2 k)
+              (val l2 l)
+              (val m2 m)
+              (val n2 n)
+              (val o2 o)
+              (val p2 p)
+
+          _ ->
+            Matrix3d
+              (val 0.0 a)
+              (val 0.0 b)
+              (val 0.0 c)
+              (val 0.0 d)
+              (val 0.0 e)
+              (val 0.0 f)
+              (val 0.0 g)
+              (val 0.0 h)
+              (val 0.0 i)
+              (val 0.0 j)
+              (val 0.0 k)
+              (val 0.0 l)
+              (val 0.0 m)
+              (val 0.0 n)
+              (val 0.0 o)
+              (val 0.0 p)
 
 
 
@@ -2438,606 +2562,617 @@ stepProp prop prev current dt =
 
 renderValue : StyleProperty Static -> String
 renderValue prop =
-    let
-        val a = toString a
+  let
+    val a =
+      toString a
 
-        renderLength a unit = (val a) ++ lenUnit unit
+    renderLength a unit =
+      (val a) ++ lenUnit unit
 
-        renderAngle a unit = (val a) ++ angleUnit unit
+    renderAngle a unit =
+      (val a) ++ angleUnit unit
 
-        renderList xs =
-            "("
-                ++ (String.concat
-                        <| List.intersperse ","
-                        <| List.map toString xs
-                   )
-                ++ ")"
-    in
-        case prop of
-            Prop _ a u ->
-                (val a) ++ u
+    renderList xs =
+      "("
+        ++ (String.concat
+              <| List.intersperse ","
+              <| List.map toString xs
+           )
+        ++ ")"
+  in
+    case prop of
+      Prop _ a u ->
+        (val a) ++ u
 
-            Opacity a ->
-                val a
+      Opacity a ->
+        val a
 
-            Height a unit ->
-                renderLength a unit
+      Height a unit ->
+        renderLength a unit
 
-            Width a unit ->
-                renderLength a unit
+      Width a unit ->
+        renderLength a unit
 
-            Left a unit ->
-                renderLength a unit
+      Left a unit ->
+        renderLength a unit
 
-            Top a unit ->
-                renderLength a unit
+      Top a unit ->
+        renderLength a unit
 
-            Right a unit ->
-                renderLength a unit
+      Right a unit ->
+        renderLength a unit
 
-            Bottom a unit ->
-                renderLength a unit
+      Bottom a unit ->
+        renderLength a unit
 
-            MaxHeight a unit ->
-                renderLength a unit
+      MaxHeight a unit ->
+        renderLength a unit
 
-            MaxWidth a unit ->
-                renderLength a unit
+      MaxWidth a unit ->
+        renderLength a unit
 
-            MinHeight a unit ->
-                renderLength a unit
+      MinHeight a unit ->
+        renderLength a unit
 
-            MinWidth a unit ->
-                renderLength a unit
+      MinWidth a unit ->
+        renderLength a unit
 
-            Padding a unit ->
-                renderLength a unit
+      Padding a unit ->
+        renderLength a unit
 
-            PaddingLeft a unit ->
-                renderLength a unit
+      PaddingLeft a unit ->
+        renderLength a unit
 
-            PaddingRight a unit ->
-                renderLength a unit
+      PaddingRight a unit ->
+        renderLength a unit
 
-            PaddingTop a unit ->
-                renderLength a unit
+      PaddingTop a unit ->
+        renderLength a unit
 
-            PaddingBottom a unit ->
-                renderLength a unit
+      PaddingBottom a unit ->
+        renderLength a unit
 
-            Margin a unit ->
-                renderLength a unit
+      Margin a unit ->
+        renderLength a unit
 
-            MarginLeft a unit ->
-                renderLength a unit
+      MarginLeft a unit ->
+        renderLength a unit
 
-            MarginRight a unit ->
-                renderLength a unit
+      MarginRight a unit ->
+        renderLength a unit
 
-            MarginTop a unit ->
-                renderLength a unit
+      MarginTop a unit ->
+        renderLength a unit
 
-            MarginBottom a unit ->
-                renderLength a unit
+      MarginBottom a unit ->
+        renderLength a unit
 
-            BorderWidth a unit ->
-                renderLength a unit
+      BorderWidth a unit ->
+        renderLength a unit
 
-            BorderRadius a unit ->
-                renderLength a unit
+      BorderRadius a unit ->
+        renderLength a unit
 
-            BorderTopLeftRadius a unit ->
-                renderLength a unit
+      BorderTopLeftRadius a unit ->
+        renderLength a unit
 
-            BorderTopRightRadius a unit ->
-                renderLength a unit
+      BorderTopRightRadius a unit ->
+        renderLength a unit
 
-            BorderBottomLeftRadius a unit ->
-                renderLength a unit
+      BorderBottomLeftRadius a unit ->
+        renderLength a unit
 
-            BorderBottomRightRadius a unit ->
-                renderLength a unit
+      BorderBottomRightRadius a unit ->
+        renderLength a unit
 
-            LetterSpacing a unit ->
-                renderLength a unit
+      LetterSpacing a unit ->
+        renderLength a unit
 
-            LineHeight a unit ->
-                renderLength a unit
+      LineHeight a unit ->
+        renderLength a unit
 
-            BackgroundPosition x y unit ->
-                renderLength x unit
-                    ++ " "
-                    ++ renderLength y unit
+      BackgroundPosition x y unit ->
+        renderLength x unit
+          ++ " "
+          ++ renderLength y unit
 
-            TransformOrigin x y z unit ->
-                renderLength x unit
-                    ++ " "
-                    ++ renderLength y unit
-                    ++ " "
-                    ++ renderLength z unit
+      TransformOrigin x y z unit ->
+        renderLength x unit
+          ++ " "
+          ++ renderLength y unit
+          ++ " "
+          ++ renderLength z unit
 
-            Color x y z a ->
-                renderColor x y z a
+      Color x y z a ->
+        renderColor x y z a
 
-            BackgroundColor x y z a ->
-                renderColor x y z a
+      BackgroundColor x y z a ->
+        renderColor x y z a
 
-            BorderColor x y z a ->
-                renderColor x y z a
+      BorderColor x y z a ->
+        renderColor x y z a
 
-            Translate a1 a2 unit ->
-                "translate("
-                    ++ (renderLength a1 unit)
-                    ++ ","
-                    ++ (renderLength a2 unit)
-                    ++ ")"
+      Translate a1 a2 unit ->
+        "translate("
+          ++ (renderLength a1 unit)
+          ++ ","
+          ++ (renderLength a2 unit)
+          ++ ")"
 
-            Translate3d a1 a2 a3 unit ->
-                "translate3d("
-                    ++ (renderLength a1 unit)
-                    ++ ","
-                    ++ (renderLength a2 unit)
-                    ++ ","
-                    ++ (renderLength a3 unit)
-                    ++ ")"
+      Translate3d a1 a2 a3 unit ->
+        "translate3d("
+          ++ (renderLength a1 unit)
+          ++ ","
+          ++ (renderLength a2 unit)
+          ++ ","
+          ++ (renderLength a3 unit)
+          ++ ")"
 
-            TranslateX a unit ->
-                "translateX(" ++ renderLength a unit ++ ")"
+      TranslateX a unit ->
+        "translateX(" ++ renderLength a unit ++ ")"
 
-            TranslateY a unit ->
-                "translateY(" ++ renderLength a unit ++ ")"
+      TranslateY a unit ->
+        "translateY(" ++ renderLength a unit ++ ")"
 
-            Scale a1 ->
-                "scale(" ++ (val a1) ++ ")"
+      Scale a1 ->
+        "scale(" ++ (val a1) ++ ")"
 
-            Scale3d a1 a2 a3 ->
-                "scale3d("
-                    ++ (val a1)
-                    ++ ","
-                    ++ (val a2)
-                    ++ ","
-                    ++ (val a3)
-                    ++ ")"
+      Scale3d a1 a2 a3 ->
+        "scale3d("
+          ++ (val a1)
+          ++ ","
+          ++ (val a2)
+          ++ ","
+          ++ (val a3)
+          ++ ")"
 
-            ScaleX a ->
-                "scaleX(" ++ val a ++ ")"
+      ScaleX a ->
+        "scaleX(" ++ val a ++ ")"
 
-            ScaleY a ->
-                "scaleY(" ++ val a ++ ")"
+      ScaleY a ->
+        "scaleY(" ++ val a ++ ")"
 
-            ScaleZ a ->
-                "scaleZ(" ++ val a ++ ")"
+      ScaleZ a ->
+        "scaleZ(" ++ val a ++ ")"
 
-            Rotate a unit ->
-                "rotate(" ++ renderAngle a unit ++ ")"
+      Rotate a unit ->
+        "rotate(" ++ renderAngle a unit ++ ")"
 
-            Rotate3d a1 a2 a3 a4 unit ->
-                "rotate3d("
-                    ++ (val a1)
-                    ++ ","
-                    ++ (val a2)
-                    ++ ","
-                    ++ (val a3)
-                    ++ ","
-                    ++ (renderAngle a4 unit)
-                    ++ ")"
+      Rotate3d a1 a2 a3 a4 unit ->
+        "rotate3d("
+          ++ (val a1)
+          ++ ","
+          ++ (val a2)
+          ++ ","
+          ++ (val a3)
+          ++ ","
+          ++ (renderAngle a4 unit)
+          ++ ")"
 
-            RotateX a unit ->
-                "rotateX(" ++ renderAngle a unit ++ ")"
+      RotateX a unit ->
+        "rotateX(" ++ renderAngle a unit ++ ")"
 
-            RotateY a unit ->
-                "rotateY(" ++ renderAngle a unit ++ ")"
+      RotateY a unit ->
+        "rotateY(" ++ renderAngle a unit ++ ")"
 
-            Skew a1 a2 unit ->
-                "skew("
-                    ++ (renderAngle a1 unit)
-                    ++ ","
-                    ++ (renderAngle a2 unit)
-                    ++ ")"
+      Skew a1 a2 unit ->
+        "skew("
+          ++ (renderAngle a1 unit)
+          ++ ","
+          ++ (renderAngle a2 unit)
+          ++ ")"
 
-            SkewX a unit ->
-                "skewX(" ++ renderAngle a unit ++ ")"
+      SkewX a unit ->
+        "skewX(" ++ renderAngle a unit ++ ")"
 
-            SkewY a unit ->
-                "skewY(" ++ renderAngle a unit ++ ")"
+      SkewY a unit ->
+        "skewY(" ++ renderAngle a unit ++ ")"
 
-            Perspective a ->
-                "perspective(" ++ (val a) ++ ")"
+      Perspective a ->
+        "perspective(" ++ (val a) ++ ")"
 
-            Matrix a b c x y z ->
-                "matrix"
-                    ++ (renderList [ a, b, c, x, y, z ])
+      Matrix a b c x y z ->
+        "matrix"
+          ++ (renderList [ a, b, c, x, y, z ])
 
-            Matrix3d a b c d e f g h i j k l m n o p ->
-                "matrix3d"
-                    ++ (renderList [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p ])
+      Matrix3d a b c d e f g h i j k l m n o p ->
+        "matrix3d"
+          ++ (renderList [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p ])
 
 
 renderColor : Float -> Float -> Float -> Float -> String
 renderColor x y z a =
-    let
-        renderList xs =
-            "("
-                ++ (String.concat
-                        <| List.intersperse ","
-                        <| List.map toString xs
-                   )
-                ++ ")"
+  let
+    renderList xs =
+      "("
+        ++ (String.concat
+              <| List.intersperse ","
+              <| List.map toString xs
+           )
+        ++ ")"
 
-        renderIntList xs = renderList <| List.map round xs
-    in
-        "rgba("
-            ++ toString (round x)
-            ++ ","
-            ++ toString (round y)
-            ++ ","
-            ++ toString (round z)
-            ++ ","
-            ++ toString a
-            ++ ")"
+    renderIntList xs =
+      renderList <| List.map round xs
+  in
+    "rgba("
+      ++ toString (round x)
+      ++ ","
+      ++ toString (round y)
+      ++ ","
+      ++ toString (round z)
+      ++ ","
+      ++ toString a
+      ++ ")"
 
 
 propId : StyleProperty a -> String
 propId prop =
-    case prop of
-        Prop name _ unit ->
-            name ++ unit
+  case prop of
+    Prop name _ unit ->
+      name ++ unit
 
-        Opacity _ ->
-            "opacity"
+    Opacity _ ->
+      "opacity"
 
-        Height _ unit ->
-            "height" ++ lenUnit unit
+    Height _ unit ->
+      "height" ++ lenUnit unit
 
-        Width _ unit ->
-            "width" ++ lenUnit unit
+    Width _ unit ->
+      "width" ++ lenUnit unit
 
-        Left _ unit ->
-            "left" ++ lenUnit unit
+    Left _ unit ->
+      "left" ++ lenUnit unit
 
-        Right _ unit ->
-            "right" ++ lenUnit unit
+    Right _ unit ->
+      "right" ++ lenUnit unit
 
-        Bottom _ unit ->
-            "bottom" ++ lenUnit unit
+    Bottom _ unit ->
+      "bottom" ++ lenUnit unit
 
-        Top _ unit ->
-            "top" ++ lenUnit unit
+    Top _ unit ->
+      "top" ++ lenUnit unit
 
-        MaxHeight _ unit ->
-            "max-height" ++ lenUnit unit
+    MaxHeight _ unit ->
+      "max-height" ++ lenUnit unit
 
-        MaxWidth _ unit ->
-            "max-width" ++ lenUnit unit
+    MaxWidth _ unit ->
+      "max-width" ++ lenUnit unit
 
-        MinHeight _ unit ->
-            "min-height" ++ lenUnit unit
+    MinHeight _ unit ->
+      "min-height" ++ lenUnit unit
 
-        MinWidth _ unit ->
-            "min-width" ++ lenUnit unit
+    MinWidth _ unit ->
+      "min-width" ++ lenUnit unit
 
-        Padding _ unit ->
-            "padding" ++ lenUnit unit
+    Padding _ unit ->
+      "padding" ++ lenUnit unit
 
-        PaddingLeft _ unit ->
-            "padding-left" ++ lenUnit unit
+    PaddingLeft _ unit ->
+      "padding-left" ++ lenUnit unit
 
-        PaddingRight _ unit ->
-            "padding-right" ++ lenUnit unit
+    PaddingRight _ unit ->
+      "padding-right" ++ lenUnit unit
 
-        PaddingTop _ unit ->
-            "padding-top" ++ lenUnit unit
+    PaddingTop _ unit ->
+      "padding-top" ++ lenUnit unit
 
-        PaddingBottom _ unit ->
-            "padding-bottom" ++ lenUnit unit
+    PaddingBottom _ unit ->
+      "padding-bottom" ++ lenUnit unit
 
-        Margin _ unit ->
-            "margin" ++ lenUnit unit
+    Margin _ unit ->
+      "margin" ++ lenUnit unit
 
-        MarginLeft _ unit ->
-            "margin-left" ++ lenUnit unit
+    MarginLeft _ unit ->
+      "margin-left" ++ lenUnit unit
 
-        MarginRight _ unit ->
-            "margin-right" ++ lenUnit unit
+    MarginRight _ unit ->
+      "margin-right" ++ lenUnit unit
 
-        MarginTop _ unit ->
-            "margin-top" ++ lenUnit unit
+    MarginTop _ unit ->
+      "margin-top" ++ lenUnit unit
 
-        MarginBottom _ unit ->
-            "margin-bottom" ++ lenUnit unit
+    MarginBottom _ unit ->
+      "margin-bottom" ++ lenUnit unit
 
-        BorderWidth _ unit ->
-            "border-width" ++ lenUnit unit
+    BorderWidth _ unit ->
+      "border-width" ++ lenUnit unit
 
-        BorderRadius _ unit ->
-            "border-radius" ++ lenUnit unit
+    BorderRadius _ unit ->
+      "border-radius" ++ lenUnit unit
 
-        BorderTopLeftRadius _ unit ->
-            "border-top-left-radius" ++ lenUnit unit
+    BorderTopLeftRadius _ unit ->
+      "border-top-left-radius" ++ lenUnit unit
 
-        BorderTopRightRadius _ unit ->
-            "border-top-right-radius" ++ lenUnit unit
+    BorderTopRightRadius _ unit ->
+      "border-top-right-radius" ++ lenUnit unit
 
-        BorderBottomLeftRadius _ unit ->
-            "border-bottom-left-radius" ++ lenUnit unit
+    BorderBottomLeftRadius _ unit ->
+      "border-bottom-left-radius" ++ lenUnit unit
 
-        BorderBottomRightRadius _ unit ->
-            "border-bottom-right-radius" ++ lenUnit unit
+    BorderBottomRightRadius _ unit ->
+      "border-bottom-right-radius" ++ lenUnit unit
 
-        LetterSpacing _ unit ->
-            "letter-spacing" ++ lenUnit unit
+    LetterSpacing _ unit ->
+      "letter-spacing" ++ lenUnit unit
 
-        LineHeight _ unit ->
-            "line-height" ++ lenUnit unit
+    LineHeight _ unit ->
+      "line-height" ++ lenUnit unit
 
-        BackgroundPosition _ _ unit ->
-            "background-position" ++ lenUnit unit
+    BackgroundPosition _ _ unit ->
+      "background-position" ++ lenUnit unit
 
-        Color _ _ _ _ ->
-            "color"
+    Color _ _ _ _ ->
+      "color"
 
-        BackgroundColor _ _ _ _ ->
-            "background-color"
+    BackgroundColor _ _ _ _ ->
+      "background-color"
 
-        BorderColor _ _ _ _ ->
-            "border-color"
+    BorderColor _ _ _ _ ->
+      "border-color"
 
-        TransformOrigin _ _ _ unit ->
-            "transform-origin" ++ lenUnit unit
+    TransformOrigin _ _ _ unit ->
+      "transform-origin" ++ lenUnit unit
 
-        Matrix _ _ _ _ _ _ ->
-            "matrix"
+    Matrix _ _ _ _ _ _ ->
+      "matrix"
 
-        Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
-            "matrix3d"
+    Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+      "matrix3d"
 
-        Translate _ _ unit ->
-            "translate" ++ lenUnit unit
+    Translate _ _ unit ->
+      "translate" ++ lenUnit unit
 
-        Translate3d _ _ _ unit ->
-            "translate3d" ++ lenUnit unit
+    Translate3d _ _ _ unit ->
+      "translate3d" ++ lenUnit unit
 
-        TranslateX _ unit ->
-            "translatex" ++ lenUnit unit
+    TranslateX _ unit ->
+      "translatex" ++ lenUnit unit
 
-        TranslateY _ unit ->
-            "translatey" ++ lenUnit unit
+    TranslateY _ unit ->
+      "translatey" ++ lenUnit unit
 
-        Scale _ ->
-            "scale"
+    Scale _ ->
+      "scale"
 
-        Scale3d _ _ _ ->
-            "scale3d"
+    Scale3d _ _ _ ->
+      "scale3d"
 
-        ScaleX _ ->
-            "scalex"
+    ScaleX _ ->
+      "scalex"
 
-        ScaleY _ ->
-            "scaley"
+    ScaleY _ ->
+      "scaley"
 
-        ScaleZ _ ->
-            "scalez"
+    ScaleZ _ ->
+      "scalez"
 
-        Rotate _ unit ->
-            "rotate" ++ angleUnit unit
+    Rotate _ unit ->
+      "rotate" ++ angleUnit unit
 
-        Rotate3d _ _ _ _ unit ->
-            "rotate3d" ++ angleUnit unit
+    Rotate3d _ _ _ _ unit ->
+      "rotate3d" ++ angleUnit unit
 
-        RotateX _ unit ->
-            "rotatex" ++ angleUnit unit
+    RotateX _ unit ->
+      "rotatex" ++ angleUnit unit
 
-        RotateY _ unit ->
-            "rotatey" ++ angleUnit unit
+    RotateY _ unit ->
+      "rotatey" ++ angleUnit unit
 
-        Skew _ _ unit ->
-            "skew" ++ angleUnit unit
+    Skew _ _ unit ->
+      "skew" ++ angleUnit unit
 
-        SkewX _ unit ->
-            "skewx" ++ angleUnit unit
+    SkewX _ unit ->
+      "skewx" ++ angleUnit unit
 
-        SkewY _ unit ->
-            "skewy" ++ angleUnit unit
+    SkewY _ unit ->
+      "skewy" ++ angleUnit unit
 
-        Perspective _ ->
-            "perspective"
+    Perspective _ ->
+      "perspective"
 
 
 lenUnit : Length -> String
 lenUnit unit =
-    case unit of
-        Px ->
-            "px"
+  case unit of
+    Px ->
+      "px"
 
-        Percent ->
-            "%"
+    Percent ->
+      "%"
 
-        Rem ->
-            "rem"
+    Rem ->
+      "rem"
 
-        Em ->
-            "em"
+    Em ->
+      "em"
 
-        Ex ->
-            "ex"
+    Ex ->
+      "ex"
 
-        Ch ->
-            "ch"
+    Ch ->
+      "ch"
 
-        Vh ->
-            "vh"
+    Vh ->
+      "vh"
 
-        Vw ->
-            "vw"
+    Vw ->
+      "vw"
 
-        Vmin ->
-            "vmin"
+    Vmin ->
+      "vmin"
 
-        Vmax ->
-            "vmax"
+    Vmax ->
+      "vmax"
 
-        Mm ->
-            "mm"
+    Mm ->
+      "mm"
 
-        Cm ->
-            "cm"
+    Cm ->
+      "cm"
 
-        In ->
-            "in"
+    In ->
+      "in"
 
-        Pt ->
-            "pt"
+    Pt ->
+      "pt"
 
-        Pc ->
-            "pc"
+    Pc ->
+      "pc"
 
 
 angleUnit : Angle -> String
 angleUnit unit =
-    case unit of
-        Deg ->
-            "deg"
+  case unit of
+    Deg ->
+      "deg"
 
-        Grad ->
-            "grad"
+    Grad ->
+      "grad"
 
-        Rad ->
-            "rad"
+    Rad ->
+      "rad"
 
-        Turn ->
-            "turn"
+    Turn ->
+      "turn"
 
 
 
 -- Spring Functionality --
 
 
-
 type alias FullSpring =
-    { stiffness : Float
-    , damping : Float
-    , position : Float
-    , velocity : Float
-    , destination : Float
-    }
+  { stiffness : Float
+  , damping : Float
+  , position : Float
+  , velocity : Float
+  , destination : Float
+  }
 
 
 type alias Spring =
-    { stiffness : Float
-    , damping : Float
-    }
+  { stiffness : Float
+  , damping : Float
+  }
 
 
 createSpring : Spring -> FullSpring
 createSpring almost =
-    { stiffness = almost.stiffness
-    , damping = almost.damping
-    , position = 0
-    , velocity = 0
-    , destination = 1
-    }
+  { stiffness = almost.stiffness
+  , damping = almost.damping
+  , position = 0
+  , velocity = 0
+  , destination = 1
+  }
 
 
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
 noWobble : Spring
 noWobble =
-    { stiffness = 170
-    , damping = 26
-    }
+  { stiffness = 170
+  , damping = 26
+  }
 
 
 {-| A spring preset.
 -}
 gentle : Spring
 gentle =
-    { stiffness = 120
-    , damping = 14
-    }
+  { stiffness = 120
+  , damping = 14
+  }
 
 
 {-| A spring preset.
 -}
 wobbly : Spring
 wobbly =
-    { stiffness = 180
-    , damping = 12
-    }
+  { stiffness = 180
+  , damping = 12
+  }
 
 
 {-| A spring preset.
 -}
 stiff : Spring
 stiff =
-    { stiffness = 210
-    , damping = 20
-    }
+  { stiffness = 210
+  , damping = 20
+  }
+
 
 {-| A spring preset.
 -}
 fastAndLoose : Spring
-fastAndLoose = 
-    { stiffness = 320
-    , damping = 17 }
-
+fastAndLoose =
+  { stiffness = 320
+  , damping = 17
+  }
 
 
 mapTo : Int -> (a -> a) -> List a -> List a
-mapTo i fn xs = 
-        let
-            update j x = 
-                if j == i then
-                    fn x
-                else
-                    x
-        in
-            List.indexedMap update xs
+mapTo i fn xs =
+  let
+    update j x =
+      if j == i then
+        fn x
+      else
+        x
+  in
+    List.indexedMap update xs
+
 
 tolerance =
-    1.0e-4
+  1.0e-4
 
 
 updateSpring : Time -> FullSpring -> FullSpring
 updateSpring dtms spring =
-    let
-        dt = dtms / 1000 
+  let
+    dt =
+      dtms / 1000
 
-        fspring = -spring.stiffness * (spring.position - spring.destination)
+    fspring =
+      -spring.stiffness * (spring.position - spring.destination)
 
-        fdamper = -spring.damping * spring.velocity
+    fdamper =
+      -spring.damping * spring.velocity
 
-        a = fspring + fdamper
+    a =
+      fspring + fdamper
 
-        newV = spring.velocity + a * dt
+    newV =
+      spring.velocity + a * dt
 
-        newX = spring.position + newV * dt
-    in
-        if (spring.destination - newX) < tolerance && newV < tolerance then
-             { spring
-                | position = spring.destination
-                , velocity = 0.0
-            }
-        else
-            { spring
-                | position = newX
-                , velocity = newV
-            }
+    newX =
+      spring.position + newV * dt
+  in
+    if (spring.destination - newX) < tolerance && newV < tolerance then
+      { spring
+        | position = spring.destination
+        , velocity = 0.0
+      }
+    else
+      { spring
+        | position = newX
+        , velocity = newV
+      }
 
 
 springAtRest : FullSpring -> Bool
 springAtRest spring =
-        spring.position == spring.destination && spring.velocity == 0
+  spring.position == spring.destination && spring.velocity == 0
 
 
 springDuration : FullSpring -> Time
 springDuration spring =
-    snd
-        <| List.foldl
-            (\t ( spg, d ) ->
-                if springAtRest spg then
-                    ( spg, d )
-                else
-                    ( updateSpring t spg, t )
-            )
-            ( spring, 0 )
-            [1..1000]
+  snd
+    <| List.foldl
+        (\t ( spg, d ) ->
+          if springAtRest spg then
+            ( spg, d )
+          else
+            ( updateSpring t spg, t )
+        )
+        ( spring, 0 )
+        [1..1000]
