@@ -282,7 +282,7 @@ internalUpdate action (A model) =
             Just t ->
               t
 
-        newElapsed =
+        elapsed =
           now - start
 
         currentAnim =
@@ -304,42 +304,54 @@ internalUpdate action (A model) =
             )
 
           Just current ->
-            if done newElapsed current then
-              let
-                anims =
-                  case remaining of
-                    Nothing ->
-                      []
+            let
+                animElapsed = elapsed - current.delay 
+            in
+                if animElapsed >= 0.0 && done animElapsed current then
+                  let
+                    anims =
+                      case remaining of
+                        Nothing ->
+                          []
 
-                    Just a ->
-                      a
+                        Just a ->
+                          a
 
-                previous =
-                  bake current model.previous
+                    previous =
+                      bake current model.previous
 
-                resetElapsed =
-                  newElapsed
+                    resetElapsed =
+                      elapsed
 
-                --newElapsed - (current.duration + current.delay)
-              in
-                ( A
-                    { model
-                      | elapsed = resetElapsed
-                      , start = Just (now - resetElapsed)
-                      , previous = previous
-                      , anim = mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
-                    }
-                , Effects.tick Tick
-                )
-            else
-              ( A
-                  { model
-                    | elapsed = newElapsed
-                    , start = Just start
-                    , anim = mapTo 0 (\a -> step a model.previous newElapsed (newElapsed - model.elapsed)) model.anim
-                  }
-              , Effects.tick Tick
-              )
+                    --newElapsed - (current.duration + current.delay)
+                  in
+                    ( A
+                        { model
+                          | elapsed = resetElapsed
+                          , start = Just (now - resetElapsed)
+                          , previous = previous
+                          , anim = mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
+                        }
+                    , Effects.tick Tick
+                    )
+                else if animElapsed >= 0.0 then
+                  ( A
+                      { model
+                        | elapsed = elapsed
+                        , start = Just start
+                        , anim = mapTo 0 (\a -> step a model.previous animElapsed (elapsed - model.elapsed)) model.anim
+                      }
+                  , Effects.tick Tick
+                  )
+                else
+                  ( A
+                      { model
+                        | elapsed = elapsed
+                        , start = Just start
+                        , anim = model.anim
+                      }
+                  , Effects.tick Tick
+                  )
 
 
 
