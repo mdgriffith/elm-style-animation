@@ -25,6 +25,7 @@ tolerance =
 update : Time -> Model -> Model
 update dtms spring =
   let
+
     dt =
       dtms / 1000
 
@@ -42,8 +43,9 @@ update dtms spring =
 
     newX =
       spring.position + newV * dt
+
   in
-    if (spring.destination - newX) < tolerance && newV < tolerance then
+    if (abs (spring.destination - newX)) < tolerance && abs newV < tolerance then
       { spring
         | position = spring.destination
         , velocity = 0.0

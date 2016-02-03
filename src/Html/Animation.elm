@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -11,7 +11,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation, Action
 
 # Creating an animation
-@docs animate, queue, stagger, props, delay, andThen, on
+@docs animate, queue, stagger, props, delay, spring, andThen, on
 
 # Animating Properties
 
@@ -39,7 +39,6 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 
 # Update a Style
 @docs update
-
 
 # Managing a list of styled widgets
 @docs forwardTo, forwardToAll
@@ -137,10 +136,6 @@ type Action
   | Internal InternalAction
 
 
-
--- private
-
-
 empty : Model
 empty =
   { elapsed = 0.0
@@ -148,10 +143,6 @@ empty =
   , anim = []
   , previous = []
   }
-
-
-
--- private
 
 
 emptyKeyframe : StyleKeyframe
@@ -174,6 +165,14 @@ emptyPhysics target =
       }
   , easing = Nothing
   }
+
+emptyKeyframeWithOptions =
+  { frame = emptyKeyframe
+  , duration = Nothing
+  , easing = Nothing
+  , spring = Nothing
+  }
+
 
 
 {-| Create an initial style for your init model.
@@ -208,8 +207,6 @@ init sty =
 
 
 
--- private
-
 
 defaultDuration : Float
 defaultDuration =
@@ -217,12 +214,55 @@ defaultDuration =
 
 
 
--- private
-
-
 defaultEasing : Float -> Float
 defaultEasing x =
   (1 - cos (pi * x)) / 2
+
+
+
+{-| A spring preset.  Probably should be your initial goto for using springs.
+-}
+noWobble : Spring.Properties
+noWobble =
+  { stiffness = 170
+  , damping = 26
+  }
+
+
+{-| A spring preset.
+-}
+gentle : Spring.Properties
+gentle =
+  { stiffness = 120
+  , damping = 14
+  }
+
+
+{-| A spring preset.
+-}
+wobbly : Spring.Properties
+wobbly =
+  { stiffness = 180
+  , damping = 12
+  }
+
+
+{-| A spring preset.
+-}
+stiff : Spring.Properties
+stiff =
+  { stiffness = 210
+  , damping = 20
+  }
+
+
+{-| A spring preset.
+-}
+fastAndLoose : Spring.Properties
+fastAndLoose =
+  { stiffness = 320
+  , damping = 17
+  }
 
 
 {-| Update an animation.  This will probably only show up once in your code.
@@ -305,53 +345,56 @@ internalUpdate action (A model) =
 
           Just current ->
             let
-                animElapsed = elapsed - current.delay 
+              animElapsed =
+                elapsed - current.delay
             in
-                if animElapsed >= 0.0 && done animElapsed current then
-                  let
-                    anims =
-                      case remaining of
-                        Nothing ->
-                          []
+              if animElapsed >= 0.0 && done animElapsed current then
+                let
+                  anims =
+                    case remaining of
+                      Nothing ->
+                        []
 
-                        Just a ->
-                          a
+                      Just a ->
+                        a
 
-                    previous =
-                      bake current model.previous
+                  previous =
+                    bake current model.previous
 
-                    resetElapsed =
-                      elapsed
+                  resetElapsed =
+                    elapsed
 
-                    --newElapsed - (current.duration + current.delay)
-                  in
-                    ( A
-                        { model
-                          | elapsed = resetElapsed
-                          , start = Just (now - resetElapsed)
-                          , previous = previous
-                          , anim = mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
-                        }
-                    , Effects.tick Tick
-                    )
-                else if animElapsed >= 0.0 then
+                
+                  --newElapsed - (current.duration + current.delay)
+                in
                   ( A
                       { model
-                        | elapsed = elapsed
-                        , start = Just start
-                        , anim = mapTo 0 (\a -> step a model.previous animElapsed (elapsed - model.elapsed)) model.anim
+                        | elapsed = 0.0
+                        , start = Just now
+                        , previous = previous
+                        , anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
+                        --, anim = Debug.log "finished" <| mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
                       }
                   , Effects.tick Tick
                   )
-                else
-                  ( A
-                      { model
-                        | elapsed = elapsed
-                        , start = Just start
-                        , anim = model.anim
-                      }
-                  , Effects.tick Tick
-                  )
+              else if animElapsed >= 0.0 then
+                ( A
+                    { model
+                      | elapsed = elapsed
+                      , start = Just start
+                      , anim = mapTo 0 (\a -> step a model.previous animElapsed (elapsed - model.elapsed)) model.anim
+                    }
+                , Effects.tick Tick
+                )
+              else
+                ( A
+                    { model
+                      | elapsed = elapsed
+                      , start = Just start
+                      , anim = model.anim
+                    }
+                , Effects.tick Tick
+                )
 
 
 
@@ -690,12 +733,6 @@ applyKeyframeOptions options =
     { frame | target = List.map applyOpt frame.target }
 
 
-emptyKeyframeWithOptions =
-  { frame = emptyKeyframe
-  , duration = Nothing
-  , easing = Nothing
-  , spring = Nothing
-  }
 
 
 {-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
@@ -1260,10 +1297,6 @@ render (A model) =
           snd transformsNprops ++ [ combinedTransforms ]
 
 
-
--- private
-
-
 renderProp : StyleProperty Static -> ( String, String )
 renderProp prop =
   ( Render.name prop
@@ -1271,15 +1304,11 @@ renderProp prop =
   )
 
 
-
--- private
-
-
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
   List.foldl
     (\x acc ->
-      -- need to know the propIndex of x, meaning how many times it's shown up already.
+      -- need to know the Render.id of x, meaning how many times it's shown up already.
       let
         xI =
           List.foldl
@@ -1527,15 +1556,30 @@ stepProp prop prev current dt =
       case physics.easing of
         Nothing ->
           let
-            target =
-              physics.target from 1.0
+            --target =
+              --physics.target from 1.0
 
-            newSpring =
-              Spring.update dt physics.spring
+            --initialPos = physics.target from 0.0
+
+            newSpring = physics.spring
+
+            pos = 
+                -- HAAAAACK, Oh lord this is a hack :/
+                if current == 0.0 && dt == 0.0 then
+                    from
+                else
+                    physics.spring.position
+
+
+            targetedSpring = { newSpring | destination = physics.target from 1.0 
+                                         , position = pos }
+
+            finalSpring = 
+              Spring.update dt targetedSpring
           in
             { physics
-              | spring = newSpring
-              , position = ((target - from) * newSpring.position) + from
+              | spring = finalSpring
+              , position = finalSpring.position
             }
 
         Just easing ->
@@ -2231,49 +2275,6 @@ stepProp prop prev current dt =
               (val 0.0 p)
 
 
-{-| A spring preset.  Probably should be your initial goto for using springs.
--}
-noWobble : Spring.Properties
-noWobble =
-  { stiffness = 170
-  , damping = 26
-  }
-
-
-{-| A spring preset.
--}
-gentle : Spring.Properties
-gentle =
-  { stiffness = 120
-  , damping = 14
-  }
-
-
-{-| A spring preset.
--}
-wobbly : Spring.Properties
-wobbly =
-  { stiffness = 180
-  , damping = 12
-  }
-
-
-{-| A spring preset.
--}
-stiff : Spring.Properties
-stiff =
-  { stiffness = 210
-  , damping = 20
-  }
-
-
-{-| A spring preset.
--}
-fastAndLoose : Spring.Properties
-fastAndLoose =
-  { stiffness = 320
-  , damping = 17
-  }
 
 
 mapTo : Int -> (a -> a) -> List a -> List a
