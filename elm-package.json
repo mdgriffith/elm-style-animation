@@ -8,6 +8,7 @@
     ],
     "exposed-modules": [
         "Html.Animation"
+    ,   "Html.Animation.Properties"
     ],
     "dependencies": {
         "elm-lang/core": "3.0.0 <= v < 4.0.0",

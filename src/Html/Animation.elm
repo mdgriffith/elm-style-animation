@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, StyleProperty(..), Length(..), Angle(..), init, update, render, animate, queue, stagger, on, props, delay, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -40,11 +40,6 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 # Update a Style
 @docs update
 
-# All Animatable Style Properties
-@docs StyleProperty
-
-# Units
-@docs Length, Angle
 
 # Managing a list of styled widgets
 @docs forwardTo, forwardToAll
@@ -56,6 +51,11 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List
 import Color
+
+import Html.Animation.Properties exposing (..)
+import Html.Animation.Render as Render
+import Html.Animation.Spring as Spring
+
 
 
 type alias Model =
@@ -71,26 +71,20 @@ type alias Model =
 type Animation
   = A Model
 
-
-type alias Static =
-  Float
-
-
 type alias DynamicTarget =
   Float -> Float -> Float
-
 
 type alias Physics a =
   { target : a
   , position : Float
-  , spring : FullSpring
+  , spring : Spring.Model
   , easing : Maybe Easing
   }
 
 
 type alias Easing =
   { ease : Float -> Float
-  , counter : Maybe FullSpring
+  , counter : Maybe Spring.Model
   , duration : Time
   }
 
@@ -115,95 +109,9 @@ type alias KeyframeWithOptions =
         { frame : StyleKeyframe
         , duration : Maybe Time
         , easing : Maybe (Float -> Float)
-        , spring : Maybe Spring
+        , spring : Maybe Spring.Properties
         }
 
-{-| All currently animatable properties.
--}
-type StyleProperty a
-  = Prop String a String
-  | Opacity a
-  | Height a Length
-  | Width a Length
-  | Left a Length
-  | Top a Length
-  | Right a Length
-  | Bottom a Length
-  | MaxHeight a Length
-  | MaxWidth a Length
-  | MinHeight a Length
-  | MinWidth a Length
-  | Padding a Length
-  | PaddingLeft a Length
-  | PaddingRight a Length
-  | PaddingTop a Length
-  | PaddingBottom a Length
-  | Margin a Length
-  | MarginLeft a Length
-  | MarginRight a Length
-  | MarginTop a Length
-  | MarginBottom a Length
-  | BorderWidth a Length
-  | BorderRadius a Length
-  | BorderTopLeftRadius a Length
-  | BorderTopRightRadius a Length
-  | BorderBottomLeftRadius a Length
-  | BorderBottomRightRadius a Length
-  | LetterSpacing a Length
-  | LineHeight a Length
-  | BackgroundPosition a a Length
-  | Color a a a a
-  | BackgroundColor a a a a
-  | BorderColor a a a a
-  | TransformOrigin a a a Length
-  | Matrix a a a a a a
-  | Matrix3d a a a a a a a a a a a a a a a a
-  | Translate a a Length
-  | Translate3d a a a Length
-  | TranslateX a Length
-  | TranslateY a Length
-  | Scale a
-  | Scale3d a a a
-  | ScaleX a
-  | ScaleY a
-  | ScaleZ a
-  | Rotate a Angle
-  | Rotate3d a a a a Angle
-  | RotateX a Angle
-  | RotateY a Angle
-  | Skew a a Angle
-  | SkewX a Angle
-  | SkewY a Angle
-  | Perspective a
-
-
-{-| Units representing length.
--}
-type Length
-  = Px
-  | Percent
-  | Rem
-  | Em
-  | Ex
-  | Ch
-  | Vh
-  | Vw
-  | Vmin
-  | Vmax
-  | Mm
-  | Cm
-  | In
-  | Pt
-  | Pc
-
-
-{-| Units representing angles.
--}
-type Angle
-  = Deg
-  | Grad
-  | Rad
-  | Turn
 
 
 {-| -}
@@ -230,13 +138,6 @@ type Action
       | Unstaggered PreAction
       | Internal InternalAction
 
-
---type alias WithDefaults =
---            { internalAction : InternalAction
---            , spring : Maybe Spring
---            , easing : Maybe (Float -> Float)
---            , duration : Maybe Float
---            }
 
 -- private
 
@@ -290,9 +191,9 @@ init sty =
           if
             List.any
               (\y ->
-                propId x
-                  == propId y
-                  && renderName x
+                Render.id x
+                  == Render.id y
+                  && Render.name x
                   /= "transform"
               )
               acc
@@ -472,7 +373,7 @@ propDone time prop =
     isDone prop =
       case prop.easing of
         Nothing ->
-          springAtRest prop.spring
+          Spring.atRest prop.spring
 
         Just easing ->
           easing.ease time
@@ -781,48 +682,6 @@ emptyKeyframeWithOptions =
         , spring = Nothing
         }
 
---type alias KeyframeWithOptions =
---        { frame : StyleKeyframe
---        , duration : Maybe Time
---        , easing : Maybe (Float -> Float)
---        , spring : Maybe Spring
---        }
-
---type alias Action = 
---        { frames : Staggered
---        , action = (List StyleKeyframe -> InternalAction)
---        }
-
-
---type Staggered
---      = Staggered (Float -> List KeyframeWithOptions)
---      | Unstaggered (List KeyframeWithOptions)
-
-
---type alias StyleKeyframe =
---  { target : List (StyleProperty (Physics DynamicTarget))
---  , delay : Time
---  }
-
-
---type alias Physics a =
---  { target : a
---  , position : Float
---  , spring : FullSpring
---  , easing : Maybe Easing
---  }
-
-
---type alias PreAction = 
---        { frames : List KeyframeWithOptions
---        , action : (List StyleKeyframe -> InternalAction)
---        }
-
-
---type Action
---      = Staggered (Float -> Action)
---      | Unstaggered PreAction
-
 
 
 {-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
@@ -1047,9 +906,9 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
              ]
          |> UI.on model.style
 -}
-spring : Spring -> Action -> Action
-spring almost action =
-  updateOrCreate action (\a -> { a | spring = Just almost })
+spring : Spring.Properties -> Action -> Action
+spring spring action =
+  updateOrCreate action (\a -> { a | spring = Just spring })
 
 
 {-| Append another keyframe.  This is used for multistage animations.  For example, to cycle through colors, we'd use the following:
@@ -1077,7 +936,7 @@ andThen stag =
   case stag of
     Internal ia ->
               Internal ia
-              
+
     Staggered s ->
       Staggered s
 
@@ -1119,62 +978,30 @@ to target =
   emptyPhysics <| 
     (\from current -> ((target - from) * current) + from)
 
+{-| Animate a StyleProperty by adding to its existing value
 
+-}
 add : Float -> Physics DynamicTarget
 add target =
   emptyPhysics <| 
     (\from current -> ((target - from) * current) + from)
 
+{-| Animate a StyleProperty by subtracting to its existing value
 
+-}
 minus : Float -> Physics DynamicTarget
 minus target =
   emptyPhysics <| 
     (\from current -> ((target - from) * current) + from)
 
+{-| Keep an animation where it is!  This is useful for stacking transforms.
 
+-}
 stay : Float -> Physics DynamicTarget
 stay target =
   emptyPhysics <| 
     (\from current -> from)
 
-
-{-| Animate a StyleProperty by adding to its existing value
-
--}
-
-
-
---add : Float -> Float -> Float -> Float
---add mod from current =
---    let
---        target = from + mod
---    in
---        to target from current
-
-
-{-| Animate a StyleProperty by subtracting to its existing value
-
--}
-
-
-
---minus : Float -> Float -> Float -> Float
---minus mod from current =
---    let
---        target = from - mod
---    in
---        to target from current
-
-
-{-| Keep an animation where it is!  This is useful for stacking transforms.
-
--}
-
-
-
---stay : Float -> Float -> Float
---stay from current =
---    from
 
 
 type alias ColorProperty =
@@ -1351,7 +1178,7 @@ findProp state prop propCount =
         <| xs
 
     matchPropID a b =
-      propId a == propId b
+      Render.id a == Render.id b
   in
     findBy (matchPropID prop) state
 
@@ -1417,179 +1244,12 @@ render (A model) =
 
 renderProp : StyleProperty Static -> ( String, String )
 renderProp prop =
-  ( renderName prop
-  , renderValue prop
+  ( Render.name prop
+  , Render.value prop
   )
 
 
 
--- private
-
-
-renderName : StyleProperty a -> String
-renderName styleProp =
-  case styleProp of
-    Prop str _ _ ->
-      str
-
-    Opacity _ ->
-      "opacity"
-
-    Height _ _ ->
-      "height"
-
-    Width _ _ ->
-      "width"
-
-    Left _ _ ->
-      "left"
-
-    Right _ _ ->
-      "right"
-
-    Bottom _ _ ->
-      "bottom"
-
-    Top _ _ ->
-      "top"
-
-    MaxHeight _ _ ->
-      "max-height"
-
-    MaxWidth _ _ ->
-      "max-width"
-
-    MinHeight _ _ ->
-      "min-height"
-
-    MinWidth _ _ ->
-      "min-width"
-
-    Padding _ _ ->
-      "padding"
-
-    PaddingLeft _ _ ->
-      "padding-left"
-
-    PaddingRight _ _ ->
-      "padding-right"
-
-    PaddingTop _ _ ->
-      "padding-top"
-
-    PaddingBottom _ _ ->
-      "padding-bottom"
-
-    Margin _ _ ->
-      "margin"
-
-    MarginLeft _ _ ->
-      "margin-left"
-
-    MarginRight _ _ ->
-      "margin-right"
-
-    MarginTop _ _ ->
-      "margin-top"
-
-    MarginBottom _ _ ->
-      "margin-bottom"
-
-    BorderWidth _ _ ->
-      "border-width"
-
-    BorderRadius _ _ ->
-      "border-radius"
-
-    BorderTopLeftRadius _ _ ->
-      "border-top-left-radius"
-
-    BorderTopRightRadius _ _ ->
-      "border-top-right-radius"
-
-    BorderBottomLeftRadius _ _ ->
-      "border-bottom-left-radius"
-
-    BorderBottomRightRadius _ _ ->
-      "border-bottom-right-radius"
-
-    LetterSpacing _ _ ->
-      "letter-spacing"
-
-    LineHeight _ _ ->
-      "line-height"
-
-    BackgroundPosition _ _ _ ->
-      "background-position"
-
-    TransformOrigin _ _ _ _ ->
-      "transform-origin"
-
-    Color _ _ _ _ ->
-      "color"
-
-    BackgroundColor _ _ _ _ ->
-      "background-color"
-
-    BorderColor _ _ _ _ ->
-      "border-color"
-
-    Matrix _ _ _ _ _ _ ->
-      "transform"
-
-    Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
-      "transform"
-
-    Translate _ _ _ ->
-      "transform"
-
-    Translate3d _ _ _ _ ->
-      "transform"
-
-    TranslateX _ _ ->
-      "transform"
-
-    TranslateY _ _ ->
-      "transform"
-
-    Scale _ ->
-      "transform"
-
-    Scale3d _ _ _ ->
-      "transform"
-
-    ScaleX _ ->
-      "transform"
-
-    ScaleY _ ->
-      "transform"
-
-    ScaleZ _ ->
-      "transform"
-
-    Rotate _ _ ->
-      "transform"
-
-    Rotate3d _ _ _ _ _ ->
-      "transform"
-
-    RotateX _ _ ->
-      "transform"
-
-    RotateY _ _ ->
-      "transform"
-
-    Skew _ _ _ ->
-      "transform"
-
-    SkewX _ _ ->
-      "transform"
-
-    SkewY _ _ ->
-      "transform"
-
-    Perspective _ ->
-      "transform"
 
 
 
@@ -1605,7 +1265,7 @@ fill new existing =
         xI =
           List.foldl
             (\x2 count ->
-              if propId x == propId x2 then
+              if Render.id x == Render.id x2 then
                 count + 1
               else
                 count
@@ -1820,7 +1480,7 @@ step frame prev current dt =
             xI =
               List.foldl
                 (\x2 count ->
-                  if propId x == propId x2 then
+                  if Render.id x == Render.id x2 then
                     count + 1
                   else
                     count
@@ -1852,7 +1512,7 @@ stepProp prop prev current dt =
               physics.target from 1.0
 
             newSpring =
-              updateSpring dt physics.spring
+              Spring.update dt physics.spring
           in
             { physics
               | spring = newSpring
@@ -1869,8 +1529,6 @@ stepProp prop prev current dt =
           in
             physics
 
-    --{ physics | position = position
-    --          , velocity = 0 }
   in
     case prop of
       Prop name to unit ->
@@ -2556,518 +2214,9 @@ stepProp prop prev current dt =
 
 
 
--- private
--- renders a valid css value for a Style Property
-
-
-renderValue : StyleProperty Static -> String
-renderValue prop =
-  let
-    val a =
-      toString a
-
-    renderLength a unit =
-      (val a) ++ lenUnit unit
-
-    renderAngle a unit =
-      (val a) ++ angleUnit unit
-
-    renderList xs =
-      "("
-        ++ (String.concat
-              <| List.intersperse ","
-              <| List.map toString xs
-           )
-        ++ ")"
-  in
-    case prop of
-      Prop _ a u ->
-        (val a) ++ u
-
-      Opacity a ->
-        val a
-
-      Height a unit ->
-        renderLength a unit
-
-      Width a unit ->
-        renderLength a unit
-
-      Left a unit ->
-        renderLength a unit
-
-      Top a unit ->
-        renderLength a unit
-
-      Right a unit ->
-        renderLength a unit
-
-      Bottom a unit ->
-        renderLength a unit
-
-      MaxHeight a unit ->
-        renderLength a unit
-
-      MaxWidth a unit ->
-        renderLength a unit
-
-      MinHeight a unit ->
-        renderLength a unit
-
-      MinWidth a unit ->
-        renderLength a unit
-
-      Padding a unit ->
-        renderLength a unit
-
-      PaddingLeft a unit ->
-        renderLength a unit
-
-      PaddingRight a unit ->
-        renderLength a unit
-
-      PaddingTop a unit ->
-        renderLength a unit
-
-      PaddingBottom a unit ->
-        renderLength a unit
-
-      Margin a unit ->
-        renderLength a unit
-
-      MarginLeft a unit ->
-        renderLength a unit
-
-      MarginRight a unit ->
-        renderLength a unit
-
-      MarginTop a unit ->
-        renderLength a unit
-
-      MarginBottom a unit ->
-        renderLength a unit
-
-      BorderWidth a unit ->
-        renderLength a unit
-
-      BorderRadius a unit ->
-        renderLength a unit
-
-      BorderTopLeftRadius a unit ->
-        renderLength a unit
-
-      BorderTopRightRadius a unit ->
-        renderLength a unit
-
-      BorderBottomLeftRadius a unit ->
-        renderLength a unit
-
-      BorderBottomRightRadius a unit ->
-        renderLength a unit
-
-      LetterSpacing a unit ->
-        renderLength a unit
-
-      LineHeight a unit ->
-        renderLength a unit
-
-      BackgroundPosition x y unit ->
-        renderLength x unit
-          ++ " "
-          ++ renderLength y unit
-
-      TransformOrigin x y z unit ->
-        renderLength x unit
-          ++ " "
-          ++ renderLength y unit
-          ++ " "
-          ++ renderLength z unit
-
-      Color x y z a ->
-        renderColor x y z a
-
-      BackgroundColor x y z a ->
-        renderColor x y z a
-
-      BorderColor x y z a ->
-        renderColor x y z a
-
-      Translate a1 a2 unit ->
-        "translate("
-          ++ (renderLength a1 unit)
-          ++ ","
-          ++ (renderLength a2 unit)
-          ++ ")"
-
-      Translate3d a1 a2 a3 unit ->
-        "translate3d("
-          ++ (renderLength a1 unit)
-          ++ ","
-          ++ (renderLength a2 unit)
-          ++ ","
-          ++ (renderLength a3 unit)
-          ++ ")"
-
-      TranslateX a unit ->
-        "translateX(" ++ renderLength a unit ++ ")"
-
-      TranslateY a unit ->
-        "translateY(" ++ renderLength a unit ++ ")"
-
-      Scale a1 ->
-        "scale(" ++ (val a1) ++ ")"
-
-      Scale3d a1 a2 a3 ->
-        "scale3d("
-          ++ (val a1)
-          ++ ","
-          ++ (val a2)
-          ++ ","
-          ++ (val a3)
-          ++ ")"
-
-      ScaleX a ->
-        "scaleX(" ++ val a ++ ")"
-
-      ScaleY a ->
-        "scaleY(" ++ val a ++ ")"
-
-      ScaleZ a ->
-        "scaleZ(" ++ val a ++ ")"
-
-      Rotate a unit ->
-        "rotate(" ++ renderAngle a unit ++ ")"
-
-      Rotate3d a1 a2 a3 a4 unit ->
-        "rotate3d("
-          ++ (val a1)
-          ++ ","
-          ++ (val a2)
-          ++ ","
-          ++ (val a3)
-          ++ ","
-          ++ (renderAngle a4 unit)
-          ++ ")"
-
-      RotateX a unit ->
-        "rotateX(" ++ renderAngle a unit ++ ")"
-
-      RotateY a unit ->
-        "rotateY(" ++ renderAngle a unit ++ ")"
-
-      Skew a1 a2 unit ->
-        "skew("
-          ++ (renderAngle a1 unit)
-          ++ ","
-          ++ (renderAngle a2 unit)
-          ++ ")"
-
-      SkewX a unit ->
-        "skewX(" ++ renderAngle a unit ++ ")"
-
-      SkewY a unit ->
-        "skewY(" ++ renderAngle a unit ++ ")"
-
-      Perspective a ->
-        "perspective(" ++ (val a) ++ ")"
-
-      Matrix a b c x y z ->
-        "matrix"
-          ++ (renderList [ a, b, c, x, y, z ])
-
-      Matrix3d a b c d e f g h i j k l m n o p ->
-        "matrix3d"
-          ++ (renderList [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p ])
-
-
-renderColor : Float -> Float -> Float -> Float -> String
-renderColor x y z a =
-  let
-    renderList xs =
-      "("
-        ++ (String.concat
-              <| List.intersperse ","
-              <| List.map toString xs
-           )
-        ++ ")"
-
-    renderIntList xs =
-      renderList <| List.map round xs
-  in
-    "rgba("
-      ++ toString (round x)
-      ++ ","
-      ++ toString (round y)
-      ++ ","
-      ++ toString (round z)
-      ++ ","
-      ++ toString a
-      ++ ")"
-
-
-propId : StyleProperty a -> String
-propId prop =
-  case prop of
-    Prop name _ unit ->
-      name ++ unit
-
-    Opacity _ ->
-      "opacity"
-
-    Height _ unit ->
-      "height" ++ lenUnit unit
-
-    Width _ unit ->
-      "width" ++ lenUnit unit
-
-    Left _ unit ->
-      "left" ++ lenUnit unit
-
-    Right _ unit ->
-      "right" ++ lenUnit unit
-
-    Bottom _ unit ->
-      "bottom" ++ lenUnit unit
-
-    Top _ unit ->
-      "top" ++ lenUnit unit
-
-    MaxHeight _ unit ->
-      "max-height" ++ lenUnit unit
-
-    MaxWidth _ unit ->
-      "max-width" ++ lenUnit unit
-
-    MinHeight _ unit ->
-      "min-height" ++ lenUnit unit
-
-    MinWidth _ unit ->
-      "min-width" ++ lenUnit unit
-
-    Padding _ unit ->
-      "padding" ++ lenUnit unit
-
-    PaddingLeft _ unit ->
-      "padding-left" ++ lenUnit unit
-
-    PaddingRight _ unit ->
-      "padding-right" ++ lenUnit unit
-
-    PaddingTop _ unit ->
-      "padding-top" ++ lenUnit unit
-
-    PaddingBottom _ unit ->
-      "padding-bottom" ++ lenUnit unit
-
-    Margin _ unit ->
-      "margin" ++ lenUnit unit
-
-    MarginLeft _ unit ->
-      "margin-left" ++ lenUnit unit
-
-    MarginRight _ unit ->
-      "margin-right" ++ lenUnit unit
-
-    MarginTop _ unit ->
-      "margin-top" ++ lenUnit unit
-
-    MarginBottom _ unit ->
-      "margin-bottom" ++ lenUnit unit
-
-    BorderWidth _ unit ->
-      "border-width" ++ lenUnit unit
-
-    BorderRadius _ unit ->
-      "border-radius" ++ lenUnit unit
-
-    BorderTopLeftRadius _ unit ->
-      "border-top-left-radius" ++ lenUnit unit
-
-    BorderTopRightRadius _ unit ->
-      "border-top-right-radius" ++ lenUnit unit
-
-    BorderBottomLeftRadius _ unit ->
-      "border-bottom-left-radius" ++ lenUnit unit
-
-    BorderBottomRightRadius _ unit ->
-      "border-bottom-right-radius" ++ lenUnit unit
-
-    LetterSpacing _ unit ->
-      "letter-spacing" ++ lenUnit unit
-
-    LineHeight _ unit ->
-      "line-height" ++ lenUnit unit
-
-    BackgroundPosition _ _ unit ->
-      "background-position" ++ lenUnit unit
-
-    Color _ _ _ _ ->
-      "color"
-
-    BackgroundColor _ _ _ _ ->
-      "background-color"
-
-    BorderColor _ _ _ _ ->
-      "border-color"
-
-    TransformOrigin _ _ _ unit ->
-      "transform-origin" ++ lenUnit unit
-
-    Matrix _ _ _ _ _ _ ->
-      "matrix"
-
-    Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
-      "matrix3d"
-
-    Translate _ _ unit ->
-      "translate" ++ lenUnit unit
-
-    Translate3d _ _ _ unit ->
-      "translate3d" ++ lenUnit unit
-
-    TranslateX _ unit ->
-      "translatex" ++ lenUnit unit
-
-    TranslateY _ unit ->
-      "translatey" ++ lenUnit unit
-
-    Scale _ ->
-      "scale"
-
-    Scale3d _ _ _ ->
-      "scale3d"
-
-    ScaleX _ ->
-      "scalex"
-
-    ScaleY _ ->
-      "scaley"
-
-    ScaleZ _ ->
-      "scalez"
-
-    Rotate _ unit ->
-      "rotate" ++ angleUnit unit
-
-    Rotate3d _ _ _ _ unit ->
-      "rotate3d" ++ angleUnit unit
-
-    RotateX _ unit ->
-      "rotatex" ++ angleUnit unit
-
-    RotateY _ unit ->
-      "rotatey" ++ angleUnit unit
-
-    Skew _ _ unit ->
-      "skew" ++ angleUnit unit
-
-    SkewX _ unit ->
-      "skewx" ++ angleUnit unit
-
-    SkewY _ unit ->
-      "skewy" ++ angleUnit unit
-
-    Perspective _ ->
-      "perspective"
-
-
-lenUnit : Length -> String
-lenUnit unit =
-  case unit of
-    Px ->
-      "px"
-
-    Percent ->
-      "%"
-
-    Rem ->
-      "rem"
-
-    Em ->
-      "em"
-
-    Ex ->
-      "ex"
-
-    Ch ->
-      "ch"
-
-    Vh ->
-      "vh"
-
-    Vw ->
-      "vw"
-
-    Vmin ->
-      "vmin"
-
-    Vmax ->
-      "vmax"
-
-    Mm ->
-      "mm"
-
-    Cm ->
-      "cm"
-
-    In ->
-      "in"
-
-    Pt ->
-      "pt"
-
-    Pc ->
-      "pc"
-
-
-angleUnit : Angle -> String
-angleUnit unit =
-  case unit of
-    Deg ->
-      "deg"
-
-    Grad ->
-      "grad"
-
-    Rad ->
-      "rad"
-
-    Turn ->
-      "turn"
-
-
-
--- Spring Functionality --
-
-
-type alias FullSpring =
-  { stiffness : Float
-  , damping : Float
-  , position : Float
-  , velocity : Float
-  , destination : Float
-  }
-
-
-type alias Spring =
-  { stiffness : Float
-  , damping : Float
-  }
-
-
-createSpring : Spring -> FullSpring
-createSpring almost =
-  { stiffness = almost.stiffness
-  , damping = almost.damping
-  , position = 0
-  , velocity = 0
-  , destination = 1
-  }
-
-
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
-noWobble : Spring
+noWobble : Spring.Properties
 noWobble =
   { stiffness = 170
   , damping = 26
@@ -3076,7 +2225,7 @@ noWobble =
 
 {-| A spring preset.
 -}
-gentle : Spring
+gentle : Spring.Properties
 gentle =
   { stiffness = 120
   , damping = 14
@@ -3085,7 +2234,7 @@ gentle =
 
 {-| A spring preset.
 -}
-wobbly : Spring
+wobbly : Spring.Properties
 wobbly =
   { stiffness = 180
   , damping = 12
@@ -3094,7 +2243,7 @@ wobbly =
 
 {-| A spring preset.
 -}
-stiff : Spring
+stiff : Spring.Properties
 stiff =
   { stiffness = 210
   , damping = 20
@@ -3103,7 +2252,7 @@ stiff =
 
 {-| A spring preset.
 -}
-fastAndLoose : Spring
+fastAndLoose : Spring.Properties
 fastAndLoose =
   { stiffness = 320
   , damping = 17
@@ -3122,57 +2271,4 @@ mapTo i fn xs =
     List.indexedMap update xs
 
 
-tolerance =
-  1.0e-4
 
-
-updateSpring : Time -> FullSpring -> FullSpring
-updateSpring dtms spring =
-  let
-    dt =
-      dtms / 1000
-
-    fspring =
-      -spring.stiffness * (spring.position - spring.destination)
-
-    fdamper =
-      -spring.damping * spring.velocity
-
-    a =
-      fspring + fdamper
-
-    newV =
-      spring.velocity + a * dt
-
-    newX =
-      spring.position + newV * dt
-  in
-    if (spring.destination - newX) < tolerance && newV < tolerance then
-      { spring
-        | position = spring.destination
-        , velocity = 0.0
-      }
-    else
-      { spring
-        | position = newX
-        , velocity = newV
-      }
-
-
-springAtRest : FullSpring -> Bool
-springAtRest spring =
-  spring.position == spring.destination && spring.velocity == 0
-
-
-springDuration : FullSpring -> Time
-springDuration spring =
-  snd
-    <| List.foldl
-        (\t ( spg, d ) ->
-          if springAtRest spg then
-            ( spg, d )
-          else
-            ( updateSpring t spg, t )
-        )
-        ( spring, 0 )
-        [1..1000]
