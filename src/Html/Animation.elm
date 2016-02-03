@@ -81,6 +81,7 @@ type alias DynamicTarget =
 
 type alias Physics a =
      { target : a
+     , position : Float
      , spring : FullSpring
      , easing : Maybe Easing
      }
@@ -242,6 +243,7 @@ emptyKeyframe =
 emptyPhysics : a -> Physics a
 emptyPhysics target = 
     { target = target
+    , position = 0
     , spring = { velocity = 0
                , position = 0
                , stiffness = noWobble.stiffness
@@ -342,7 +344,7 @@ internalUpdate action (A model) =
               in
                   ( A
                       { model
-                          | anim = anims
+                          | anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
                           , elapsed = 0.0
                           , start = Nothing
                           , previous = previous
@@ -1520,7 +1522,7 @@ bake frame style =
         
 
 toStatic : Physics DynamicTarget -> Static
-toStatic physic = physic.spring.position
+toStatic physic = physic.position 
 
 
 mapProp :  (a -> b) -> StyleProperty a -> StyleProperty b
@@ -1724,14 +1726,15 @@ step frame prev current dt =
 stepProp : StyleProperty (Physics DynamicTarget) -> StyleProperty Static -> Time -> Time -> StyleProperty (Physics DynamicTarget)
 stepProp prop prev current dt =
     let
-        --val from fn = fn from current
         val from physics =
             case physics.easing of 
                 Nothing ->
                     let
-                        target = physics.target from current
+                        target = physics.target from 1.0
+                        newSpring = updateSpring dt physics.spring
                     in
-                        { physics | spring = updateSpring dt physics.spring }
+                        { physics | spring = newSpring
+                                  , position = ((target - from) * newSpring.position) + from }
                   
                     
                 Just easing ->
@@ -3009,10 +3012,16 @@ updateSpring dtms spring =
 
         newX = spring.position + newV * dt
     in
-        { spring
-            | position = newX
-            , velocity = newV
-        }
+        if (spring.destination - newX) < tolerance && newV < tolerance then
+             { spring
+                | position = spring.destination
+                , velocity = 0.0
+            }
+        else
+            { spring
+                | position = newX
+                , velocity = newV
+            }
 
 
 springAtRest : FullSpring -> Bool
