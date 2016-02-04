@@ -5,7 +5,7 @@ import Effects exposing (Effects)
 import Html.Animation.Properties exposing (..)
 import Html.Animation.Spring as Spring
 import Html.Animation.Render as Render
-
+import Debug
 
 type alias Model =
   { start : Maybe Time
@@ -418,7 +418,13 @@ transferVelocity old new =
           in
             case findProp old.target x xI of
               Nothing ->
-                acc
+                let
+                  warn = Debug.log "elm-html-animation" 
+                            """You're trying to animate """ 
+                         ++ Render.id x
+                         ++ ", but haven't provided an init value for it.  It won't be animated until you do."
+                in
+                  acc
 
               Just prevX ->
                 acc ++ [ stepProp x prevX <| transferVelocityProp ]

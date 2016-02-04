@@ -431,91 +431,91 @@ id prop =
       "opacity"
 
     Height _ unit ->
-      "height" ++ lenUnit unit
+      "height in " ++ lenUnit unit
 
     Width _ unit ->
-      "width" ++ lenUnit unit
+      "width in " ++ lenUnit unit
 
     Left _ unit ->
-      "left" ++ lenUnit unit
+      "left in " ++ lenUnit unit
 
     Right _ unit ->
-      "right" ++ lenUnit unit
+      "right in " ++ lenUnit unit
 
     Bottom _ unit ->
-      "bottom" ++ lenUnit unit
+      "bottom in " ++ lenUnit unit
 
     Top _ unit ->
-      "top" ++ lenUnit unit
+      "top in " ++ lenUnit unit
 
     MaxHeight _ unit ->
-      "max-height" ++ lenUnit unit
+      "max-height in " ++ lenUnit unit
 
     MaxWidth _ unit ->
-      "max-width" ++ lenUnit unit
+      "max-width in " ++ lenUnit unit
 
     MinHeight _ unit ->
-      "min-height" ++ lenUnit unit
+      "min-height in " ++ lenUnit unit
 
     MinWidth _ unit ->
-      "min-width" ++ lenUnit unit
+      "min-width in " ++ lenUnit unit
 
     Padding _ unit ->
-      "padding" ++ lenUnit unit
+      "padding in " ++ lenUnit unit
 
     PaddingLeft _ unit ->
-      "padding-left" ++ lenUnit unit
+      "padding-left in " ++ lenUnit unit
 
     PaddingRight _ unit ->
-      "padding-right" ++ lenUnit unit
+      "padding-right in " ++ lenUnit unit
 
     PaddingTop _ unit ->
-      "padding-top" ++ lenUnit unit
+      "padding-top in " ++ lenUnit unit
 
     PaddingBottom _ unit ->
-      "padding-bottom" ++ lenUnit unit
+      "padding-bottom in " ++ lenUnit unit
 
     Margin _ unit ->
-      "margin" ++ lenUnit unit
+      "margin in " ++ lenUnit unit
 
     MarginLeft _ unit ->
-      "margin-left" ++ lenUnit unit
+      "margin-left in " ++ lenUnit unit
 
     MarginRight _ unit ->
-      "margin-right" ++ lenUnit unit
+      "margin-right in " ++ lenUnit unit
 
     MarginTop _ unit ->
-      "margin-top" ++ lenUnit unit
+      "margin-top in " ++ lenUnit unit
 
     MarginBottom _ unit ->
-      "margin-bottom" ++ lenUnit unit
+      "margin-bottom in " ++ lenUnit unit
 
     BorderWidth _ unit ->
-      "border-width" ++ lenUnit unit
+      "border-width in " ++ lenUnit unit
 
     BorderRadius _ unit ->
-      "border-radius" ++ lenUnit unit
+      "border-radius in " ++ lenUnit unit
 
     BorderTopLeftRadius _ unit ->
-      "border-top-left-radius" ++ lenUnit unit
+      "border-top-left-radius in " ++ lenUnit unit
 
     BorderTopRightRadius _ unit ->
-      "border-top-right-radius" ++ lenUnit unit
+      "border-top-right-radius in " ++ lenUnit unit
 
     BorderBottomLeftRadius _ unit ->
-      "border-bottom-left-radius" ++ lenUnit unit
+      "border-bottom-left-radius in " ++ lenUnit unit
 
     BorderBottomRightRadius _ unit ->
-      "border-bottom-right-radius" ++ lenUnit unit
+      "border-bottom-right-radius in " ++ lenUnit unit
 
     LetterSpacing _ unit ->
-      "letter-spacing" ++ lenUnit unit
+      "letter-spacing in " ++ lenUnit unit
 
     LineHeight _ unit ->
-      "line-height" ++ lenUnit unit
+      "line-height in " ++ lenUnit unit
 
     BackgroundPosition _ _ unit ->
-      "background-position" ++ lenUnit unit
+      "background-position in " ++ lenUnit unit
 
     Color _ _ _ _ ->
       "color"
@@ -527,7 +527,7 @@ id prop =
       "border-color"
 
     TransformOrigin _ _ _ unit ->
-      "transform-origin" ++ lenUnit unit
+      "transform-origin in " ++ lenUnit unit
 
     Matrix _ _ _ _ _ _ ->
       "matrix"
@@ -536,16 +536,16 @@ id prop =
       "matrix3d"
 
     Translate _ _ unit ->
-      "translate" ++ lenUnit unit
+      "translate in " ++ lenUnit unit
 
     Translate3d _ _ _ unit ->
-      "translate3d" ++ lenUnit unit
+      "translate3d in " ++ lenUnit unit
 
     TranslateX _ unit ->
-      "translatex" ++ lenUnit unit
+      "translatex in " ++ lenUnit unit
 
     TranslateY _ unit ->
-      "translatey" ++ lenUnit unit
+      "translatey in " ++ lenUnit unit
 
     Scale _ ->
       "scale"
@@ -563,25 +563,25 @@ id prop =
       "scalez"
 
     Rotate _ unit ->
-      "rotate" ++ angleUnit unit
+      "rotate in " ++ angleUnit unit
 
     Rotate3d _ _ _ _ unit ->
-      "rotate3d" ++ angleUnit unit
+      "rotate3d in " ++ angleUnit unit
 
     RotateX _ unit ->
-      "rotatex" ++ angleUnit unit
+      "rotatex in " ++ angleUnit unit
 
     RotateY _ unit ->
-      "rotatey" ++ angleUnit unit
+      "rotatey in " ++ angleUnit unit
 
     Skew _ _ unit ->
-      "skew" ++ angleUnit unit
+      "skew in " ++ angleUnit unit
 
     SkewX _ unit ->
-      "skewx" ++ angleUnit unit
+      "skewx in " ++ angleUnit unit
 
     SkewY _ unit ->
-      "skewy" ++ angleUnit unit
+      "skewy in " ++ angleUnit unit
 
     Perspective _ ->
       "perspective"
