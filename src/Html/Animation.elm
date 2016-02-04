@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -11,7 +11,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation, Action
 
 # Creating an animation
-@docs animate, queue, stagger, props, delay, spring, andThen, on
+@docs animate, queue, stagger, props, delay, spring, easing, andThen, on
 
 # Animating Properties
 
@@ -70,7 +70,7 @@ type alias KeyframeWithOptions =
   { frame : Core.StyleKeyframe
   , duration : Maybe Time
   , easing : Maybe (Float -> Float)
-  , spring : Maybe Spring.Properties
+  , spring : Maybe Spring.Model
   }
 
 
@@ -117,11 +117,12 @@ emptyKeyframe =
 emptyPhysics : a -> Core.Physics a
 emptyPhysics target =
   { target = target
-  , position = 0
+  , physical = 
+        { position = 0
+        , velocity = 0
+        }
   , spring =
-      { velocity = 0
-      , position = 0
-      , stiffness = noWobble.stiffness
+      { stiffness = noWobble.stiffness
       , damping = noWobble.damping
       , destination = 1
       }
@@ -184,46 +185,51 @@ defaultEasing x =
 
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
-noWobble : Spring.Properties
+noWobble : Spring.Model
 noWobble =
   { stiffness = 170
   , damping = 26
+  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-gentle : Spring.Properties
+gentle : Spring.Model
 gentle =
   { stiffness = 120
   , damping = 14
+  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-wobbly : Spring.Properties
+wobbly : Spring.Model
 wobbly =
   { stiffness = 180
   , damping = 12
+  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-stiff : Spring.Properties
+stiff : Spring.Model
 stiff =
   { stiffness = 210
   , damping = 20
+  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-fastAndLoose : Spring.Properties
+fastAndLoose : Spring.Model
 fastAndLoose =
   { stiffness = 320
   , damping = 17
+  , destination = 1
   }
 
 
@@ -628,7 +634,7 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
              ]
          |> UI.on model.style
 -}
-spring : Spring.Properties -> Action -> Action
+spring : Spring.Model -> Action -> Action
 spring spring action =
   updateOrCreate action (\a -> { a | spring = Just spring })
 

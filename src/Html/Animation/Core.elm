@@ -42,7 +42,7 @@ type alias DynamicTarget =
 
 type alias Physics a =
   { target : a
-  , position : Float
+  , physical : Spring.Physical
   , spring : Spring.Model
   , easing : Maybe Easing
   }
@@ -51,7 +51,8 @@ type alias Physics a =
 
 type alias Easing =
   { ease : Float -> Float
-  , counter : Maybe Spring.Model
+  , counterForce : Spring.Model
+  , counterForcePhys : Maybe Spring.Physical
   , duration : Time
   }
 
@@ -184,18 +185,37 @@ done time frame =
   List.all (propDone time) frame.target
 
 
+
+
+--type alias Physics a =
+--  { target : a
+--  , physical : Spring.Physical
+--  , spring : Spring.Model
+--  , easing : Maybe Easing
+--  }
+
+
+
+--type alias Easing =
+--  { ease : Float -> Float
+--  , counterForce : Spring.Model
+--  , counterForcePhys : Maybe Spring.Physical
+--  , duration : Time
+--  }
+
+
 propDone : Time -> StyleProperty (Physics DynamicTarget) -> Bool
 propDone time prop =
   let
     isDone prop =
       case prop.easing of
         Nothing ->
-          Spring.atRest prop.spring
+          Spring.atRest prop.spring prop.physical
 
         Just easing ->
           easing.ease time
             == 1.0
-            && easing.counter
+            && easing.counterForcePhys
             == Nothing
   in
     case prop of
@@ -369,10 +389,10 @@ transferVelocityProp maybeOld target =
               Nothing -> target
               Just old ->
                 let
-                  newSpring = target.spring
-                  springWithNewV = { newSpring | velocity = old.spring.velocity }
+                  newPhys = target.physical
+                  newV = { newPhys | velocity = old.physical.velocity }
                 in
-                  { target | spring = springWithNewV }
+                  { target | physical = newV }
 
 
 
@@ -421,6 +441,7 @@ applyStep current dt maybeFrom physics =
             Nothing ->
               let
 
+                newPhysical = physics.physical
                 newSpring = physics.spring
 
                 pos = 
@@ -428,18 +449,25 @@ applyStep current dt maybeFrom physics =
                     if current == 0.0 && dt == 0.0 then
                         from
                     else
-                        physics.spring.position
+                        physics.physical.position
+
+                targeted = 
+                    { newSpring 
+                        | destination = physics.target from 1.0 
+                    }
 
 
-                targetedSpring = { newSpring | destination = physics.target from 1.0 
-                                             , position = pos }
+                positioned = 
+                    { newPhysical 
+                        | position = pos
+                    }
 
-                finalSpring = 
-                  Spring.update dt targetedSpring
+                finalPhysical = 
+                  Spring.update dt targeted positioned
               in
                 { physics
-                  | spring = finalSpring
-                  , position = finalSpring.position
+                  | physical = finalPhysical
+                  , spring = targeted
                 }
 
             Just easing ->
@@ -447,10 +475,26 @@ applyStep current dt maybeFrom physics =
                 eased =
                   easing.ease (current / easing.duration)
 
-                position =
-                  physics.target from eased
+                physical = physics.physical
+
+                currentPos = physics.target from eased
+
+                finalPhysical = 
+                  { physical 
+                      | position = currentPos
+                      , velocity = velocity physics.physical.position currentPos dt
+                  }
+                  
               in
-                physics
+                { physics
+                    | physical = finalPhysical
+                }
+
+
+velocity : Float -> Float -> Time -> Float
+velocity oldPos newPos dt = 
+              (newPos - oldPos) / dt
+
 
 
 step : StyleKeyframe -> Style -> Time -> Time -> StyleKeyframe
@@ -1194,7 +1238,7 @@ bake frame style =
 
 toStatic : Physics DynamicTarget -> Static
 toStatic physic =
-  physic.position
+  physic.physical.position
 
 
 mapProp : (a -> b) -> StyleProperty a -> StyleProperty b

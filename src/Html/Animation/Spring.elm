@@ -1,76 +1,82 @@
 
-module Html.Animation.Spring (Model, Properties, update, atRest, duration) where
+module Html.Animation.Spring (Model, Physical, update, atRest, duration) where
 
 
 
 import Time exposing (Time, second)
 
+--type alias Model =
+--  { stiffness : Float
+--  , damping : Float
+--  , position : Float
+--  , velocity : Float
+--  , destination : Float
+--  }
+
+
 type alias Model =
   { stiffness : Float
   , damping : Float
-  , position : Float
-  , velocity : Float
   , destination : Float
   }
 
-
-type alias Properties =
-  { stiffness : Float
-  , damping : Float
+type alias Physical =
+  { position : Float
+  , velocity : Float
   }
 
 tolerance =
   1.0e-4
 
-update : Time -> Model -> Model
-update dtms spring =
+update : Time -> Model -> Physical -> Physical
+update dtms spring phys =
   let
 
     dt =
       dtms / 1000
 
     fspring =
-      -spring.stiffness * (spring.position - spring.destination)
+      -spring.stiffness * (phys.position - spring.destination)
 
     fdamper =
-      -spring.damping * spring.velocity
+      -spring.damping * phys.velocity
 
     a =
       fspring + fdamper
 
     newV =
-      spring.velocity + a * dt
+      phys.velocity + a * dt
 
     newX =
-      spring.position + newV * dt
+      phys.position + newV * dt
 
   in
     if (abs (spring.destination - newX)) < tolerance && abs newV < tolerance then
-      { spring
+      { phys
         | position = spring.destination
         , velocity = 0.0
       }
     else
-      { spring
+      { phys
         | position = newX
         , velocity = newV
       }
 
 
-atRest : Model -> Bool
-atRest spring =
-  spring.position == spring.destination && spring.velocity == 0
+atRest : Model -> Physical -> Bool
+atRest spring physical =
+  physical.position == spring.destination && physical.velocity == 0
 
 
-duration : Model -> Time
-duration spring =
+duration : Model -> Physical -> Time
+duration spring phys =
   snd
     <| List.foldl
-        (\t ( spg, d ) ->
-          if atRest spg then
-            ( spg, d )
-          else
-            ( update t spg, t )
+        (\t ( phys, d ) ->
+          if atRest spring phys then
+            ( phys, d )
+          else 
+           ( update t spring phys, t )
         )
-        ( spring, 0 )
+        ( phys, 0 )
         [1..1000]
