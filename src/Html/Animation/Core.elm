@@ -74,17 +74,20 @@ update action model =
       let
         currentAnim =
           List.head model.anim
-
-        previous =
+        (previous, newAnims) =
           case currentAnim of
             Nothing ->
-              model.previous
+              ( model.previous
+              , anims
+              )
 
             Just frame ->
-              bake frame model.previous
+              ( bake frame model.previous
+              , mapTo 0 (\a -> transferVelocity frame a) anims
+              )
       in
         ( { model
-              | anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
+              | anim = mapTo 0 (\a -> step a previous 0.0 0.0) newAnims
               , elapsed = 0.0
               , start = Nothing
               , previous = previous
@@ -140,6 +143,9 @@ update action model =
                   previous =
                     bake current model.previous
 
+                  newAnims = 
+                    mapTo 0 (\a -> transferVelocity current a) anims
+
                   resetElapsed =
                     elapsed
 
@@ -150,8 +156,7 @@ update action model =
                         | elapsed = 0.0
                         , start = Just now
                         , previous = previous
-                        , anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
-                        --, anim = Debug.log "finished" <| mapTo 0 (\a -> step a previous resetElapsed resetElapsed) anims
+                        , anim = mapTo 0 (\a -> step a previous 0.0 0.0) newAnims
                       }
                   , Effects.tick Tick
                   )
