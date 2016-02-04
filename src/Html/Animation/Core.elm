@@ -358,6 +358,95 @@ propDone time prop =
 
 
 
+transferVelocityProp : Maybe (Physics DynamicTarget) -> Physics DynamicTarget -> Physics DynamicTarget 
+transferVelocityProp maybeOld target = 
+            case maybeOld of
+              Nothing -> target
+              Just old ->
+                let
+                  newSpring = target.spring
+                  springWithNewV = { newSpring | velocity = old.spring.velocity }
+                in
+                  { target | spring = springWithNewV }
+
+
+
+
+transferVelocity : StyleKeyframe -> StyleKeyframe -> StyleKeyframe
+transferVelocity old new =
+  let
+    style =
+      List.foldl
+        (\x acc ->
+          -- need to know how many times x has shown up already.
+          let
+            xI =
+              List.foldl
+                (\x2 count ->
+                  if Render.id x == Render.id x2 then
+                    count + 1
+                  else
+                    count
+                )
+                0
+                acc
+          in
+            case findProp old.target x xI of
+              Nothing ->
+                acc
+
+              Just prevX ->
+                acc ++ [ stepProp x prevX <| transferVelocityProp ]
+        )
+        []
+        new.target
+  in
+    { new | target = style }
+
+
+
+applyStep : Time -> Time -> Maybe Float -> Physics DynamicTarget -> Physics DynamicTarget
+applyStep current dt maybeFrom physics = 
+      case maybeFrom of
+        Nothing ->
+          physics
+
+        Just from ->
+          case physics.easing of
+            Nothing ->
+              let
+
+                newSpring = physics.spring
+
+                pos = 
+                    -- Kind of a hack to establish initial values :/
+                    if current == 0.0 && dt == 0.0 then
+                        from
+                    else
+                        physics.spring.position
+
+
+                targetedSpring = { newSpring | destination = physics.target from 1.0 
+                                             , position = pos }
+
+                finalSpring = 
+                  Spring.update dt targetedSpring
+              in
+                { physics
+                  | spring = finalSpring
+                  , position = finalSpring.position
+                }
+
+            Just easing ->
+              let
+                eased =
+                  easing.ease (current / easing.duration)
+
+                position =
+                  physics.target from eased
+              in
+                physics
+
 
 step : StyleKeyframe -> Style -> Time -> Time -> StyleKeyframe
 step frame prev current dt =
@@ -383,7 +472,7 @@ step frame prev current dt =
                 acc
 
               Just prevX ->
-                acc ++ [ stepProp x prevX current dt ]
+                acc ++ [ stepProp x prevX <| applyStep current dt ]
         )
         []
         frame.target
@@ -391,59 +480,19 @@ step frame prev current dt =
     { frame | target = style }
 
 
-stepProp : StyleProperty (Physics DynamicTarget) -> StyleProperty Static -> Time -> Time -> StyleProperty (Physics DynamicTarget)
-stepProp prop prev current dt =
-  let
-    val from physics =
-      case physics.easing of
-        Nothing ->
-          let
-            --target =
-              --physics.target from 1.0
 
-            --initialPos = physics.target from 0.0
-
-            newSpring = physics.spring
-
-            pos = 
-                -- HAAAAACK, Oh lord this is a hack :/
-                if current == 0.0 && dt == 0.0 then
-                    from
-                else
-                    physics.spring.position
-
-
-            targetedSpring = { newSpring | destination = physics.target from 1.0 
-                                         , position = pos }
-
-            finalSpring = 
-              Spring.update dt targetedSpring
-          in
-            { physics
-              | spring = finalSpring
-              , position = finalSpring.position
-            }
-
-        Just easing ->
-          let
-            eased =
-              easing.ease (current / easing.duration)
-
-            position =
-              physics.target from eased
-          in
-            physics
-  in
+stepProp : StyleProperty a -> StyleProperty b -> (Maybe b -> a -> a) -> StyleProperty a
+stepProp prop prev val =
     case prop of
       Prop name to unit ->
         let
           from =
             case prev of
               Prop _ x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Prop name (val from to) unit
 
@@ -452,10 +501,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Opacity x ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Opacity (val from to)
 
@@ -465,10 +514,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Height x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Height (val from to) unit
 
@@ -477,10 +526,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Width x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Width (val from to) unit
 
@@ -489,10 +538,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Left x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Left (val from to) unit
 
@@ -501,10 +550,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Top x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Top (val from to) unit
 
@@ -513,10 +562,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Right x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Right (val from to) unit
 
@@ -525,10 +574,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Bottom x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Bottom (val from to) unit
 
@@ -537,10 +586,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MaxHeight x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MaxHeight (val from to) unit
 
@@ -549,10 +598,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MaxWidth x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MaxWidth (val from to) unit
 
@@ -561,10 +610,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MinHeight x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MinHeight (val from to) unit
 
@@ -573,10 +622,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MinWidth x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MinWidth (val from to) unit
 
@@ -585,10 +634,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Padding x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Padding (val from to) unit
 
@@ -597,10 +646,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               PaddingLeft x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           PaddingLeft (val from to) unit
 
@@ -609,10 +658,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               PaddingRight x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           PaddingRight (val from to) unit
 
@@ -621,10 +670,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               PaddingTop x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           PaddingTop (val from to) unit
 
@@ -633,10 +682,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               PaddingBottom x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           PaddingBottom (val from to) unit
 
@@ -645,10 +694,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Margin x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Margin (val from to) unit
 
@@ -657,10 +706,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MarginLeft x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MarginLeft (val from to) unit
 
@@ -669,10 +718,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MarginRight x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MarginRight (val from to) unit
 
@@ -681,10 +730,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MarginTop x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MarginTop (val from to) unit
 
@@ -693,10 +742,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               MarginBottom x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           MarginBottom (val from to) unit
 
@@ -705,10 +754,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               BorderWidth x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           BorderWidth (val from to) unit
 
@@ -717,10 +766,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               BorderRadius x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           BorderRadius (val from to) unit
 
@@ -729,10 +778,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               BorderTopLeftRadius x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           BorderTopLeftRadius (val from to) unit
 
@@ -741,10 +790,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               BorderTopRightRadius x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           BorderTopRightRadius (val from to) unit
 
@@ -753,10 +802,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               BorderBottomLeftRadius x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           BorderBottomLeftRadius (val from to) unit
 
@@ -765,10 +814,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               BorderBottomRightRadius x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           BorderBottomRightRadius (val from to) unit
 
@@ -777,10 +826,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               LetterSpacing x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           LetterSpacing (val from to) unit
 
@@ -789,30 +838,30 @@ stepProp prop prev current dt =
           from =
             case prev of
               LineHeight x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           LineHeight (val from to) unit
 
       BackgroundPosition x y unit ->
         case prev of
           BackgroundPosition xFrom yFrom _ ->
-            BackgroundPosition (val xFrom x) (val yFrom y) unit
+            BackgroundPosition (val (Just xFrom) x) (val (Just yFrom) y) unit
 
           _ ->
-            BackgroundPosition (val 0.0 x) (val 0.0 y) unit
+            BackgroundPosition (val Nothing x) (val Nothing y) unit
 
       Color x y z a ->
         let
           ( xFrom, yFrom, zFrom, aFrom ) =
             case prev of
               Color x1 y1 z1 a1 ->
-                ( x1, y1, z1, a1 )
+                (Just x1,Just y1,Just z1,Just a1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0, 0.0 )
+                ( Nothing, Nothing, Nothing, Nothing )
         in
           Color (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
@@ -821,10 +870,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom, zFrom, aFrom ) =
             case prev of
               BorderColor x1 y1 z1 a1 ->
-                ( x1, y1, z1, a1 )
+                (Just x1,Just y1,Just z1,Just a1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0, 0.0 )
+                ( Nothing, Nothing, Nothing, Nothing )
         in
           BorderColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
@@ -833,10 +882,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom, zFrom, aFrom ) =
             case prev of
               BackgroundColor x1 y1 z1 a1 ->
-                ( x1, y1, z1, a1 )
+                  (Just x1,Just y1,Just z1,Just a1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0, 0.0 )
+                ( Nothing, Nothing, Nothing, Nothing )
         in
           BackgroundColor (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a)
 
@@ -845,10 +894,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom, zFrom ) =
             case prev of
               TransformOrigin x1 y1 z1 _ ->
-                ( x1, y1, z1 )
+                (Just x1,Just y1,Just z1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0 )
+                ( Nothing, Nothing, Nothing )
         in
           TransformOrigin (val xFrom x) (val yFrom y) (val zFrom z) unit
 
@@ -857,10 +906,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom ) =
             case prev of
               Translate x1 y1 _ ->
-                ( x1, y1 )
+                (Just x1,Just y1 )
 
               _ ->
-                ( 0.0, 0.0 )
+                ( Nothing, Nothing )
         in
           Translate (val xFrom x) (val yFrom y) unit
 
@@ -869,10 +918,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom, zFrom ) =
             case prev of
               Translate3d x1 y1 z1 _ ->
-                ( x1, y1, z1 )
+                (Just x1,Just y1,Just z1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0 )
+                (Nothing,Nothing,Nothing )
         in
           Translate3d (val xFrom x) (val yFrom y) (val zFrom z) unit
 
@@ -881,10 +930,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               TranslateX x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           TranslateX (val from to) unit
 
@@ -893,10 +942,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               TranslateY x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           TranslateY (val from to) unit
 
@@ -905,10 +954,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Scale x ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Scale (val from to)
 
@@ -917,10 +966,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom, zFrom ) =
             case prev of
               Scale3d x1 y1 z1 ->
-                ( x1, y1, z1 )
+                (Just x1,Just y1,Just z1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0 )
+                ( Nothing, Nothing, Nothing )
         in
           Scale3d (val xFrom x) (val yFrom y) (val zFrom z)
 
@@ -929,10 +978,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               ScaleX x ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           ScaleX (val from to)
 
@@ -941,10 +990,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               ScaleY x ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           ScaleY (val from to)
 
@@ -953,10 +1002,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               ScaleZ x ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           ScaleZ (val from to)
 
@@ -965,10 +1014,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               Rotate x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Rotate (val from to) unit
 
@@ -977,10 +1026,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom, zFrom, aFrom ) =
             case prev of
               Rotate3d x1 y1 z1 a1 _ ->
-                ( x1, y1, z1, a1 )
+                (Just x1,Just y1,Just z1,Just a1 )
 
               _ ->
-                ( 0.0, 0.0, 0.0, 0.0 )
+                ( Nothing, Nothing, Nothing, Nothing )
         in
           Rotate3d (val xFrom x) (val yFrom y) (val zFrom z) (val aFrom a) unit
 
@@ -989,10 +1038,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               RotateX x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           RotateX (val from to) unit
 
@@ -1001,10 +1050,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               RotateY x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           RotateY (val from to) unit
 
@@ -1013,10 +1062,10 @@ stepProp prop prev current dt =
           ( xFrom, yFrom ) =
             case prev of
               Skew x y _ ->
-                ( x, y )
+                ( Just x, Just y )
 
               _ ->
-                ( 0.0, 0.0 )
+                ( Nothing, Nothing )
         in
           Skew (val xFrom x) (val yFrom y) unit
 
@@ -1025,10 +1074,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               SkewX x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           SkewX (val from to) unit
 
@@ -1037,10 +1086,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               SkewY x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           SkewY (val from to) unit
 
@@ -1049,10 +1098,10 @@ stepProp prop prev current dt =
           from =
             case prev of
               SkewY x _ ->
-                x
+                Just x
 
               _ ->
-                0.0
+                Nothing
         in
           Perspective (val from to)
 
@@ -1060,61 +1109,61 @@ stepProp prop prev current dt =
         case prev of
           Matrix aFrom bFrom cFrom xFrom yFrom zFrom ->
             Matrix
-              (val aFrom a)
-              (val bFrom b)
-              (val cFrom c)
-              (val xFrom x)
-              (val yFrom y)
-              (val zFrom z)
+              (val (Just aFrom) a)
+              (val (Just bFrom) b)
+              (val (Just cFrom) c)
+              (val (Just xFrom) x)
+              (val (Just yFrom) y)
+              (val (Just zFrom) z)
 
           _ ->
             Matrix
-              (val 0.0 a)
-              (val 0.0 b)
-              (val 0.0 c)
-              (val 0.0 x)
-              (val 0.0 y)
-              (val 0.0 z)
+              (val Nothing a)
+              (val Nothing b)
+              (val Nothing c)
+              (val Nothing x)
+              (val Nothing y)
+              (val Nothing z)
 
       Matrix3d a b c d e f g h i j k l m n o p ->
         case prev of
           Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2 ->
             Matrix3d
-              (val a2 a)
-              (val b2 b)
-              (val c2 c)
-              (val d2 d)
-              (val e2 e)
-              (val f2 f)
-              (val g2 g)
-              (val h2 h)
-              (val i2 i)
-              (val j2 j)
-              (val k2 k)
-              (val l2 l)
-              (val m2 m)
-              (val n2 n)
-              (val o2 o)
-              (val p2 p)
+              (val (Just a2) a)
+              (val (Just b2) b)
+              (val (Just c2) c)
+              (val (Just d2) d)
+              (val (Just e2) e)
+              (val (Just f2) f)
+              (val (Just g2) g)
+              (val (Just h2) h)
+              (val (Just i2) i)
+              (val (Just j2) j)
+              (val (Just k2) k)
+              (val (Just l2) l)
+              (val (Just m2) m)
+              (val (Just n2) n)
+              (val (Just o2) o)
+              (val (Just p2) p)
 
           _ ->
             Matrix3d
-              (val 0.0 a)
-              (val 0.0 b)
-              (val 0.0 c)
-              (val 0.0 d)
-              (val 0.0 e)
-              (val 0.0 f)
-              (val 0.0 g)
-              (val 0.0 h)
-              (val 0.0 i)
-              (val 0.0 j)
-              (val 0.0 k)
-              (val 0.0 l)
-              (val 0.0 m)
-              (val 0.0 n)
-              (val 0.0 o)
-              (val 0.0 p)
+              (val Nothing a)
+              (val Nothing b)
+              (val Nothing c)
+              (val Nothing d)
+              (val Nothing e)
+              (val Nothing f)
+              (val Nothing g)
+              (val Nothing h)
+              (val Nothing i)
+              (val Nothing j)
+              (val Nothing k)
+              (val Nothing l)
+              (val Nothing m)
+              (val Nothing n)
+              (val Nothing o)
+              (val Nothing p)
 
 
 
@@ -1314,7 +1363,7 @@ mapProp fn prop =
  propCount refers to the how many times a property shows up
  in the original list that prop is being pulled from
 -}
-findProp : Style -> StyleProperty a -> Int -> Maybe (StyleProperty Static)
+findProp : List (StyleProperty a) -> StyleProperty b -> Int -> Maybe (StyleProperty a)
 findProp state prop propCount =
   let
     findBy fn xs =
