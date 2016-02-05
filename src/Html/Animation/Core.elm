@@ -99,8 +99,10 @@ update action model =
       --    ( A model, Effects.none )
       --else
       let
+
         currentAnim =
           List.head model.anim
+
         (previous, newAnims) =
           case currentAnim of
             Nothing ->
@@ -124,7 +126,7 @@ update action model =
 
     Tick now ->
       let
-        start =
+        prelimStart =
           case model.start of
             Nothing ->
               now
@@ -132,9 +134,29 @@ update action model =
             Just t ->
               t
 
-        elapsed =
-          now - start
+        prelimElapsed =
+          now - prelimStart
 
+        prelimDt = 
+          prelimElapsed - model.elapsed
+
+
+        -- if dt is very large (starting at, maybe, 300ms)
+        -- then it's most likely because someone left the 
+        -- browser mid animation and then returned.
+        -- The browser 'pauses' the animation until it's viewed again.
+        -- the longer the user is gone, the longer the pause.
+        --  This can cause very screwy results, as you might imagine.
+        -- To fix this, if there is a large dt, then
+        --   * start is reset
+        --   * elapsed is reset
+        --   * this frame is essentially skipped.
+        (start, elapsed, dt) = 
+          if prelimDt > 300 then
+              (now - model.elapsed, model.elapsed, 0)
+          else
+            (prelimStart, prelimElapsed, prelimDt)
+        
         currentAnim =
           List.head model.anim
 
@@ -157,53 +179,57 @@ update action model =
               animElapsed =
                 elapsed - current.delay
             in
-              if animElapsed >= 0.0 && done animElapsed current then
-                let
-                  anims =
-                    case remaining of
-                      Nothing ->
-                        []
+              if dt == 0 || animElapsed < 0 then
+                -- Nothing has happened
+                ( { model
+                        | elapsed = elapsed
+                        , start = Just start
+                      }
+                  , Effects.tick Tick
+                )
+              else
+                if animElapsed >= 0.0 && done animElapsed current then
+                  -- animation is finished, switch to new frame
+                  let
+                    anims =
+                      case remaining of
+                        Nothing ->
+                          []
 
-                      Just a ->
-                        a
+                        Just a ->
+                          a
 
-                  previous =
-                    bake current model.previous
+                    previous =
+                      bake current model.previous
 
-                  newAnims = 
-                    mapTo 0 (\a -> transferVelocity current a) anims
+                    newAnims = 
+                      mapTo 0 (\a -> transferVelocity current a) anims
 
-                  resetElapsed =
-                    elapsed
+                    resetElapsed =
+                      elapsed
 
-                
-                  --newElapsed - (current.duration + current.delay)
-                in
+                  
+                    --newElapsed - (current.duration + current.delay)
+                  in
+                    (  { model
+                          | elapsed = 0.0
+                          , start = Just now
+                          , previous = previous
+                          , anim = mapTo 0 (\a -> step a previous 0.0 0.0) newAnims
+                        }
+                    , Effects.tick Tick
+                    )
+                else 
+                  -- normal tick
                   (  { model
-                        | elapsed = 0.0
-                        , start = Just now
-                        , previous = previous
-                        , anim = mapTo 0 (\a -> step a previous 0.0 0.0) newAnims
+                        | elapsed = elapsed
+                        , start = Just start
+                        , anim = mapTo 0 (\a -> step a model.previous animElapsed dt) model.anim
                       }
                   , Effects.tick Tick
                   )
-              else if animElapsed >= 0.0 then
-                (  { model
-                      | elapsed = elapsed
-                      , start = Just start
-                      , anim = mapTo 0 (\a -> step a model.previous animElapsed (elapsed - model.elapsed)) model.anim
-                    }
-                , Effects.tick Tick
-                )
-              else
-                ( { model
-                      | elapsed = elapsed
-                      , start = Just start
-                      , anim = model.anim
-                    }
-                , Effects.tick Tick
-                )
 
+                 
 
 
 done : Time -> StyleKeyframe -> Bool
