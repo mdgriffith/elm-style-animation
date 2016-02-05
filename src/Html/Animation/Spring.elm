@@ -26,7 +26,7 @@ type alias Physical =
   }
 
 tolerance =
-  1.0e-4
+  1.0e-3
 
 update : Time -> Model -> Physical -> Physical
 update dtms spring phys =
@@ -65,7 +65,8 @@ update dtms spring phys =
 
 atRest : Model -> Physical -> Bool
 atRest spring physical =
-  physical.position == spring.destination && physical.velocity == 0
+     abs (spring.destination - physical.position) < tolerance 
+  && abs physical.velocity < tolerance
 
 
 duration : Model -> Physical -> Time
@@ -76,7 +77,7 @@ duration spring phys =
           if atRest spring phys then
             ( phys, d )
           else 
-           ( update t spring phys, t )
+           ( update 1 spring phys, t )
         )
         ( phys, 0 )
-        [1..1000]
+        [1..10000] -- Ticks in ms
