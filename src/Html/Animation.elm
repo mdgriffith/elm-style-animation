@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -11,7 +11,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation, Action
 
 # Creating an animation
-@docs animate, queue, stagger, props, delay, spring, easing, andThen, on
+@docs animate, queue, stagger, props, delay, spring, duration, easing, andThen, on
 
 # Animating Properties
 
@@ -169,17 +169,6 @@ init sty =
     A { empty | previous = deduped }
 
 
-
-
-defaultDuration : Float
-defaultDuration =
-  0.35 * second
-
-
-
-defaultEasing : Float -> Float
-defaultEasing x =
-  (1 - cos (pi * x)) / 2
 
 
 
@@ -392,8 +381,32 @@ applyKeyframeOptions options =
                       | stiffness = partialSpring.stiffness
                       , damping = partialSpring.damping
                     }
+            newEasing = Core.emptyEasing
+
+
+            withEase =
+                Maybe.map 
+                    (\ease ->
+                        { newEasing | ease = ease }
+                           
+
+                    ) 
+                    options.easing
+
+            withDuration = 
+              case options.duration of
+                Nothing ->
+                    withEase
+                Just dur ->
+                    case withEase of
+                        Nothing ->
+                            Just { newEasing | duration = dur }
+                        Just ease ->
+                            Just { ease | duration = dur }
+
           in
-            { a | spring = newSpring }
+            { a | spring = newSpring
+                , easing = withDuration }
       in
         Core.mapProp addOptions prop
   in

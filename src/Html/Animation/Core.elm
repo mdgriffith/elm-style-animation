@@ -1,4 +1,4 @@
-module Html.Animation.Core (Model, Action (..), StyleKeyframe, Style, Physics, DynamicTarget, update, step, mapProp, bake) where
+module Html.Animation.Core (Model, Action (..), StyleKeyframe, Style, Physics, DynamicTarget, update, step, mapProp, bake, emptyEasing) where
 
 import Time exposing (Time, second)
 import Effects exposing (Effects)
@@ -55,6 +55,32 @@ type alias Easing =
   , counterForcePhys : Maybe Spring.Physical
   , duration : Time
   }
+
+
+
+emptyEasing =
+  { ease = defaultEasing
+  , counterForce = 
+                { stiffness = 170
+                , damping = 26
+                , destination = 1
+                }
+  , counterForcePhys = Nothing
+  , duration = defaultDuration
+  }
+
+
+
+
+defaultDuration : Float
+defaultDuration =
+  0.35 * second
+
+
+
+defaultEasing : Float -> Float
+defaultEasing x =
+  (1 - cos (pi * x)) / 2
 
 
 
@@ -213,8 +239,7 @@ propDone time prop =
           Spring.atRest prop.spring prop.physical
 
         Just easing ->
-          easing.ease time
-            == 1.0
+          time >= easing.duration
             && easing.counterForcePhys
             == Nothing
   in
@@ -395,8 +420,6 @@ transferVelocityProp maybeOld target =
                   { target | physical = newV }
 
 
-
-
 transferVelocity : StyleKeyframe -> StyleKeyframe -> StyleKeyframe
 transferVelocity old new =
   let
@@ -478,7 +501,7 @@ applyStep current dt maybeFrom physics =
 
             Just easing ->
               let
-                eased =
+                eased = 
                   easing.ease (current / easing.duration)
 
                 physical = physics.physical
