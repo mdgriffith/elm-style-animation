@@ -202,8 +202,8 @@ update action model =
                     previous =
                       bake current model.previous
 
-                    newAnims = 
-                      mapTo 0 (\a -> transferVelocity current a) anims
+                    newAnims = anims
+                      --mapTo 0 (\a -> transferVelocity current a) anims
 
                     resetElapsed =
                       elapsed
@@ -236,24 +236,6 @@ done : Time -> StyleKeyframe -> Bool
 done time frame =
   List.all (propDone time) frame.target
 
-
-
-
---type alias Physics a =
---  { target : a
---  , physical : Spring.Physical
---  , spring : Spring.Model
---  , easing : Maybe Easing
---  }
-
-
-
---type alias Easing =
---  { ease : Float -> Float
---  , counterForce : Spring.Model
---  , counterForcePhys : Maybe Spring.Physical
---  , duration : Time
---  }
 
 
 propDone : Time -> StyleProperty (Physics DynamicTarget) -> Bool
@@ -442,8 +424,41 @@ transferVelocityProp maybeOld target =
                 let
                   newPhys = target.physical
                   newV = { newPhys | velocity = old.physical.velocity }
+
+                  -- If the target physics is easing based,
+                  --  calculate a new velocity based on 
+                  -- what the easing velocity will be minus the old.physical.velocity
+                  --  Everyhting left over will transfer to the counterForce spring
                 in
-                  { target | physical = newV }
+                  case target.easing of
+                    Nothing -> { target | physical = newV }
+                    Just easing ->
+                      let
+                        sampleSize = 16.0 -- how many milliseconds to take the sample at
+
+                        eased = 
+                          easing.ease (sampleSize/easing.duration)
+
+                        easeV = 
+                          velocity 0 eased sampleSize -- easing initial velocity
+
+                        deltaV = 
+                            old.physical.velocity - easeV
+
+                        newEasing = 
+                          Just <|
+                            { easing | 
+                                counterForcePhys = 
+                                  Just <|
+                                        { position = 0
+                                        , velocity = deltaV
+                                        }
+                            }
+                        
+                      in
+                        { target | easing = newEasing
+                                 , physical = newV }
+
 
 
 transferVelocity : StyleKeyframe -> StyleKeyframe -> StyleKeyframe
@@ -476,7 +491,7 @@ transferVelocity old new =
                   acc
 
               Just prevX ->
-                acc ++ [ stepProp x prevX <| transferVelocityProp ]
+                acc ++ [ stepProp x prevX transferVelocityProp ]
         )
         []
         new.target
