@@ -56,14 +56,10 @@ import Html.Animation.Spring as Spring
 import Html.Animation.Core as Core
 
 
-
 {-| An Animation of CSS properties.
 -}
 type Animation
   = A Core.Model
-
-
-
 
 
 type alias KeyframeWithOptions =
@@ -72,8 +68,6 @@ type alias KeyframeWithOptions =
   , easing : Maybe (Float -> Float)
   , spring : Maybe Spring.Model
   }
-
-
 
 
 {-| Actions to be run on an animation.
@@ -86,7 +80,9 @@ type alias PreAction =
   , action : List Core.StyleKeyframe -> Core.Action
   }
 
-type alias Dynamic = Core.Physics Core.DynamicTarget
+
+type alias Dynamic =
+  Core.Physics Core.DynamicTarget
 
 
 type Action
@@ -95,15 +91,13 @@ type Action
   | Internal Core.Action
 
 
-
-
-
 empty : Core.Model
 empty =
   { elapsed = 0.0
   , start = Nothing
   , anim = []
   , previous = []
+  , interruption = Nothing
   }
 
 
@@ -117,10 +111,10 @@ emptyKeyframe =
 emptyPhysics : a -> Core.Physics a
 emptyPhysics target =
   { target = target
-  , physical = 
-        { position = 0
-        , velocity = 0
-        }
+  , physical =
+      { position = 0
+      , velocity = 0
+      }
   , spring =
       { stiffness = noWobble.stiffness
       , damping = noWobble.damping
@@ -129,13 +123,13 @@ emptyPhysics target =
   , easing = Nothing
   }
 
+
 emptyKeyframeWithOptions =
   { frame = emptyKeyframe
   , duration = Nothing
   , easing = Nothing
   , spring = Nothing
   }
-
 
 
 {-| Create an initial style for your init model.
@@ -167,9 +161,6 @@ init sty =
         sty
   in
     A { empty | previous = deduped }
-
-
-
 
 
 {-| A spring preset.  Probably should be your initial goto for using springs.
@@ -235,7 +226,6 @@ update action (A model) =
 
 
 
-
 --finalStyle : Style -> List Core.StyleKeyframe -> Style
 --finalStyle style keyframes =
 --                List.foldl
@@ -252,7 +242,6 @@ update action (A model) =
 --                            final2 = finalStyle style frame2
 --                          in
 --                            final1 == final2
-
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -339,18 +328,18 @@ on model action =
 -}
 resolve : Action -> Int -> Int -> Core.Action
 resolve stag t i =
-    case stag of
-      Unstaggered preaction ->
-        preaction.action
-          <| List.map
-              applyKeyframeOptions
-              preaction.frames
+  case stag of
+    Unstaggered preaction ->
+      preaction.action
+        <| List.map
+            applyKeyframeOptions
+            preaction.frames
 
-      Staggered s ->
-        resolve (s (toFloat t) (toFloat i)) t i
+    Staggered s ->
+      resolve (s (toFloat t) (toFloat i)) t i
 
-      Internal ia ->
-        ia
+    Internal ia ->
+      ia
 
 
 applyKeyframeOptions : KeyframeWithOptions -> Core.StyleKeyframe
@@ -377,38 +366,38 @@ applyKeyframeOptions options =
                       | stiffness = partialSpring.stiffness
                       , damping = partialSpring.damping
                     }
-            newEasing = Core.emptyEasing
 
+            newEasing =
+              Core.emptyEasing
 
             withEase =
-                Maybe.map 
-                    (\ease ->
-                        { newEasing | ease = ease }
-                           
+              Maybe.map
+                (\ease ->
+                  { newEasing | ease = ease }
+                )
+                options.easing
 
-                    ) 
-                    options.easing
-
-            withDuration = 
+            withDuration =
               case options.duration of
                 Nothing ->
-                    withEase
-                Just dur ->
-                    case withEase of
-                        Nothing ->
-                            Just { newEasing | duration = dur }
-                        Just ease ->
-                            Just { ease | duration = dur }
+                  withEase
 
+                Just dur ->
+                  case withEase of
+                    Nothing ->
+                      Just { newEasing | duration = dur }
+
+                    Just ease ->
+                      Just { ease | duration = dur }
           in
-            { a | spring = newSpring
-                , easing = withDuration }
+            { a
+              | spring = newSpring
+              , easing = withDuration
+            }
       in
         Core.mapProp addOptions prop
   in
     { frame | target = List.map applyOpt frame.target }
-
-
 
 
 {-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
@@ -444,8 +433,8 @@ Which you can then use to apply an animation to a widget in a list.
 forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
 forwardTo toInternalAction styleGet styleSet i widgets action =
   let
-
-    numWidgets = List.length widgets
+    numWidgets =
+      List.length widgets
 
     ( widgets, effects ) =
       List.unzip
@@ -453,7 +442,9 @@ forwardTo toInternalAction styleGet styleSet i widgets action =
             (\j widget ->
               if j == i then
                 let
-                  (A anim) = styleGet widget
+                  (A anim) =
+                    styleGet widget
+
                   ( newStyle, fx ) =
                     Core.update
                       (resolve action numWidgets i)
@@ -488,19 +479,22 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
     --                      [1..List.length widgets]
     --                |> List.maximum
     --                |> Maybe.withDefault 0.0
-    numWidgets = List.length widgets
+    numWidgets =
+      List.length widgets
+
     ( widgets, effects ) =
       List.unzip
         <| List.indexedMap
             (\i widget ->
               let
-                (A anim) = styleGet widget
+                (A anim) =
+                  styleGet widget
+
                 ( newStyle, fx ) =
                   Core.update
                     --(normalizedDuration largestDuration (resolve action i))
                     (resolve action numWidgets i)
                     anim
-                    
               in
                 ( styleSet widget (A newStyle)
                 , Effects.map
@@ -966,13 +960,7 @@ renderProp prop =
   )
 
 
+
 --bakeFinal : Core.StyleKeyframe -> Style -> Style
 --bakeFinal frame style = style
-
-
-
 -- Update
-
-
-
-

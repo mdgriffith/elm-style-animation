@@ -15,6 +15,7 @@ import Time exposing (second)
 
 import Html.Animation as UI
 import Html.Animation.Properties exposing (..)
+import Easing exposing (easeInBounce, easeInSine, easeOutSine)
 
 import String
 import Graphics.Element exposing (Element)
@@ -39,12 +40,14 @@ tests =
 
 
 type Action = NoOp
-            | DelayTest
+            | StartDelayTest
+            | InterruptWithDelay
             | AnimateWidget UI.Action 
 
 
 type alias Model = 
             { widget : UI.Animation
+            , interruptable : Bool
             }
 
 
@@ -58,19 +61,30 @@ update action model =
       ( model, Effects.none )
 
 
-    DelayTest ->
+    StartDelayTest ->
       let 
         (anim, fx) = 
               UI.animate 
-                 --|> UI.duration (0.4*second)
+                 |> UI.duration (5.0*second)
+                 |> UI.easing easeInBounce
                  |> UI.props 
                      [ Left (UI.to 50) Percent
                      ] 
-              --|> UI.andThen
-              --   |> UI.delay (0.5*second)
-              --   |> UI.props 
-              --       [ Left (UI.to 50) Percent
-              --       ] 
+                 |> UI.on model.widget
+      in
+        ( { model | widget = anim
+                  , interruptable = True 
+                  }
+        , Effects.map AnimateWidget fx )
+
+    InterruptWithDelay ->
+      let 
+        (anim, fx) = 
+              UI.animate 
+                 |> UI.delay (1.0 * second)
+                 |> UI.props 
+                     [ Left (UI.to 100) Percent
+                     ] 
                  |> UI.on model.widget
       in
         ( { model | widget = anim }
@@ -104,34 +118,42 @@ view address model =
                        [ text "Test Suite"]
                   , fromElement <| elementRunner tests
                   , hr [ style [("height", "1px"), ("border", "none"), ("background-color", "#CCC")]] []
-                  , delay address model.widget
+                  , delay address model
                   ]
 
 
-delay : Address Action -> UI.Animation -> Html
-delay address anim = 
-        div [ onClick address DelayTest
-            , style 
-                [ ("cursor", "pointer")
-                , ("width", "100%")
-               
-                --, 
-                ]
-            ] 
-            [ h1 [] [text "Test Delay"]
-            , div [ style  
-                      [ ("height", "0px")
-                      , ("border-top", "2px dashed #CCC")
-                      ]
+delay : Address Action -> Model -> Html
+delay address model = 
+        let
+          action = 
+            if model.interruptable then
+              InterruptWithDelay
+            else
+              StartDelayTest
+
+        in
+          div [ onClick address action
+              , style 
+                  [ ("cursor", "pointer")
+                  , ("width", "100%")
+                 
+                  --, 
                   ]
-                  [ div [ style <| 
-                          [ ("position", "relative")
-                          , ("margin-top", "-11px")
-                          ] ++ (UI.render anim)
-                        ] 
-                        []
-                ]
-            ]
+              ] 
+              [ h1 [] [text "Test Delay"]
+              , div [ style  
+                        [ ("height", "0px")
+                        , ("border-top", "2px dashed #CCC")
+                        ]
+                    ]
+                    [ div [ style <| 
+                            [ ("position", "relative")
+                            , ("margin-top", "-11px")
+                            ] ++ (UI.render model.widget)
+                          ] 
+                          []
+                  ]
+              ]
 
 
 init : ( Model, Effects Action )
@@ -142,7 +164,9 @@ init = ( { widget = UI.init
                         , BackgroundColor |> UI.rgb 100 100 100
                         , Left 0 Percent
                         ]
+         , interruptable = False
          }
+         
        , Effects.none )
 
 app =
