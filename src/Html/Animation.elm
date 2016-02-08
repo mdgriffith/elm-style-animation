@@ -90,7 +90,7 @@ type alias Dynamic = Core.Physics Core.DynamicTarget
 
 
 type Action
-  = Staggered (Float -> Action)
+  = Staggered (Float -> Float -> Action)
   | Unstaggered PreAction
   | Internal Core.Action
 
@@ -229,7 +229,7 @@ update : Action -> Animation -> ( Animation, Effects Action )
 update action (A model) =
   let
     ( newModel, fx ) =
-      Core.update (resolve action 0) model
+      Core.update (resolve action 1 0) model
   in
     ( A newModel, Effects.map Internal fx )
 
@@ -313,7 +313,7 @@ queue =
         |> forwardToAllWidgets model.widgets
 
 -}
-stagger : (Float -> Action) -> Action
+stagger : (Float -> Float -> Action) -> Action
 stagger =
   Staggered
 
@@ -337,12 +337,8 @@ on model action =
 {-| Resolve the stagger if there is one, and apply springs if present.
 
 -}
-resolve : Action -> Int -> Core.Action
-resolve stag i =
-  let
-    f =
-      toFloat i
-  in
+resolve : Action -> Int -> Int -> Core.Action
+resolve stag t i =
     case stag of
       Unstaggered preaction ->
         preaction.action
@@ -351,7 +347,7 @@ resolve stag i =
               preaction.frames
 
       Staggered s ->
-        resolve (s f) i
+        resolve (s (toFloat t) (toFloat i)) t i
 
       Internal ia ->
         ia
@@ -448,6 +444,9 @@ Which you can then use to apply an animation to a widget in a list.
 forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
 forwardTo toInternalAction styleGet styleSet i widgets action =
   let
+
+    numWidgets = List.length widgets
+
     ( widgets, effects ) =
       List.unzip
         <| List.indexedMap
@@ -457,7 +456,7 @@ forwardTo toInternalAction styleGet styleSet i widgets action =
                   (A anim) = styleGet widget
                   ( newStyle, fx ) =
                     Core.update
-                      (resolve action i)
+                      (resolve action numWidgets i)
                       anim
                 in
                   ( styleSet widget (A newStyle)
@@ -489,6 +488,7 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
     --                      [1..List.length widgets]
     --                |> List.maximum
     --                |> Maybe.withDefault 0.0
+    numWidgets = List.length widgets
     ( widgets, effects ) =
       List.unzip
         <| List.indexedMap
@@ -498,7 +498,7 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
                 ( newStyle, fx ) =
                   Core.update
                     --(normalizedDuration largestDuration (resolve action i))
-                    (resolve action i)
+                    (resolve action numWidgets i)
                     anim
                     
               in
