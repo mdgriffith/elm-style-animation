@@ -12,7 +12,7 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
-
+import Html.Animation.Properties exposing (..)
 
 type alias Model = 
             { style : UI.Animation 
@@ -32,18 +32,18 @@ update action model =
         (anim, fx) = 
             UI.animate 
                   |> UI.props 
-                      [ UI.BackgroundColor 
+                      [ BackgroundColor 
                             |> UI.toRGBA 100 100 100 1.0  
                       ] 
               |> UI.andThen -- create a new keyframe
                   |> UI.duration (1*second)
                   |> UI.props 
-                      [ UI.BackgroundColor 
+                      [ BackgroundColor 
                             |> UI.toRGBA 178 201 14 1.0 
                       ] 
               |> UI.andThen 
                   |> UI.props 
-                      [ UI.BackgroundColor 
+                      [ BackgroundColor 
                             |> UI.toRGBA 58 40 69 1.0 
                       ] 
               |> UI.on model.style
@@ -88,7 +88,7 @@ view address model =
 init : ( Model, Effects Action )
 init = ( { style = 
               UI.init 
-                  [ UI.BackgroundColor 
+                  [ BackgroundColor 
                         |> UI.rgba 58 40 69 1.0 ]
          }
        , Effects.none )

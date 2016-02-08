@@ -12,7 +12,7 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
-
+import Html.Animation.Properties exposing (..)
 
 
 type alias Model = 
@@ -36,32 +36,32 @@ update action model =
               UI.animate 
                   |> UI.duration (0.5*second)
                   |> UI.props 
-                      [ UI.Rotate (UI.to 20) UI.Deg
+                      [ Rotate (UI.to 20) Deg
                       ] 
               |> UI.andThen
                   |> UI.duration (0.7*second)
                   |> UI.props 
-                      [ UI.TranslateY (UI.to -200) UI.Px
+                      [ TranslateY (UI.to -200) Px
                       ] 
               |> UI.andThen
                   |> UI.duration (0.7*second)
                   |> UI.props 
-                      [ UI.Rotate UI.stay UI.Deg  -- <-  Here's the only new function! 
+                      [  Rotate UI.stay Deg  -- <-  Here's the only new function! 
                                                   --  UI.stay allows us to specify 
                                                   --  the 2nd Rotate we mentioned in our init
-                      , UI.Rotate (UI.to 360) UI.Deg
+                      , Rotate (UI.to 360) Deg
                       ] 
                 |> UI.andThen
                   |> UI.duration (0.7*second)
                   |> UI.props 
-                      [ UI.Rotate (UI.to 380) UI.Deg 
+                      [ Rotate (UI.to 380) Deg 
                       ] 
               |> UI.andThen
                   |> UI.delay (1*second)
                   |> UI.props 
-                      [ UI.Rotate (UI.to 0.0) UI.Deg
-                      , UI.TranslateY (UI.to 0.0) UI.Px
-                      , UI.Rotate (UI.to 0.0) UI.Deg
+                      [ Rotate (UI.to 0.0) Deg
+                      , TranslateY (UI.to 0.0) Px
+                      , Rotate (UI.to 0.0) Deg
                       ] 
               |> UI.on model.style
       in
@@ -106,10 +106,10 @@ view address model =
 
 init : ( Model, Effects Action )
 init = ( { style = UI.init 
-                        [ UI.Rotate 0.0 UI.Deg
-                        , UI.TranslateY 0.0 UI.Px
-                        , UI.TranslateX 0.0 UI.Px
-                        , UI.Rotate 0.0 UI.Deg
+                        [ Rotate 0.0 Deg
+                        , TranslateY 0.0 Px
+                        , TranslateX 0.0 Px
+                        , Rotate 0.0 Deg
                         ]
          }
        , Effects.none )

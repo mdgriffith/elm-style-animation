@@ -12,6 +12,7 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
+import Html.Animation.Properties exposing (..)
 
 
 
@@ -36,8 +37,8 @@ update action model =
               UI.animate 
                  --|> UI.duration (0.4*second)
                  |> UI.props 
-                     [ UI.Left (UI.to 0) UI.Px
-                     , UI.Opacity (UI.to 1)
+                     [ Left (UI.to 0) Px
+                     , Opacity (UI.to 1)
                      ] 
                  |> UI.on model.style
 
@@ -52,8 +53,8 @@ update action model =
             UI.animate
                --|> UI.duration (0.4*second)
                |> UI.props 
-                      [ UI.Left (UI.to -350) UI.Px
-                      , UI.Opacity (UI.to 0)
+                      [ Left (UI.to -350) Px
+                      , Opacity (UI.to 0)
                       ] 
                |> UI.on model.style
       in
@@ -78,7 +79,8 @@ view address model =
                              , ("top", "0px")
                              , ("width", "350px")
                              , ("height", "100%")
-                             , ("background-color", "#AAA")
+                             --, ("background-color", "#AAA")
+                             , ("border", "2px dashed #AAA")
                             ]
             in
               div [ onMouseEnter address Show
@@ -95,12 +97,14 @@ viewMenu : Address Action -> Model -> Html
 viewMenu address model =
                 let
                   menuStyle = [ ("position", "absolute")
-                                , ("top", "0px")
+                                , ("top", "-2px")
+                                , ("margin-left", "-2px")
                                 , ("padding", "25px")
                                 , ("width", "300px")
                                 , ("height", "100%")
                                 , ("background-color", "rgb(58,40,69)")
                                 , ("color", "white")
+                                , ("border", "2px solid rgb(58,40,69)")
                               ]
                 in
                   div [ style (menuStyle ++ (UI.render model.style)) ]
@@ -115,8 +119,8 @@ viewMenu address model =
 
 init : ( Model, Effects Action )
 init = ( { style = UI.init 
-                      [ UI.Left -350.0 UI.Px
-                      , UI.Opacity 0.0 
+                      [ Left -350.0 Px
+                      , Opacity 0.0 
                       ]
          }
        , Effects.none )

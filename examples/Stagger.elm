@@ -12,7 +12,8 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
-
+import Html.Animation.Properties exposing (..)
+import Debug
 
 
 type alias Model = 
@@ -59,12 +60,12 @@ update action model =
       let 
         (widgets, fx) = 
               UI.stagger
-                (\i -> 
+                (\total i -> 
                    UI.animate
                      |> UI.delay (i * 0.05 * second)
-                     |> UI.spring UI.fastAndLoose
+                     |> UI.spring UI.wobbly
                      |> UI.props 
-                         [ UI.Left (UI.to 100) UI.Px
+                         [ Left (UI.to 100) Px
                          ] 
                 )
                 |> forwardToAllWidgets model.widgets
@@ -77,12 +78,16 @@ update action model =
     Hide ->
       let 
         (widgets, fx) = 
+            UI.stagger
+              (\total i -> 
                 UI.animate
-                   |> UI.spring UI.fastAndLoose
+                   |> UI.delay ((i * 0.05) * second)
+                   |> UI.spring UI.wobbly
                    |> UI.props 
-                       [ UI.Left (UI.to -70) UI.Px
+                       [ Left (UI.to -70) Px
                        ] 
-                |> forwardToAllWidgets model.widgets
+              )
+              |> forwardToAllWidgets model.widgets
 
       in
         ( { model | widgets = widgets
@@ -156,8 +161,8 @@ init = ( { widgets = List.map (\i -> initWidget i) [0..10]
 
 initWidget i = 
         { style = UI.init 
-                      [ UI.Left -50.0 UI.Px
-                      , UI.Top (i * 45.0) UI.Px
+                      [ Left -50.0 Px
+                      , Top (i * 45.0) Px
                       ]
          }
 
