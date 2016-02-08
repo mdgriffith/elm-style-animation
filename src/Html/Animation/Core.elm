@@ -454,7 +454,7 @@ transferVelocityProp maybeOld target =
                                         , velocity = deltaV
                                         }
                             }
-                        
+
                       in
                         { target | easing = newEasing
                                  , physical = newV }
@@ -549,15 +549,35 @@ applyStep current dt maybeFrom physics =
 
                 currentPos = physics.target from eased
 
+                counterSpring = 
+                  case easing.counterForcePhys of
+                    Nothing -> Just easing
+                    Just phys ->
+                      let
+                        newCounterSpring = 
+                          Spring.update dt easing.counterForce phys
+                      in 
+                        if Spring.atRest easing.counterForce  newCounterSpring then
+                          Just <|
+                            { easing
+                               | counterForcePhys = Nothing }
+                        else
+                          Just <|
+                            { easing
+                                | counterForcePhys = Just newCounterSpring
+                            }
+
                 finalPhysical = 
                   { physical 
                       | position = currentPos
                       , velocity = velocity physics.physical.position currentPos dt
+
                   }
                   
               in
                 { physics
                     | physical = finalPhysical
+                    , easing = counterSpring
                 }
 
 
@@ -627,7 +647,6 @@ stepProp prop prev val =
         in
           Opacity (val from to)
 
-      --Opacity ()
       Height to unit ->
         let
           from =
