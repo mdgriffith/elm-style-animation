@@ -13,7 +13,7 @@ type alias Model =
   , elapsed : Time
   , anim : List StyleKeyframe
   , previous : Style
-  , interruption : Maybe Interruption
+  , interruption : List Interruption
   }
 
 
@@ -96,34 +96,48 @@ update action model =
       , Effects.tick Tick
       )
 
-    Interrupt anims ->
-      case List.head anims of
+
+    Interrupt interrupt ->
+      case List.head interrupt of
         Nothing ->
           ( model, Effects.none )
 
         Just first ->
           let
-            interruption =
-              Just
-                <| { at = model.elapsed + first.delay
-                   , anim = anims
-                   }
+            last = List.head 
+                    <| List.reverse model.interruption
+
+            interruptionTime =
+                case last of
+                  Nothing -> 
+                    model.elapsed + first.delay
+
+                  Just prev ->
+                    (model.elapsed + first.delay) - prev.at 
+
+            interruptions = 
+                 model.interruption ++
+                           [ { at = interruptionTime
+                             , anim = interrupt
+                             }
+                           ]
           in
             ( { model
-                | interruption = interruption
+                | interruption = interruptions
               }
             , Effects.tick Tick
             )
+
 
     Tick now ->
       let
         ( start, elapsed, dt ) =
           getTimes now model
       in
-        case model.interruption of
+        case List.head model.interruption of
           Just interruption ->
             if elapsed >= interruption.at then
-              interrupt now model interruption.anim
+              interrupt now model interruption.anim (Maybe.withDefault [] <| List.tail model.interruption)
             else
               case List.head model.anim of
                 Nothing ->
@@ -227,8 +241,8 @@ getTimes now model =
       ( prelimStart, prelimElapsed, prelimDt )
 
 
-interrupt : Time -> Model -> List StyleKeyframe -> ( Model, Effects Action )
-interrupt now model interruption =
+interrupt : Time -> Model -> List StyleKeyframe -> List Interruption -> ( Model, Effects Action )
+interrupt now model interruption remaining =
   let
     ( previous, newAnims ) =
       case List.head model.anim of
@@ -247,7 +261,7 @@ interrupt now model interruption =
         , elapsed = 0.0
         , start = Nothing
         , previous = previous
-        , interruption = Nothing
+        , interruption = remaining
       }
     , Effects.tick Tick
     )

@@ -97,7 +97,7 @@ empty =
   , start = Nothing
   , anim = []
   , previous = []
-  , interruption = Nothing
+  , interruption = []
   }
 
 
