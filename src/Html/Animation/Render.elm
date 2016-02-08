@@ -1,4 +1,4 @@
-module Html.Animation.Render (name, value, id) where
+module Html.Animation.Render (name, value, id, debugName) where
 
 
 import Html.Animation.Properties exposing (..)
@@ -419,7 +419,170 @@ renderColor x y z a =
       ++ ")"
 
 
+debugName : StyleProperty a -> String
+debugName prop =
+  case prop of
+    Prop name _ unit ->
+      name ++ unit
 
+    Opacity _ ->
+      "opacity"
+
+    Height _ _ ->
+      "height"
+
+    Width _ _ ->
+      "width"
+
+    Left _ _ ->
+      "left"
+
+    Right _ _ ->
+      "right"
+
+    Bottom _ _ ->
+      "bottom"
+
+    Top _ _ ->
+      "top"
+
+    MaxHeight _ _ ->
+      "max-height"
+
+    MaxWidth _ _ ->
+      "max-width"
+
+    MinHeight _ _ ->
+      "min-height"
+
+    MinWidth _ _ ->
+      "min-width"
+
+    Padding _ _ ->
+      "padding"
+
+    PaddingLeft _ _ ->
+      "padding-left"
+
+    PaddingRight _ _ ->
+      "padding-right"
+
+    PaddingTop _ _ ->
+      "padding-top"
+
+    PaddingBottom _ _ ->
+      "padding-bottom"
+
+    Margin _ _ ->
+      "margin"
+
+    MarginLeft _ _ ->
+      "margin-left"
+
+    MarginRight _ _ ->
+      "margin-right"
+
+    MarginTop _ _ ->
+      "margin-top"
+
+    MarginBottom _ _ ->
+      "margin-bottom"
+
+    BorderWidth _ _ ->
+      "border-width"
+
+    BorderRadius _ _ ->
+      "border-radius"
+
+    BorderTopLeftRadius _ _ ->
+      "border-top-left-radius"
+
+    BorderTopRightRadius _ _ ->
+      "border-top-right-radius"
+
+    BorderBottomLeftRadius _ _ ->
+      "border-bottom-left-radius"
+
+    BorderBottomRightRadius _ _ ->
+      "border-bottom-right-radius"
+
+    LetterSpacing _ _ ->
+      "letter-spacing"
+
+    LineHeight _ _ ->
+      "line-height"
+
+    BackgroundPosition _ _ _ ->
+      "background-position"
+
+    Color _ _ _ _ ->
+      "color"
+
+    BackgroundColor _ _ _ _ ->
+      "background-color"
+
+    BorderColor _ _ _ _ ->
+      "border-color"
+
+    TransformOrigin _ _ _ _ ->
+      "transform-origin"
+
+    Matrix _ _ _ _ _ _ ->
+      "matrix"
+
+    Matrix3d _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ->
+      "matrix3d"
+
+    Translate _ _ _ ->
+      "translate"
+
+    Translate3d _ _ _ _ ->
+      "translate3d"
+
+    TranslateX _ _ ->
+      "translatex"
+
+    TranslateY _ _ ->
+      "translatey"
+
+    Scale _ ->
+      "scale"
+
+    Scale3d _ _ _ ->
+      "scale3d"
+
+    ScaleX _ ->
+      "scalex"
+
+    ScaleY _ ->
+      "scaley"
+
+    ScaleZ _ ->
+      "scalez"
+
+    Rotate _ _ ->
+      "rotate"
+
+    Rotate3d _ _ _ _ _ ->
+      "rotate3d"
+
+    RotateX _ _ ->
+      "rotatex"
+
+    RotateY _ _ ->
+      "rotatey"
+
+    Skew _ _ _ ->
+      "skew"
+
+    SkewX _ _ ->
+      "skewx"
+
+    SkewY _ _ ->
+      "skewy"
+
+    Perspective _ ->
+      "perspective"
 
 id : StyleProperty a -> String
 id prop =

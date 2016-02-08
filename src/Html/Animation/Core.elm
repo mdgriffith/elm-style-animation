@@ -96,7 +96,6 @@ update action model =
       , Effects.tick Tick
       )
 
-
     Interrupt interrupt ->
       case List.head interrupt of
         Nothing ->
@@ -104,30 +103,30 @@ update action model =
 
         Just first ->
           let
-            last = List.head 
-                    <| List.reverse model.interruption
+            last =
+              List.head
+                <| List.reverse model.interruption
 
             interruptionTime =
-                case last of
-                  Nothing -> 
-                    model.elapsed + first.delay
+              case last of
+                Nothing ->
+                  model.elapsed + first.delay
 
-                  Just prev ->
-                    (model.elapsed + first.delay) - prev.at 
+                Just prev ->
+                  (model.elapsed + first.delay) - prev.at
 
-            interruptions = 
-                 model.interruption ++
-                           [ { at = interruptionTime
-                             , anim = interrupt
-                             }
-                           ]
+            interruptions =
+              model.interruption
+                ++ [ { at = interruptionTime
+                     , anim = interrupt
+                     }
+                   ]
           in
             ( { model
                 | interruption = interruptions
               }
             , Effects.tick Tick
             )
-
 
     Tick now ->
       let
@@ -192,7 +191,7 @@ tick model current elapsed dt start now =
           | elapsed = 0.0
           , start = Just now
           , previous = previous
-          , anim = mapTo 0 (\a -> step a previous 0.0 0.0) anims
+          , anim = initializeFrame previous anims
         }
       , Effects.tick Tick
       )
@@ -257,7 +256,7 @@ interrupt now model interruption remaining =
           )
   in
     ( { model
-        | anim = mapTo 0 (\a -> step a previous 0.0 0.0) newAnims
+        | anim = initializeFrame previous newAnims
         , elapsed = 0.0
         , start = Nothing
         , previous = previous
@@ -265,6 +264,55 @@ interrupt now model interruption remaining =
       }
     , Effects.tick Tick
     )
+
+
+initializeFrame : Style -> List StyleKeyframe -> List StyleKeyframe
+initializeFrame style anims =
+  let
+    warn =
+      case List.head anims of
+        Nothing ->
+          []
+
+        Just first ->
+          List.foldl
+            (\x acc ->
+              -- need to know how many times x has shown up already.
+              let
+                xI =
+                  countOccurance x acc
+              in
+                case findNearProp style x xI of
+                  Nothing ->
+                    let
+                      warn =
+                        Debug.log "elm-html-animation"
+                          <| "Provide an initial value for the style property "
+                          ++ Render.id x
+                          ++ ".  Animation for this property won't begin without one."
+                    in
+                      acc
+
+                  Just prevX ->
+                    if Render.id x == Render.id prevX then
+                      acc ++ [ x ]
+                    else
+                      let
+                        warn =
+                          Debug.log "elm-html-animation"
+                            <| "Wrong units provided.  "
+                            ++ "Initial value as '"
+                            ++ Render.id prevX
+                            ++ "' versus animation as '"
+                            ++ Render.id x
+                            ++ "'."
+                      in
+                        acc
+            )
+            []
+            first.target
+  in
+    mapTo 0 (\a -> step a style 0.0 0.0) anims
 
 
 done : Time -> StyleKeyframe -> Bool
@@ -514,15 +562,7 @@ transferVelocity old new =
           -- need to know how many times x has shown up already.
           let
             xI =
-              List.foldl
-                (\x2 count ->
-                  if Render.id x == Render.id x2 then
-                    count + 1
-                  else
-                    count
-                )
-                0
-                acc
+              countOccurance x acc
           in
             case findProp old.target x xI of
               Nothing ->
@@ -644,15 +684,7 @@ step frame prev current dt =
           -- need to know how many times x has shown up already.
           let
             xI =
-              List.foldl
-                (\x2 count ->
-                  if Render.id x == Render.id x2 then
-                    count + 1
-                  else
-                    count
-                )
-                0
-                acc
+              countOccurance x acc
           in
             case findProp prev x xI of
               Nothing ->
@@ -1558,6 +1590,37 @@ findProp state prop propCount =
     findBy (matchPropID prop) state
 
 
+findNearProp : List (StyleProperty a) -> StyleProperty b -> Int -> Maybe (StyleProperty a)
+findNearProp state prop propCount =
+  let
+    findBy fn xs =
+      List.head
+        <| List.drop propCount
+        <| List.filter fn
+        <| xs
+
+    matchPropID a b =
+      Render.debugName a == Render.debugName b
+  in
+    findBy (matchPropID prop) state
+
+
+
+--countOccurance : -> Int
+
+
+countOccurance x pool =
+  List.foldl
+    (\x2 count ->
+      if Render.id x == Render.id x2 then
+        count + 1
+      else
+        count
+    )
+    0
+    pool
+
+
 fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
 fill new existing =
   List.foldl
@@ -1565,15 +1628,7 @@ fill new existing =
       -- need to know the Render.id of x, meaning how many times it's shown up already.
       let
         xI =
-          List.foldl
-            (\x2 count ->
-              if Render.id x == Render.id x2 then
-                count + 1
-              else
-                count
-            )
-            0
-            acc
+          countOccurance x acc
       in
         case findProp new x xI of
           Nothing ->
