@@ -915,19 +915,27 @@ render (A model) =
           rendered =
             List.map renderProp model.previous
 
-          transformsNprops =
-            List.partition (\( name, _ ) -> name == "transform") rendered
+          props =
+            List.filter (\( name, _ ) -> name /= "transform") rendered
 
-          combinedTransforms =
-            ( "transform"
-            , String.concat
-                (List.intersperse
-                  " "
-                  (List.map (snd) (fst transformsNprops))
-                )
-            )
+          transforms = 
+            List.map (snd) 
+              <| List.filter (\( name, _ ) -> name == "transform") rendered
+
+          combinedTransforms = 
+            if List.length transforms == 0 then
+              []
+            else
+              [( "transform"
+              , String.concat
+                  (List.intersperse
+                    " "
+                    transforms
+                  )
+              )]
+            
         in
-          snd transformsNprops ++ [ combinedTransforms ]
+          props ++ combinedTransforms
 
       Just anim ->
         -- Combine all transform properties
@@ -938,19 +946,26 @@ render (A model) =
           rendered =
             List.map renderProp baked
 
-          transformsNprops =
-            List.partition (\s -> fst s == "transform") rendered
+          props =
+            List.filter (\( name, _ ) -> name /= "transform") rendered
 
-          combinedTransforms =
-            ( "transform"
-            , String.concat
-                (List.intersperse
-                  " "
-                  (List.map (snd) (fst transformsNprops))
-                )
-            )
+          transforms = 
+            List.map (snd) 
+              <| List.filter (\( name, _ ) -> name == "transform") rendered
+
+          combinedTransforms = 
+            if List.length transforms == 0 then
+              []
+            else
+              [( "transform"
+              , String.concat
+                  (List.intersperse
+                    " "
+                    transforms
+                  )
+              )]
         in
-          snd transformsNprops ++ [ combinedTransforms ]
+          props ++ combinedTransforms
 
 
 renderProp : StyleProperty Static -> ( String, String )
