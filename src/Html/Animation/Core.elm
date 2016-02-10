@@ -287,9 +287,11 @@ initializeFrame style anims =
                     let
                       warn =
                         Debug.log "elm-html-animation"
-                          <| "Provide an initial value for the style property "
+                          <| "There is no initial value for '"
                           ++ Render.id x
-                          ++ ".  Animation for this property won't begin without one."
+                          ++ "', though it is queued to be animated.  Define an initial value for '" 
+                          ++ Render.id x ++ "'"
+
                     in
                       acc
 
@@ -301,9 +303,9 @@ initializeFrame style anims =
                         warn =
                           Debug.log "elm-html-animation"
                             <| "Wrong units provided.  "
-                            ++ "Initial value as '"
+                            ++ "An initial value was given as '"
                             ++ Render.id prevX
-                            ++ "' versus animation as '"
+                            ++ "' versus the animation which was given as '"
                             ++ Render.id x
                             ++ "'."
                       in
