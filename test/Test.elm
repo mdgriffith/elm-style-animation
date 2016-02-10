@@ -28,17 +28,23 @@ tests =
 
 type Action
   = NoOp
+  | CreateAnimation Int UI.Action
   | StartDelayTest
   | InterruptWithDelay
   | UninitializedPropWarning
-  | AnimateWidget UI.Action
+  | UninitializedUnitWarning
+  | Animate Int UI.Action
 
 
 type alias Model =
-  { widget : UI.Animation
+  { widgets : List Widget
   , interruptable : Bool
   }
 
+
+type alias Widget = 
+  { style : UI.Animation 
+  }
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
@@ -46,62 +52,86 @@ update action model =
       NoOp ->
         ( model, Effects.none )
 
-      UninitializedPropWarning ->
+      CreateAnimation i anim ->
         let
-          ( anim, fx ) =
-            UI.animate
-              |> UI.props
-                  [ Left (UI.to 50) Px  -- This should fail with a warning because we initialized with Left Percent, not Px
-                  ]
-              |> UI.on model.widget
+          ( widgets, fx ) =
+            anim |> forwardToWidget i model.widgets
         in
           ( { model
-              | widget = anim
+              | widgets = widgets
             }
-          , Effects.map AnimateWidget fx
+          , fx
+          )
+
+      UninitializedUnitWarning ->
+        let
+          ( widgets, fx ) =
+            UI.animate
+              |> UI.props
+                  [ Left (UI.to 50) Px 
+                  ]
+              |> forwardToWidget 0 model.widgets
+        in
+          ( { model
+              | widgets = widgets
+            }
+          , fx
+          )
+
+      UninitializedPropWarning ->
+        let
+          ( widgets, fx ) =
+            UI.animate
+              |> UI.props
+                  [ Right (UI.to 50) Px 
+                  ]
+              |> forwardToWidget 0 model.widgets
+        in
+          ( { model
+              | widgets = widgets
+            }
+          , fx
           )
 
 
       StartDelayTest ->
         let
-          ( anim, fx ) =
+          ( widgets, fx ) =
             UI.animate
               |> UI.duration (5.0 * second)
               |> UI.easing easeInBounce
               |> UI.props
                   [ Left (UI.to 50) Percent
                   ]
-              |> UI.on model.widget
+              |> forwardToWidget 2 model.widgets
         in
           ( { model
-              | widget = anim
+              | widgets = widgets
               , interruptable = True
             }
-          , Effects.map AnimateWidget fx
+          ,  fx
           )
 
       InterruptWithDelay ->
         let
-          ( anim, fx ) =
+          ( widgets, fx ) =
             UI.animate
               |> UI.delay (1.0 * second)
               |> UI.props
                   [ Left (UI.to 100) Percent
                   ]
-              |> UI.on model.widget
+              |> forwardToWidget 2 model.widgets
         in
-          ( { model | widget = anim }
-          , Effects.map AnimateWidget fx
+          ( { model | widgets = widgets }
+          , fx
           )
 
-      AnimateWidget action ->
+      Animate i action ->
         let
-          ( anim, fx ) =
-            UI.update action model.widget
+          (widgets, fx) = forwardToWidget i model.widgets action
         in
-          ( { model | widget = anim }
-          , Effects.map AnimateWidget fx
-          )
+          ( { model | widgets = widgets }
+          , fx )
 
 
 view : Address Action -> Model -> Html
@@ -112,8 +142,6 @@ view address model =
       , ( "margin", "15px auto" )
       , ( "width", "800px" )
       , ( "padding", "25px;" )
-        --, ("height", "100%")
-        --, ("background-color", "#AAA")
       ]
   in
     div
@@ -123,14 +151,16 @@ view address model =
           []
           [ text "Test Suite" ]
       , fromElement <| elementRunner tests
-      , hr [ style [ ( "height", "1px" ), ( "border", "none" ), ( "background-color", "#CCC" ) ] ] []
-      , delay address model
       , uninitializedPropertyWarning address
+      , basic address model
       ]
 
 
-delay : Address Action -> Model -> Html
-delay address model =
+testStyle =  [("margin-top", "95px")]
+
+
+basic : Address Action -> Model -> Html
+basic address model =
   let
     action =
       if model.interruptable then
@@ -139,54 +169,119 @@ delay address model =
         StartDelayTest
   in
     div
-      [ onClick address action
-      , style
-          [ ( "cursor", "pointer" )
+      [ style
+          ([ ( "cursor", "pointer" )
           , ( "width", "100%" )
-            --,
-          ]
+          
+          ] ++ testStyle )
       ]
-      [ h1 [] [ text "Test Delay" ]
-      , div
-          [ style
-              [ ( "height", "0px" )
-              , ( "border-top", "2px dashed #CCC" )
-              ]
+      [ h1 [] [ text "Animations"]
+
+      , animation address
+          "Basic" 
+          (CreateAnimation 1
+            ( UI.animate
+                  |> UI.props
+                      [ Left (UI.to 100) Percent
+                      ]
+            )
+          ) 
+          (renderWidget 1 model.widgets)
+
+      , animation address
+          "Delay and Interrupt" 
+          action 
+          (renderWidget 2 model.widgets)
+      
+      ]
+
+animation : Address Action -> String -> Action -> List (String, String) -> Html
+animation address label action rendered =
+      div [ onClick address action 
+          , style [("margin-bottom", "85px")]
           ]
-          [ div
+          [ h2 [ style [ ("color", "#CCC")
+                       ] 
+               ] 
+               [ text label ]
+          , renderStyleAsText rendered
+          , div
               [ style
-                  <| [ ( "position", "relative" )
-                     , ( "margin-top", "-11px" )
-                     ]
-                  ++ (UI.render model.widget)
+                  [ ( "height", "0px" )
+                  , ( "border-top", "2px dashed #CCC" )
+                  , ( "margin-top", "35px")
+                  ] 
               ]
-              []
+              [ div
+                  [ style
+                      <| [ ( "position", "relative" )
+                         , ( "margin-top", "-11px" )
+                         ]
+                      ++ rendered
+                  ]
+                  []
+              ] 
           ]
-      ]
+
+
+
+renderStyleAsText : List (String, String) -> Html
+renderStyleAsText sty = 
+                  let
+                    renderEl (name, val) = 
+                      div [ style <| [ ("font-size", "11px")
+                                     , ("margin", "15px")
+                                     , ("line-height", "0px")
+                                     ]
+                          ]
+                          [ text (name ++ ": " ++ val) ]
+                  in
+                    div []
+                        (List.map renderEl sty)
 
 
 
 uninitializedPropertyWarning : Address Action -> Html
 uninitializedPropertyWarning address = 
     div
-        [ onClick address UninitializedPropWarning
-        , style
-            [ ( "cursor", "pointer" )
-            , ( "width", "100%" )
-              --,
-            ]
+        [ style
+            ([ ( "width", "100%" )
+            ] ++ testStyle )
         ]
-        [ h1 [] [ text "Warning for Animating Uninitialized Property" ]
+        [ h1 [] [ text "Warnings" ]
         , p [] [text "Click circle and verify a warning has occurred in the console"]
         , div
-            [ style
+            [ onClick address UninitializedUnitWarning
+            , style
                 [ ("border-radius", "40px")
                 , ("width", "80px")
                 , ("height", "80px")
                 , ("background-color", "#CCC")
+                , ("text-align", "center")
+                , ("display", "inline-block")
+                , ("margin", "10px")
+                , ("padding-top", "20px")
+                , ("box-sizing", "border-box")
+                , ( "cursor", "pointer" )
                 ]
             ]
-            []
+            [text "Wrong Units"]
+        , div
+            [ onClick address UninitializedPropWarning
+            , style
+                [ ("border-radius", "40px")
+                , ("width", "80px")
+                , ("height", "80px")
+                , ("background-color", "#CCC")
+                , ("display", "inline-block")
+                , ("text-align", "center")
+                , ("margin", "10px")
+                , ("padding-top", "20px")
+                , ("box-sizing", "border-box")
+                , ( "cursor", "pointer" )
+                ]
+            ]
+            [text "Wrong Property"]
         ]
 
 
@@ -198,18 +293,24 @@ uninitializedPropertyWarning address =
 
 init : ( Model, Effects Action )
 init =
-  ( { widget =
-        UI.init
+  ( { widgets = List.repeat 5 emptyWidget
+       
+    , interruptable = False
+    }
+  , Effects.none
+  )
+
+emptyWidget : Widget
+emptyWidget =
+  { style =  
+      UI.init
           [ BorderRadius 10 Px
           , Width 20 Px
           , Height 20 Px
           , BackgroundColor |> UI.rgb 100 100 100
           , Left 0 Percent
           ]
-    , interruptable = False
-    }
-  , Effects.none
-  )
+  }
 
 
 app =
@@ -228,3 +329,27 @@ main =
 port tasks : Signal (Task.Task Never ())
 port tasks =
   app.tasks
+
+
+forwardToWidget = UI.forwardTo 
+                      Animate
+                      .style -- widget style getter
+                      (\w style -> { w | style = style }) -- widget style setter
+                                    
+
+
+
+renderWidget : Int -> List Widget -> List (String, String)
+renderWidget i widgets = 
+                       Maybe.withDefault []
+                        <| Maybe.map (\(i, w) -> UI.render w.style)
+                        <| List.head
+                        <| List.filter (\(j,w) -> j == i) 
+                        <| List.indexedMap (,) widgets
+
+
+
+
+
+
+
