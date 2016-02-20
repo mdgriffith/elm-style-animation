@@ -3,11 +3,11 @@
 
 A library to simplify creating html animations in elm. My focus was to create something I could use as a UI designer to prototype animations quickly, accurately, and without sneaky errors.
 
-  1. Showing a menu on hover - [demo](https://mdgriffith.github.io/elm-html-animation/examples/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/SideMenu.elm)
-  2. Chaining animations together - [demo](https://mdgriffith.github.io/elm-html-animation/examples/Chaining.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Chaining.elm)
-  3. Managing multiple animations - [demo](https://mdgriffith.github.io/elm-html-animation/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
-  4. Stacking transformations - [demo](https://mdgriffith.github.io/elm-html-animation/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
-  5. Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
+  1. Showing a menu on hover - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/SideMenu.elm)
+  2. Chaining animations together - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Chaining.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Chaining.elm)
+  3. Managing multiple animations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
+  4. Stacking transformations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
+  5. Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
 
 
 ## Installation
@@ -97,7 +97,7 @@ view address model =
 
 # Example 1: Showing a Menu on Hover
 
-[demo](https://mdgriffith.github.io/elm-html-animation/examples/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/SideMenu.elm)
+[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/SideMenu.elm)
 
 Our first example is a menu that is shown when the mouse enters a certain area, and hides when the mouse leaves.
 
@@ -167,7 +167,7 @@ However, there may be a situation where we don't want our animation to be interr
 
 # Example 2: Chaining Animations Together
 
-[demo](https://mdgriffith.github.io/elm-html-animation/examples/Chaining.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Chaining.elm)
+[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Chaining.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Chaining.elm)
 
 We also have option of chaining animations together.  So, let's make a square that cycles through a few background colors when you click it.
 
@@ -206,7 +206,7 @@ In this case we can use `UI.andThen` to create a new key frame.  This new keyfra
 
 # Example 4: Managing Multiple Animations
 
-[demo](https://mdgriffith.github.io/elm-html-animation/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
+[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
 
 It's also fairly common to have a list of elements that all need to animated individually.  In order to do this we need to make a few changes to our boilerplate code we had in the beginning.
 
@@ -283,7 +283,7 @@ From here, we're able to animate each widget independently.
 
 # Example 4: Stacking Transformations
 
-[demo](https://mdgriffith.github.io/elm-html-animation/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
+[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
 
 CSS has support for `transforms` such as `translate`, `rotate`, and `scale`.  We also have access to some more complicated transformations such as `rotate3d` and `transform3d`.
 
@@ -362,7 +362,7 @@ There's only one new function and that's `UI.stay`.
 
 # Example 5: Staggering Animations
 
-[demo](https://mdgriffith.github.io/elm-html-animation/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
+[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
 
 Staggering animations can add a very pleasing effect to an animation.
 
