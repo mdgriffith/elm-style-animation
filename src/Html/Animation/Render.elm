@@ -1,7 +1,6 @@
 module Html.Animation.Render (name, value, id, debugName) where
 
 import Html.Animation.Properties exposing (..)
-import Html.Animation.DisplayModes exposing (..)
 import String exposing (concat)
 
 
@@ -829,22 +828,20 @@ angleUnit unit =
       "turn"
 
 
-displayMode : DisplayMode Static -> String
+displayMode : DisplayMode -> String
 displayMode mode =
-            case mode of
-              DisplayMode _ _ target ->
-                case target of 
-                  None ->
-                    "none"
+              case mode of 
+                None ->
+                  "none"
 
-                  Inline ->
-                    "inline"
+                Inline ->
+                  "inline"
 
-                  InlineBlock ->
-                    "inline-block"
+                InlineBlock ->
+                  "inline-block"
 
-                  Block ->
-                    "block"
+                Block ->
+                  "block"
 
 
              

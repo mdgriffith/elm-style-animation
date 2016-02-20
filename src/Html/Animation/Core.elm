@@ -3,7 +3,6 @@ module Html.Animation.Core (Model, Action(..), StyleKeyframe, Style, Physics, Dy
 import Time exposing (Time, second)
 import Effects exposing (Effects)
 import Html.Animation.Properties exposing (..)
-import Html.Animation.DisplayModes exposing (..)
 import Html.Animation.Spring as Spring
 import Html.Animation.Render as Render
 import Debug
@@ -341,9 +340,7 @@ propDone time prop =
         isDone a
 
       Display mode ->
-        case mode of
-          DisplayMode a _ _ ->
-            isDone a
+        True
 
       Opacity a ->
         isDone a
@@ -721,22 +718,25 @@ stepProp prop prev val =
       in
         Prop name (val from to) unit
 
-    Display mode ->
-      let
-        from =
-          case prev of
-            Display mode ->
-              case mode of
-                DisplayMode x _ _ ->
-                  Just x
+    Display mode -> Display mode
+      --let
+      --  from =
+      --    case prev of
+      --      Display mode ->
+      --        Just mode
 
-            _ ->
-              Nothing
-      in
-        Display 
-          <| case mode of
-               DisplayMode to prev target ->
-                  DisplayMode (val from to) prev target
+      --      _ ->
+      --        Nothing
+      --in
+      --  case from of
+      --    Nothing ->
+      --      Display mode
+      --    Just m ->
+      --      Display m
+      --  Display 
+      --    <| case mode of
+      --         DisplayMode to prev target ->
+      --            DisplayMode (val from to) prev target
 
     Opacity to ->
       let
@@ -1437,10 +1437,10 @@ mapProp fn prop =
     Prop n a u ->
       Prop n (fn a) u
 
-    Display mode ->
-      case mode of
-        DisplayMode a p t ->
-              Display (DisplayMode (fn a) p t)
+    Display mode -> Display mode
+      --case mode of
+      --  DisplayMode a p t ->
+      --        Display (DisplayMode (fn a) p t)
 
     Opacity a ->
       Opacity (fn a)

@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, inline, set, none, inlineBlock, block, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -51,7 +51,6 @@ import String exposing (concat)
 import List
 import Color
 import Html.Animation.Properties exposing (..)
-import Html.Animation.DisplayModes exposing (..)
 import Html.Animation.Render as Render
 import Html.Animation.Spring as Spring
 import Html.Animation.Core as Core
@@ -789,22 +788,6 @@ stay : Dynamic
 stay =
   emptyPhysics
     <| (\from current -> from)
-
-
-{-| Set the display type
--}
-none : DisplayMode Float
-none = DisplayMode 0 None None
-
-
-inline : DisplayMode Float
-inline = DisplayMode 1 Inline Inline
-
-inlineBlock : DisplayMode Float
-inlineBlock = DisplayMode 2 InlineBlock InlineBlock
-
-block : DisplayMode Float
-block = DisplayMode 3 Block Block
 
 
 
