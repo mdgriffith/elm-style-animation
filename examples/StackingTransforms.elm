@@ -14,6 +14,7 @@ import Time exposing (second)
 import Html.Animation as UI
 import Html.Animation.Properties exposing (..)
 
+import String exposing (concat)
 
 type alias Model = 
             { style : UI.Animation 
@@ -94,14 +95,24 @@ view address model =
                              , ("background-color", "#AAA")
                              , ("cursor", "pointer")
                             ]
+              renderToString style = 
+                  String.concat
+                      <| List.map 
+                          (\(name, value) -> name ++ ": " ++ value)
+                          style
             in
-              div [ onClick address Transform
-                  , style <| boxStyle ++ (UI.render model.style)
+              div [ onClick address Transform ]
+                [ div [ style <| boxStyle ++ (UI.render model.style)
                   ]
 
                   [ h1 [ style [("padding","25px")]] 
                        [ text "Click to see a Stacked Transform"]
                   ]
+                , small [ style [("position", "fixed"), ("left","50px"), ("top", "50px")]] [text <| renderToString <| (UI.render model.style) ]
+                ]
+
+
+
 
 
 init : ( Model, Effects Action )

@@ -33,21 +33,23 @@ type alias Widget =
 
 -- UPDATE
 
-type Action = Rotate Int
+type Action = RotateWidget Int
             | RotateAllAxis Int
             | RotateCustomEasingDuration Int
             | ChangeColors Int
             | ChangeMultipleColors Int
-            | FadeInFadeOut Int
+            | FadeOutFadeIn Int
+            | FadeOut Int
             | Loopty Int
             | Spring Int
             | Animate Int UI.Action
 
 
+
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
-    Rotate i ->
+    RotateWidget i ->
       let 
         (widgets, fx) = 
               UI.queue -- queue up this animation 
@@ -185,7 +187,7 @@ update action model =
           ( { model | widgets = widgets }
           , fx)
 
-    FadeInFadeOut i ->
+    FadeOutFadeIn i ->
        let 
           (widgets, fx) =
                     UI.animate
@@ -201,6 +203,24 @@ update action model =
         in
           ( { model | widgets = widgets }
           , fx )
+
+    FadeOut i ->
+       let 
+          (widgets, fx) =
+                    UI.animate
+                        |> UI.props 
+                            [ Opacity (UI.to 0)
+                            ] 
+                     |> UI.andThen
+                        |> UI.set 
+                            [ Display None
+                            ]
+                     |> forwardToWidget i model.widgets
+
+        in
+          ( { model | widgets = widgets }
+          , fx )
+
 
 
     Animate i action ->
@@ -253,7 +273,8 @@ box address i widget =
 
 
 initialWidgetStyle = UI.init 
-                        [ Rotate 0.0 Turn
+                        [ Display InlineBlock
+                        , Rotate 0.0 Turn
                         , RotateX 0.0 Turn
                         , RotateY 0.0 Turn
                         , TranslateY 0.0 Px
@@ -276,7 +297,7 @@ init = (
           [  
               { label = "Rotate"
               , style = initialWidgetStyle
-              , action = Rotate
+              , action = RotateWidget
               }
           , 
               { label = "Rotate in All Kinds of Ways"
@@ -299,9 +320,14 @@ init = (
               , action = ChangeMultipleColors
               }
           , 
-              { label = "FadeIn FadeOut"
+              { label = "Fade Out Fade In"
               , style = initialWidgetStyle
-              , action = FadeInFadeOut
+              , action = FadeOutFadeIn
+              }
+          , 
+              { label = "Fade Out and display:none"
+              , style = initialWidgetStyle
+              , action = FadeOut
               }
           , 
               { label = "Loop About"
