@@ -1,8 +1,7 @@
 module Html.Animation.Render (name, value, id, debugName) where
 
-
 import Html.Animation.Properties exposing (..)
-
+import Html.Animation.DisplayModes exposing (..)
 import String exposing (concat)
 
 
@@ -11,6 +10,9 @@ name styleProp =
   case styleProp of
     Prop str _ _ ->
       str
+
+    Display _ ->
+      "display"
 
     Opacity _ ->
       "opacity"
@@ -197,6 +199,9 @@ value prop =
     case prop of
       Prop _ a u ->
         (val a) ++ u
+
+      Display mode ->
+        displayMode mode
 
       Opacity a ->
         val a
@@ -419,11 +424,17 @@ renderColor x y z a =
       ++ ")"
 
 
+{-| Used to match properties without units so that mismatched units can be detected.
+
+-}
 debugName : StyleProperty a -> String
 debugName prop =
   case prop of
     Prop name _ unit ->
       name ++ unit
+
+    Display _ ->
+      "display"
 
     Opacity _ ->
       "opacity"
@@ -592,6 +603,9 @@ id prop =
 
     Opacity _ ->
       "opacity"
+
+    Display _ ->
+      "display"
 
     Height _ unit ->
       "height in " ++ lenUnit unit
@@ -814,3 +828,23 @@ angleUnit unit =
     Turn ->
       "turn"
 
+
+displayMode : DisplayMode Static -> String
+displayMode mode =
+            case mode of
+              DisplayMode _ _ target ->
+                case target of 
+                  None ->
+                    "none"
+
+                  Inline ->
+                    "inline"
+
+                  InlineBlock ->
+                    "inline-block"
+
+                  Block ->
+                    "block"
+
+
+             

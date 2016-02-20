@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, inline, set, none, inlineBlock, block, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -51,6 +51,7 @@ import String exposing (concat)
 import List
 import Color
 import Html.Animation.Properties exposing (..)
+import Html.Animation.DisplayModes exposing (..)
 import Html.Animation.Render as Render
 import Html.Animation.Spring as Spring
 import Html.Animation.Core as Core
@@ -590,17 +591,35 @@ This is useful for setting display:none at the end of fading an element out.
              [ UI.Opacity (UI.to 1)
              ]
          |> UI.set
-             [ UI.Display UI.None
+             [ UI.Display UI.none
              ]
          |> UI.on model.style
 
 -}
-set : List (StyleProperty Dynamic) -> Action -> Action
-set properties action = 
-                action
-                  |> andThen 
-                    |> props properties 
-                    |> duration 0
+set : List (StyleProperty Static) -> Action -> Action
+set staticProps action = 
+          let
+            dynamic = List.map 
+                        (Core.mapProp (\x -> to x)) 
+                        staticProps
+          in
+            updateOrCreate
+              action
+              (\a ->
+                let
+                  frame =
+                    a.frame
+
+                  updatedFrame =
+                    { frame 
+                        | target = dynamic
+                    }
+                in
+                  { a | frame = updatedFrame
+                      , duration = Just 0
+                      , easing = Just (\x -> x) 
+                  }
+              )
 
 
 {-| Specify a duration.  If not specified, the default is 350ms.
@@ -731,7 +750,6 @@ updateOrCreate action fn =
 
 
 {-| Animate a StyleProperty to a value.
-
 -}
 to : Float -> Dynamic
 to target =
@@ -740,30 +758,54 @@ to target =
 
 
 {-| Animate a StyleProperty by adding to its existing value
-
 -}
 add : Float -> Dynamic
-add target =
+add mod =
   emptyPhysics
-    <| (\from current -> ((target - from) * current) + from)
+    <| (\from current -> 
+            let
+              target = from + mod
+            in
+              ((target - from) * current) + from
+        )
 
 
 {-| Animate a StyleProperty by subtracting to its existing value
-
 -}
 minus : Float -> Dynamic
-minus target =
-  emptyPhysics
-    <| (\from current -> ((target - from) * current) + from)
+minus mod =
+   emptyPhysics
+    <| (\from current -> 
+            let
+              target = from - mod
+            in
+              ((target - from) * current) + from
+        )
 
 
 {-| Keep an animation where it is!  This is useful for stacking transforms.
-
 -}
-stay : Float -> Dynamic
-stay target =
+stay : Dynamic
+stay =
   emptyPhysics
     <| (\from current -> from)
+
+
+{-| Set the display type
+-}
+none : DisplayMode Float
+none = DisplayMode 0 None None
+
+
+inline : DisplayMode Float
+inline = DisplayMode 1 Inline Inline
+
+inlineBlock : DisplayMode Float
+inlineBlock = DisplayMode 2 InlineBlock InlineBlock
+
+block : DisplayMode Float
+block = DisplayMode 3 Block Block
+
 
 
 type alias ColorProperty =
@@ -1001,7 +1043,3 @@ renderProp prop =
   )
 
 
-
---bakeFinal : Core.StyleKeyframe -> Style -> Style
---bakeFinal frame style = style
--- Update

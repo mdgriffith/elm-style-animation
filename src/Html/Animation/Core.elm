@@ -3,6 +3,7 @@ module Html.Animation.Core (Model, Action(..), StyleKeyframe, Style, Physics, Dy
 import Time exposing (Time, second)
 import Effects exposing (Effects)
 import Html.Animation.Properties exposing (..)
+import Html.Animation.DisplayModes exposing (..)
 import Html.Animation.Spring as Spring
 import Html.Animation.Render as Render
 import Debug
@@ -136,7 +137,8 @@ update action model =
         case List.head model.interruption of
           Just interruption ->
             if elapsed >= interruption.at then
-              interrupt now model interruption.anim (Maybe.withDefault [] <| List.tail model.interruption)
+              interrupt now model interruption.anim 
+                      (Maybe.withDefault [] <| List.tail model.interruption)
             else
               case List.head model.anim of
                 Nothing ->
@@ -291,7 +293,6 @@ initializeFrame style anims =
                           ++ Render.id x
                           ++ "', though it is queued to be animated.  Define an initial value for '" 
                           ++ Render.id x ++ "'"
-
                     in
                       acc
 
@@ -321,7 +322,6 @@ done : Time -> StyleKeyframe -> Bool
 done time frame =
   List.all (propDone time) frame.target
 
-
 propDone : Time -> StyleProperty (Physics DynamicTarget) -> Bool
 propDone time prop =
   let
@@ -339,6 +339,11 @@ propDone time prop =
     case prop of
       Prop _ a _ ->
         isDone a
+
+      Display mode ->
+        case mode of
+          DisplayMode a _ _ ->
+            isDone a
 
       Opacity a ->
         isDone a
@@ -715,6 +720,23 @@ stepProp prop prev val =
               Nothing
       in
         Prop name (val from to) unit
+
+    Display mode ->
+      let
+        from =
+          case prev of
+            Display mode ->
+              case mode of
+                DisplayMode x _ _ ->
+                  Just x
+
+            _ ->
+              Nothing
+      in
+        Display 
+          <| case mode of
+               DisplayMode to prev target ->
+                  DisplayMode (val from to) prev target
 
     Opacity to ->
       let
@@ -1399,7 +1421,9 @@ mapTo i fn xs =
 
 bake : StyleKeyframe -> Style -> Style
 bake frame style =
-  fill (List.map (mapProp toStatic) frame.target) style
+  fill (List.map 
+            (mapProp toStatic)
+              frame.target) style
 
 
 toStatic : Physics DynamicTarget -> Static
@@ -1412,6 +1436,11 @@ mapProp fn prop =
   case prop of
     Prop n a u ->
       Prop n (fn a) u
+
+    Display mode ->
+      case mode of
+        DisplayMode a p t ->
+              Display (DisplayMode (fn a) p t)
 
     Opacity a ->
       Opacity (fn a)

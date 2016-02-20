@@ -1,5 +1,8 @@
 module Html.Animation.Properties (StyleProperty (..), Static, Length (..), Angle (..)) where
 
+
+import Html.Animation.DisplayModes exposing (..)
+
 {-|
 
 # All Animatable Style Properties
@@ -17,6 +20,7 @@ type alias Static =
 -}
 type StyleProperty a
   = Prop String a String
+  | Display (DisplayMode a)
   | Opacity a
   | Height a Length
   | Width a Length
@@ -100,3 +104,6 @@ type Angle
   | Grad
   | Rad
   | Turn
+
+
+
