@@ -307,6 +307,8 @@ stagger =
   Staggered
 
 
+
+
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
 
      UI.animate
@@ -575,6 +577,30 @@ props p action =
       in
         { a | frame = updatedFrame }
     )
+
+
+
+{-| Create an animation frame that happens immediately with duration 0.  
+This is useful for setting display:none at the end of fading an element out.
+
+
+    UI.animate
+         |> UI.duration (0.4*second)
+         |> UI.props
+             [ UI.Opacity (UI.to 1)
+             ]
+         |> UI.set
+             [ UI.Display UI.None
+             ]
+         |> UI.on model.style
+
+-}
+set : List (StyleProperty Dynamic) -> Action -> Action
+set properties action = 
+                action
+                  |> andThen 
+                    |> props properties 
+                    |> duration 0
 
 
 {-| Specify a duration.  If not specified, the default is 350ms.
