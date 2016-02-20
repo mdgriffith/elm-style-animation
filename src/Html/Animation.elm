@@ -225,25 +225,6 @@ update action (A model) =
     ( A newModel, Effects.map Internal fx )
 
 
-
---finalStyle : Style -> List Core.StyleKeyframe -> Style
---finalStyle style keyframes =
---                List.foldl
---                      (\frame st ->
---                        bakeFinal frame st
---                      ) style keyframes
---equivalentAnim : Style -> List Core.StyleKeyframe -> List Core.StyleKeyframe -> Bool
---equivalentAnim style frame1 frame2 =
---                        if List.length frame1 == 0 then
---                          False
---                        else
---                          let
---                            final1 = finalStyle style frame1
---                            final2 = finalStyle style frame2
---                          in
---                            final1 == final2
-
-
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
 
       UI.animate
@@ -507,49 +488,6 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
             widgets
   in
     ( widgets, Effects.batch effects )
-
-
-
---normalizedDuration : Time -> InternalAction -> InternalAction
---normalizedDuration desiredDuration action =
---                            case action of
---                                Queue frames ->
---                                    Queue <| addBufferDuration frames desiredDuration
---                                Interrupt frames ->
---                                    Interrupt <| addBufferDuration frames desiredDuration
---                                _ -> action
-
-
-{-| Adds a blank keyframe with a duration that makes the keyframes fill all the time until Time.
-
--}
-
-
-
---addBufferDuration : List Core.StyleKeyframe -> Time -> List Core.StyleKeyframe
---addBufferDuration frames desiredDuration =
---                let
---                  dur = getFullDuration frames
---                  delta = desiredDuration - dur
---                in
---                  if dur >= desiredDuration then
---                    frames
---                  else
---                    frames ++ [{ emptyKeyframe | duration = delta }]
-
-
-{-|
--}
-
-
-
---getFullDuration : List Core.StyleKeyframe -> Time
---getFullDuration frames =
---                    List.foldl
---                        (\frame total ->
---                            total + frame.delay + frame.duration
---                        )
---                        0 frames
 
 
 {-| Specify the properties that should be animated
