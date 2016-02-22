@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToIndex, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -41,7 +41,7 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 @docs update
 
 # Managing a list of styled widgets
-@docs forwardTo, forwardToAll
+@docs forwardTo, forwardToIndex, forwardToAll
 
 -}
 
@@ -207,8 +207,8 @@ stiff =
 -}
 fastAndLoose : Spring.Model
 fastAndLoose =
-  { stiffness = 320
-  , damping = 17
+  { stiffness = 400
+  , damping = 28
   , destination = 1
   }
 
@@ -291,6 +291,7 @@ stagger =
 
 
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
+However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare a custom version of `on`.
 
      UI.animate
          |> UI.duration (0.4*second)
@@ -383,6 +384,13 @@ applyKeyframeOptions options =
     { frame | target = List.map applyOpt frame.target }
 
 
+
+
+
+
+
+
+
 {-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
 you can forward the update to a specific element in a list that has a Animation model.
 
@@ -413,8 +421,55 @@ Which you can then use to apply an animation to a widget in a list.
                 -- Where i is the index of the widget to update.
 
 -}
-forwardTo : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
-forwardTo toInternalAction styleGet styleSet i widgets action =
+forwardTo : (Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> a -> Action -> ( a, Effects b )
+forwardTo toInternalAction styleGet styleSet widget action =
+    let
+      ( A anim ) =
+        styleGet widget
+
+      ( newStyle, fx ) =
+        Core.update (resolve action 1 0) anim
+
+    in
+      ( styleSet widget (A newStyle)
+      , Effects.map
+          (\a -> toInternalAction (Internal a))
+          fx
+      )
+
+
+{-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
+you can forward the update to a specific element in a list that has a Animation model.
+
+To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
+
+So, for a model like the following
+
+    type alias Model = { widgets : List Widget }
+
+    type alias Widget =
+              { style : UI.Animation
+              }
+You'd probably want to create a specialized version of `forwardTo`.
+
+    forwardToWidget = UI.forwardToIndex
+                        .style -- widget style getter
+                        (\w style -> { w | style = style }) -- widget style setter
+
+Which you can then use to apply an animation to a widget in a list.
+
+    (widgets, fx) =
+            UI.animate
+                |> UI.duration (5*second)
+                |> UI.props
+                    [ UI.Opacity (UI.to 0)
+                    ]
+                |> forwardToWidget i model.widgets
+                -- Where i is the index of the widget to update.
+
+-}
+forwardToIndex : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
+forwardToIndex toInternalAction styleGet styleSet i widgets action =
   let
     numWidgets =
       List.length widgets
