@@ -27,48 +27,39 @@ type Action = Show
             | Animate UI.Action
 
 
+{-| Prepare a helper function manage effects and assign styles
+
+-}
+onMenu =
+  UI.forwardTo 
+      Animate
+      .style
+      (\w style -> { w | style = style }) -- style setter 
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
     Show ->
-      let 
-        (anim, fx) = 
-              UI.animate 
-                 --|> UI.duration (0.4*second)
-                 |> UI.props 
-                     [ Left (UI.to 0) Px
-                     , Opacity (UI.to 1)
-                     ] 
-                 |> UI.on model.style
-
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      UI.animate 
+         --|> UI.duration (0.4*second)
+         |> UI.props 
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
+             ] 
+         |> onMenu model
 
     Hide ->
-      let 
-        (anim, fx) = 
-            UI.animate
-               --|> UI.duration (0.4*second)
-               |> UI.props 
-                      [ Left (UI.to -350) Px
-                      , Opacity (UI.to 0)
-                      ] 
-               |> UI.on model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
-
+        UI.animate
+           --|> UI.duration (0.4*second)
+           |> UI.props 
+                  [ Left (UI.to -350) Px
+                  , Opacity (UI.to 0)
+                  ] 
+           |> onMenu 
+ 
     Animate action ->
-      let
-        (anim, fx) = UI.update action model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      onMenu model action
 
 
 view : Address Action -> Model -> Html

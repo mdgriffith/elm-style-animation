@@ -26,58 +26,55 @@ type Action = Transform
             | Animate UI.Action
 
 
+{-| Prepare a helper function manage effects and assign styles
+
+-}
+onModel =
+  UI.forwardTo 
+      Animate
+      .style
+      (\w style -> { w | style = style }) -- style setter 
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
  
     Transform ->
-      let 
-        (anim, fx) = 
-              UI.animate 
-                  |> UI.duration (0.5*second)
-                  |> UI.props 
-                      [ Rotate (UI.to 20) Deg
-                      ] 
-              |> UI.andThen
-                  |> UI.duration (0.7*second)
-                  |> UI.props 
-                      [ TranslateY (UI.to -200) Px
-                      ] 
-              |> UI.andThen
-                  |> UI.duration (0.7*second)
-                  |> UI.props 
-                      [  Rotate UI.stay Deg  -- <-  Here's the only new function! 
-                                                  --  UI.stay allows us to specify 
-                                                  --  the 2nd Rotate we mentioned in our init
-                      , Rotate (UI.to 360) Deg
-                      ] 
-                |> UI.andThen
-                  |> UI.duration (0.7*second)
-                  |> UI.props 
-                      [ Rotate (UI.to 380) Deg 
-                      ] 
-              |> UI.andThen
-                  |> UI.delay (1*second)
-                  |> UI.props 
-                      [ Rotate (UI.to 0.0) Deg
-                      , TranslateY (UI.to 0.0) Px
-                      , Rotate (UI.to 0.0) Deg
-                      ] 
-              |> UI.on model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      UI.animate 
+            |> UI.duration (0.5*second)
+            |> UI.props 
+                [ Rotate (UI.to 20) Deg
+                ] 
+        |> UI.andThen
+            |> UI.duration (0.7*second)
+            |> UI.props 
+                [ TranslateY (UI.to -200) Px
+                ] 
+        |> UI.andThen
+            |> UI.duration (0.7*second)
+            |> UI.props 
+                [  Rotate UI.stay Deg  -- <-  Here's the only new function! 
+                                            --  UI.stay allows us to specify 
+                                            --  the 2nd Rotate we mentioned in our init
+                , Rotate (UI.to 360) Deg
+                ] 
+          |> UI.andThen
+            |> UI.duration (0.7*second)
+            |> UI.props 
+                [ Rotate (UI.to 380) Deg 
+                ] 
+        |> UI.andThen
+            |> UI.delay (1*second)
+            |> UI.props 
+                [ Rotate (UI.to 0.0) Deg
+                , TranslateY (UI.to 0.0) Px
+                , Rotate (UI.to 0.0) Deg
+                ] 
+        |> onModel model
 
     Animate action ->
-      let
-        (anim, fx) = UI.update action model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
-
+      onModel model action
 
 view : Address Action -> Model -> Html
 view address model =
@@ -110,9 +107,6 @@ view address model =
                   ]
                 , small [ style [("position", "fixed"), ("left","50px"), ("top", "50px")]] [text <| renderToString <| (UI.render model.style) ]
                 ]
-
-
-
 
 
 init : ( Model, Effects Action )

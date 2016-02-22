@@ -45,6 +45,13 @@ type Action = RotateWidget Int
             | Animate Int UI.Action
 
 
+onWidget = 
+    UI.forwardToIndex
+        Animate
+        .style -- widget style getter
+        (\w style -> { w | style = style }) -- widget style setter
+                                    
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
@@ -58,7 +65,7 @@ update action model =
                   |> UI.props 
                       [ Rotate (UI.add 1) Turn 
                       ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -74,7 +81,7 @@ update action model =
                       , RotateY (UI.add 1) Turn
                       , Rotate (UI.add 1) Turn
                       ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -91,7 +98,7 @@ update action model =
                   |> UI.props 
                       [ Rotate (UI.add 1) Turn 
                       ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -118,7 +125,7 @@ update action model =
                         , Rotate (UI.add 0.5) Turn
                         ] 
 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -137,7 +144,7 @@ update action model =
                     |> UI.props 
                         [ Scale (UI.to 1.0)
                         ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -156,7 +163,7 @@ update action model =
                           , BorderColor 
                                 |> UI.toRGBA 100 100 100 1.0 
                           ] 
-                      |> forwardToWidget i model.widgets
+                      |> onWidget i model.widgets
                       
         in
           ( { model | widgets = widgets }
@@ -181,7 +188,7 @@ update action model =
                               , BorderColor
                                     |> UI.toRGBA 178 201 14 1.0 
                               ] 
-                      |> forwardToWidget i model.widgets
+                      |> onWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
@@ -198,7 +205,7 @@ update action model =
                         |> UI.props 
                             [ Opacity (UI.to 1)  
                             ] 
-                    |> forwardToWidget i model.widgets
+                    |> onWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
@@ -215,17 +222,16 @@ update action model =
                         |> UI.set 
                             [ Display None
                             ]
-                     |> forwardToWidget i model.widgets
+                     |> onWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
           , fx )
 
 
-
     Animate i action ->
       let
-        (widgets, fx) = forwardToWidget i model.widgets action
+        (widgets, fx) = onWidget i model.widgets action
       in
         ( { model | widgets = widgets }
         , fx )
@@ -363,11 +369,7 @@ port tasks =
 
 
 
-forwardToWidget = UI.forwardTo 
-                      Animate
-                      .style -- widget style getter
-                      (\w style -> { w | style = style }) -- widget style setter
-                                    
+
 
 
 
