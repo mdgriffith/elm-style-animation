@@ -37,7 +37,7 @@ elm-package install mdgriffith/elm-html-animation
 
 ## The Basics
 
-I recommend checking out [the Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/) if you haven't already.  These examples will be much easier if you're already familiar with the standard model, update, and view pattern.  As well you should understand the basics of using the `Effects` library.
+I recommend checking out [the Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/) if you haven't already.  These examples will be much easier if you're already familiar with the standard `model`, `update`, and `view` pattern.  As well you should understand the basics of using the `Effects` library.
 
 So, with all that in mind, here's a basic overview of what you'll need to do to use this library.
 
@@ -63,29 +63,11 @@ init = { style =
         }
 ```
 
-  * Add a new action to your Action type to allow updates to be sent to an animation.
+
+
+ * In your `view`, render the animation as a css style.
 
 ```elm
-type Action = Animate UI.Action
-
--- and in our update function, we need the following code to allow for updates to be passed to an animation
-
-update : Action -> Model -> ( Model, Effects Action )
-update action model =
-  case action of
-
-    Animate action ->
-      let
-        (anim, fx) = UI.update action model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-```
-
-  * In your `view`, render the animation as a css style.
-
-```elm
-
 view : Address Action -> Model -> Html
 view address model =
           div [ style (UI.render model.style) ] []
@@ -93,6 +75,40 @@ view address model =
 ```
 
 
+  * Add a new action to your Action type to allow updates to be sent to an animation.
+
+```elm
+type Action = Show -- This action triggers the animation
+            | Animate UI.Action -- This action forwards all updates to the elm-html-animation core.
+
+
+{-| Prepare a helper function to manage effects and assign styles. -}
+onMenu =
+  UI.forwardTo 
+      Animate -- The action type constructor that is used to forward all updates to an animation
+      .style -- style getter
+      (\w style -> { w | style = style }) -- style setter 
+
+
+
+-- In our update function, we can use the helper function trigger animations 
+-- and to pass updates to an animation
+update : Action -> Model -> ( Model, Effects Action )
+update action model =
+  case action of
+
+    Show ->
+      UI.animate 
+         |> UI.props 
+             [ Opacity (UI.to 1)
+             ] 
+         |> onMenu model
+
+    Animate action ->
+      onMenu model action
+```
+
+ 
   * Start creating animations!  Now that we're set up, we can begin animating. 
 
 
@@ -108,21 +124,16 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
 ```elm
 -- ... we add this to the case statement in our update function.
     Show ->
-      let 
-        (anim, fx) = 
-              UI.animate 
-              -- |> UI.duration (0.5*second)
-              -- |> UI.delay (0.5*second)
-              -- |> UI.easing (\x -> x)
-                 |> UI.props 
-                     [ Left (UI.to 0) Px
-                     , Opacity (UI.to 1)
-                     ] 
-                 |> UI.on model.style
+      UI.animate 
+      -- |> UI.duration (0.5*second)
+      -- |> UI.delay (0.5*second)
+      -- |> UI.easing (\x -> x)
+         |> UI.props 
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
+             ] 
+         |> onMenu model
 
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
 ```
 
 Notice we are programming declaratively by defining what style property should be by using `UI.to`.  
@@ -139,8 +150,6 @@ In the above code, these are commented out, which means the defaults are used.
 
 Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
 
-Finally, we have to `map` the resulting animation Effect, `fx`, to the Animate action we created earlier.
-
 Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
 
 However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queue` instead of `UI.animate`
@@ -149,16 +158,15 @@ However, there may be a situation where we don't want our animation to be interr
 > Instead of using a duration and an easing function, you also have the option of animating by using a __spring__.  Using the math that models real-world springs, we can create organic animations by just defining two numbers, _stiffness_ and _damping_.  Here's an example of using a spring:
 >
   ```elm
-    (anim, fx) = 
-           UI.animate 
-               |> UI.spring { stiffness = 180
-                            , damping = 12
-                            }
-               |> UI.props 
-                   [ Left (UI.to 0) Px
-                   , Opacity (UI.to 1)
-                   ] 
-               |> UI.on model.style
+       UI.animate 
+           |> UI.spring { stiffness = 180
+                        , damping = 12
+                        }
+           |> UI.props 
+               [ Left (UI.to 0) Px
+               , Opacity (UI.to 1)
+               ] 
+           |> onMenu model
   ```
 >  __Note:__ If you provide a spring, it will override any duration or easing you may have specified. 
 >
@@ -175,29 +183,23 @@ We also have option of chaining animations together.  So, let's make a square th
 ```elm
 -- in our update function:
     ChangeColor ->
-      let 
-        (anim, fx) = 
-            UI.animate 
-                    |> UI.props 
-                        [ BackgroundColor 
-                            UI.toRgba 100 100 100 1.0
-                        ] 
-                |> UI.andThen -- create a new keyframe
-                    |> UI.duration (1*second)
-                    |> UI.props 
-                        [ BackgroundColor 
-                            UI.toRgba 178 201 14 1.0
-                        ] 
-                |> UI.andThen 
-                    |> UI.props 
-                        [ BackgroundColor 
-                            UI.toRgba 58 40 69 1.0 
-                        ] 
-                |> UI.on model.style 
-
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
+      UI.animate 
+              |> UI.props 
+                  [ BackgroundColor 
+                      UI.toRgba 100 100 100 1.0
+                  ] 
+          |> UI.andThen -- create a new keyframe
+              |> UI.duration (1*second)
+              |> UI.props 
+                  [ BackgroundColor 
+                      UI.toRgba 178 201 14 1.0
+                  ] 
+          |> UI.andThen 
+              |> UI.props 
+                  [ BackgroundColor 
+                      UI.toRgba 58 40 69 1.0 
+                  ] 
+          |> onMenu
 
 ```
 
@@ -231,10 +233,11 @@ To do this, we're going to use `UI.forwardTo`.  Essentially, `UI.forwardTo` will
 
 ```elm
 
-forwardToWidget = UI.forwardTo 
-                      Animate -- A way to create an Action.  Needs to be (Int -> UI.Action -> Your.Action)
-                      .style -- widget style getter
-                      (\w style -> { w | style = style }) -- widget style setter
+onWidget = 
+    UI.forwardToIndex  
+          Animate -- A way to create an Action.  Needs to be (Int -> UI.Action -> Your.Action)
+          .style -- widget style getter
+          (\w style -> { w | style = style }) -- widget style setter
 ```
 
 
@@ -243,12 +246,12 @@ Now that we have this function, we can animate a widget by using code like this:
       -- where i is the index of the widget we want to animate.
       let 
         (widgets, fx) = 
-                    UI.animate
-                        |> UI.duration (5*second)
-                        |> UI.props 
-                            [ Opacity (UI.to 0)  
-                            ] 
-                        |> forwardToWidget i model.widgets
+            UI.animate
+                |> UI.duration (5*second)
+                |> UI.props 
+                    [ Opacity (UI.to 0)  
+                    ] 
+                |> onWidget i model.widgets
 
       in
         ( { model | widgets = widgets }
@@ -271,7 +274,7 @@ And the update function forwards an animation update to a specific widget using 
     Animate i action ->
       let
         (widgets, fx) = 
-            forwardToWidget i model.widgets action 
+            onWidget i model.widgets action 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -377,21 +380,21 @@ How can we do this?  Well, essentially a stagger is just a function that takes t
 ```elm
 
 UI.stagger
-      (\i -> 
-         UI.animate
-           |> UI.delay (i * 0.05 * second) -- i is the index of the widget in the list.
-           |> UI.duration (0.3 * second)
-           |> UI.props 
-               [ Left (UI.to 200) Px
-               ] 
-        |> UI.andThen
-           |> UI.delay (2.0 * second)
-           |> UI.duration (0.3 * second)
-           |> UI.props 
-               [ Left (UI.to -50) Px
-               ] 
-      )
-      |> forwardToAllWidgets model.widgets
+    (\i -> 
+       UI.animate
+         |> UI.delay (i * 0.05 * second) -- i is the index of the widget in the list.
+         |> UI.duration (0.3 * second)
+         |> UI.props 
+             [ Left (UI.to 200) Px
+             ] 
+      |> UI.andThen
+         |> UI.delay (2.0 * second)
+         |> UI.duration (0.3 * second)
+         |> UI.props 
+             [ Left (UI.to -50) Px
+             ] 
+    )
+    |> onAllWidgets model.widgets -- onAllWidgets is a new helper function we created using UI.forwardToAll
 
 
 ```
