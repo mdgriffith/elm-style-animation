@@ -27,9 +27,7 @@ type Action = Show
             | Animate UI.Action
 
 
-{-| Prepare a helper function manage effects and assign styles
-
--}
+{-| Prepare a helper function manage effects and assign styles -}
 onMenu =
   UI.forwardTo 
       Animate
@@ -56,7 +54,7 @@ update action model =
                   [ Left (UI.to -350) Px
                   , Opacity (UI.to 0)
                   ] 
-           |> onMenu 
+           |> onMenu model
  
     Animate action ->
       onMenu model action
@@ -103,7 +101,7 @@ viewMenu address model =
                       , ul [] 
                            [ li [] [text "Some things"]
                            , li [] [text "in a list"]
-                            ]
+                           ]
                       ]
 
 

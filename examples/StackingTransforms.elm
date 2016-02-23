@@ -99,14 +99,18 @@ view address model =
                           style
             in
               div [ onClick address Transform ]
-                [ div [ style <| boxStyle ++ (UI.render model.style)
-                  ]
 
-                  [ h1 [ style [("padding","25px")]] 
-                       [ text "Click to see a Stacked Transform"]
+                  [ div [ style <| boxStyle ++ (UI.render model.style) ]
+                        [ h1 [ style [("padding","25px")]] 
+                             [ text "Click to see a Stacked Transform"]
+                        ]
+                  , small [ style [ ("position", "fixed")
+                                  , ("left","50px")
+                                  , ("top", "50px")
+                                  ]
+                          ] 
+                          [ text <| renderToString <| (UI.render model.style) ]
                   ]
-                , small [ style [("position", "fixed"), ("left","50px"), ("top", "50px")]] [text <| renderToString <| (UI.render model.style) ]
-                ]
 
 
 init : ( Model, Effects Action )

@@ -29,21 +29,21 @@ type alias Widget =
 type Action = Show 
             | Hide
             | Toggle
-            | Animate Target UI.Action
-
-type Target = OnWidget Int
+            | Animate Int UI.Action
 
 
 
-forwardToWidget = UI.forwardTo 
-                      (\i action -> Animate (OnWidget i) action)
-                      .style -- widget style getter
-                      (\w style -> { w | style = style }) -- widget style setter
+onWidget = 
+  UI.forwardToIndex
+      Animate
+      .style -- widget style getter
+      (\w style -> { w | style = style }) -- widget style setter
                                     
-forwardToAllWidgets = UI.forwardToAll 
-                          (\i action -> Animate (OnWidget i) action)
-                          .style -- widget style getter
-                          (\w style -> { w | style = style }) -- widget style setter
+onAllWidgets = 
+    UI.forwardToAll 
+        Animate
+        .style -- widget style getter
+        (\w style -> { w | style = style }) -- widget style setter
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -68,7 +68,7 @@ update action model =
                          [ Left (UI.to 100) Px
                          ] 
                 )
-                |> forwardToAllWidgets model.widgets
+                |> onAllWidgets model.widgets
 
       in
         ( { model | widgets = widgets 
@@ -87,7 +87,7 @@ update action model =
                        [ Left (UI.to -70) Px
                        ] 
               )
-              |> forwardToAllWidgets model.widgets
+              |> onAllWidgets model.widgets
 
       in
         ( { model | widgets = widgets
@@ -95,14 +95,13 @@ update action model =
         , fx )
 
 
-    Animate target action ->
-      case target of
-        OnWidget i ->
-          let
-            (widgets, fx) = forwardToWidget i model.widgets action
-          in
-            ( { model | widgets = widgets }
-            , fx )
+    Animate i action ->
+      let
+        (widgets, fx) = 
+            onWidget i model.widgets action
+      in
+        ( { model | widgets = widgets }
+        , fx )
 
 
 
@@ -127,11 +126,14 @@ view address model =
                   , style triggerStyle  
                   ]
 
-                  ([ h1 [ style [("padding","25px")]] 
-                        [ text "Click me!"]
-                   , p [] [ text "This example shows staggered animations"]
-                  
-                  ] ++ List.map (viewWidget address) model.widgets)
+                  <| List.concat 
+                      [ [ h1 [ style [("padding","25px")]] 
+                             [ text "Click me!"]
+                        , p [] [ text "This example shows staggered animations"]
+                        ]
+                      , List.map (viewWidget address) model.widgets
+                      ]
+    
 
 viewWidget : Address Action -> Widget -> Html
 viewWidget address model =
@@ -160,10 +162,11 @@ init = ( { widgets = List.map (\i -> initWidget i) [0..10]
        , Effects.none )
 
 initWidget i = 
-        { style = UI.init 
-                      [ Left -50.0 Px
-                      , Top (i * 45.0) Px
-                      ]
+        { style = 
+            UI.init 
+                [ Left -50.0 Px
+                , Top (i * 45.0) Px
+                ]
          }
 
 

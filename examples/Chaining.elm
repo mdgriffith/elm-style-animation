@@ -24,9 +24,7 @@ type Action = ChangeColor
             | Animate UI.Action
 
 
-{-| Prepare a helper function manage effects and assign styles
-
--}
+{-| Prepare a helper function manage effects and assign styles -}
 onModel =
   UI.forwardTo 
       Animate

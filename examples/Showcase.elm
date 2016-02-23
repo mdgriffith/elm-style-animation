@@ -44,7 +44,7 @@ type Action = RotateWidget Int
             | Spring Int
             | Animate Int UI.Action
 
-
+{-| Prepare a helper function manage effects and assign styles -}
 onWidget = 
     UI.forwardToIndex
         Animate
@@ -247,12 +247,14 @@ view address model =
                              , ("top", "0px")
                              , ("width", "100%")
                              , ("height", "100%")
-
                             ]
             in
               div [ style triggerStyle ]
 
-                  (List.indexedMap (\i w -> Html.Lazy.lazy (box address i) w) model.widgets)
+                  <| List.indexedMap 
+                       (\i w -> Html.Lazy.lazy2 (box address) i w) 
+                       model.widgets
+                  
 
 
 box : Address Action -> Int -> Widget -> Html
