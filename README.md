@@ -49,15 +49,16 @@ __Note__ all properties that are going to be animated need to be accounted for i
 
 ```elm
 import Html.Animation as UI
+import Html.Animation.Properties
 
 type alias Model = { style : UI.Animation }
 
 init : Model
 init = { style = 
             UI.init 
-                [ UI.Left -350.0 UI.Px
-                , UI.Opacity 0.0 
-                , UI.Color |> rgba 50 50 50 1.0
+                [ Left -350.0 Px
+                , Opacity 0.0 
+                , Color |> UI.rgba 50 50 50 1.0
                 ]
         }
 ```
@@ -114,8 +115,8 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
               -- |> UI.delay (0.5*second)
               -- |> UI.easing (\x -> x)
                  |> UI.props 
-                     [ UI.Left (UI.to 0) UI.Px
-                     , UI.Opacity (UI.to 1)
+                     [ Left (UI.to 0) Px
+                     , Opacity (UI.to 1)
                      ] 
                  |> UI.on model.style
 
@@ -154,8 +155,8 @@ However, there may be a situation where we don't want our animation to be interr
                             , damping = 12
                             }
                |> UI.props 
-                   [ UI.Left (UI.to 0) UI.Px
-                   , UI.Opacity (UI.to 1)
+                   [ Left (UI.to 0) Px
+                   , Opacity (UI.to 1)
                    ] 
                |> UI.on model.style
   ```
@@ -178,19 +179,19 @@ We also have option of chaining animations together.  So, let's make a square th
         (anim, fx) = 
             UI.animate 
                     |> UI.props 
-                        [ UI.BackgroundColor 
-                              UI.toRgba 100 100 100 1.0
+                        [ BackgroundColor 
+                            UI.toRgba 100 100 100 1.0
                         ] 
                 |> UI.andThen -- create a new keyframe
                     |> UI.duration (1*second)
                     |> UI.props 
-                        [ UI.BackgroundColor 
-                              UI.toRgba 178 201 14 1.0
+                        [ BackgroundColor 
+                            UI.toRgba 178 201 14 1.0
                         ] 
                 |> UI.andThen 
                     |> UI.props 
-                        [ UI.BackgroundColor 
-                              UI.toRgba 58 40 69 1.0 
+                        [ BackgroundColor 
+                            UI.toRgba 58 40 69 1.0 
                         ] 
                 |> UI.on model.style 
 
@@ -245,7 +246,7 @@ Now that we have this function, we can animate a widget by using code like this:
                     UI.animate
                         |> UI.duration (5*second)
                         |> UI.props 
-                            [ UI.Opacity (UI.to 0)  
+                            [ Opacity (UI.to 0)  
                             ] 
                         |> forwardToWidget i model.widgets
 
@@ -305,9 +306,9 @@ First, we define our initial style.  This will define the order that the transfo
 
 ```elm
 initialWidgetStyle = UI.init 
-                        [ UI.Rotate 0.0 UI.Deg
-                        , UI.TranslateY 0.0 UI.Px
-                        , UI.Rotate 0.0 UI.Deg
+                        [ Rotate 0 Deg
+                        , TranslateY 0 Px
+                        , Rotate 0 Deg
                         ]
 
 ```
@@ -325,20 +326,20 @@ Now let's animate these properties.  Let's say we want do the following animatio
   UI.animate 
       |> UI.duration (0.5*second)
       |> UI.props 
-          [ UI.Rotate (UI.to 20) UI.Deg
+          [ Rotate (UI.to 20) Deg
           ] 
   |> UI.andThen
       |> UI.duration (0.7*second)
       |> UI.props 
-          [ UI.TranslateY (UI.to -200) UI.Px
+          [ TranslateY (UI.to -200) Px
           ] 
   |> UI.andThen
       |> UI.duration (0.7*second)
       |> UI.props 
-          [ UI.Rotate UI.stay UI.Deg  -- <-  Here's the only new function! 
-                                      --  UI.stay allows us to specify 
-                                      --  the 2nd Rotate we mentioned in our init
-          , UI.Rotate (UI.to 360) UI.Deg
+          [ Rotate UI.stay Deg  -- <-  Here's the only new function! 
+                                --  UI.stay allows us to specify 
+                                --  the 2nd Rotate we mentioned in our init
+          , Rotate (UI.to 360) Deg
           ] 
     |> UI.andThen
       |> UI.duration (0.7*second)
@@ -348,16 +349,16 @@ Now let's animate these properties.  Let's say we want do the following animatio
   |> UI.andThen
       |> UI.delay (1*second)
       |> UI.props 
-          [ UI.Rotate (UI.to 0.0) UI.Deg
-          , UI.TranslateY (UI.to 0.0) UI.Px
-          , UI.Rotate (UI.to 0.0) UI.Deg
+          [ Rotate (UI.to 0.0) Deg
+          , TranslateY (UI.to 0.0) Px
+          , Rotate (UI.to 0.0) Deg
           ] 
 
 ```
 
 There's only one new function and that's `UI.stay`.
 
-`UI.stay` just keeps a property at it's current value.  Normally this is just assumed for any property that isn't explicitly animated, but we need `UI.stay` in this case to access that second `UI.Rotate` property.
+`UI.stay` just keeps a property at it's current value.  Normally this is just assumed for any property that isn't explicitly animated, but we need `UI.stay` in this case to access that second `Rotate` property.
 
 
 # Example 5: Staggering Animations
@@ -381,13 +382,13 @@ UI.stagger
            |> UI.delay (i * 0.05 * second) -- i is the index of the widget in the list.
            |> UI.duration (0.3 * second)
            |> UI.props 
-               [ UI.Left (UI.to 200) UI.Px
+               [ Left (UI.to 200) Px
                ] 
         |> UI.andThen
            |> UI.delay (2.0 * second)
            |> UI.duration (0.3 * second)
            |> UI.props 
-               [ UI.Left (UI.to -50) UI.Px
+               [ Left (UI.to -50) Px
                ] 
       )
       |> forwardToAllWidgets model.widgets
@@ -404,7 +405,7 @@ The cool part about this way of approaching it is that you can stagger anything 
 
 ## Uninitialized Style Animations
 
-If you attempt to animate a property that hasn't been provided in the initial style, _that property will not be animated._
+If you attempt to animate a property that hasn't been provided in the initial style, _that property will not be animated_ and a warning will be logged.
 
 This was done because it seems to be the better option than animating with an arbitrarily chosen default value and with arbitrarily chosen default units.
 
@@ -413,7 +414,7 @@ So, if a property isn't animating, check your UI.init!
 
 ## Doubly Specified Units
 
-If you specify different units for a property in the UI.init vs the animation, _that property animation will also not be animated._
+If you specify different units for a property in the UI.init vs the animation, _that property animation will also not be animated_ and a warning will be logged.
 
 I know this is not the best solution, but there are a few reasons why it's the case.
 
