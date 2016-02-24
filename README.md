@@ -8,6 +8,7 @@ A library to simplify creating html animations in elm. My focus was to create so
   3. Managing multiple animations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
   4. Stacking transformations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
   5. Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
+  6. Realistic scenario (flower menu) (separate repo) - [demo](https://mdgriffith.github.io/elm-html-animation/examples/FlowerMenu/) / [view code](https://github.com/mdgriffith/elm-html-animation-flower-menu/blob/master/FlowerMenu.elm)
 
 
 ## Installation
