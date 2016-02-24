@@ -82,7 +82,8 @@ inset =
     , ("background-color", "#EEE")
     ]
 
---debug =
+
+--  debug =
 --      toIndex 4 
 --        (\submenu -> ADebug.view submenu.style)
 --        model.submenus
@@ -100,7 +101,14 @@ inset =
 
 view : Animation.Animation -> Html
 view (Animation.A model) = 
-      div [ class "animation-debug" ]
+      div [ class "animation-debug"
+          , style [ ("position", "fixed")
+                  , ("width", "500px")
+                  , ("right", "25px")
+                  , ("top", "25px")
+                  , ("color", "#111")
+                  ] 
+          ]
           [ div [ ]
                 [ p [ style [("font-weight", "bold"), ("margin-top", "40px")]] [ text "Times"]
                 , div [ class "times", style inset ]
