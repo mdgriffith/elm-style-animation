@@ -213,7 +213,7 @@ We also have option of chaining animations together.  So, let's make a square th
 In this case we can use `UI.andThen` to create a new key frame.  This new keyframe will have it's own independent duration, easing, and properties.  Again, it can be interrupted at any point.
 
 
-# Example 4: Managing Multiple Animations
+# Example 3: Managing Multiple Animations
 
 [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
 
@@ -235,7 +235,7 @@ type alias Widget =
 
 We also need to prepare a function that will perform an animation update on a specific widget in the list.  
 
-To do this, we're going to use `UI.forwardTo`.  Essentially, `UI.forwardTo` will take a list of things and an index, and apply an update to the thing at that index.  In order to do this, it needs a `getter` and a `setter` function to get and set the style of the widget.
+To do this, we're going to use `UI.forwardToIndex`, which takes a list of things and an index, and applies an update to the thing at that index.  In order to do this, it needs a `getter` and a `setter` function to get and set the style of the widget.  It also needs a way to prepare an update using `Animate`.
 
 ```elm
 
