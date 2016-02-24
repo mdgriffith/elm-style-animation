@@ -418,7 +418,7 @@ applyKeyframeOptions options =
 
 
 
-{-|  This function is used to handle the boilerplate of forwarding animation updates 
+{-|  This function is used to handle the boilerplate of forwarding animation updates, and can be used in place of `on`.
 
 To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
 

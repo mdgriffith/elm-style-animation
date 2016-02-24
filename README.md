@@ -126,9 +126,7 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
 -- ... we add this to the case statement in our update function.
     Show ->
       UI.animate 
-      -- |> UI.duration (0.5*second)
       -- |> UI.delay (0.5*second)
-      -- |> UI.easing (\x -> x)
          |> UI.props 
              [ Left (UI.to 0) Px
              , Opacity (UI.to 1)
@@ -137,42 +135,49 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
 
 ```
 
-Notice we are programming declaratively by defining what style property should be by using `UI.to`.  
+Notice we are programming declaratively by defining what style property should be by using `UI.to`.  A delay is present but commented out, just to make you aware of how to do delays.
 
-We also have the option of defining a _duration_, a _delay_, and an _easing function_. 
+Instead of using a duration and an easing function, this library defaults to animating by using a __spring__.  By modeling real-world springs, we can create organic animations by defining two numbers, _stiffness_ and _damping_.
 
-In the above code, these are commented out, which means the defaults are used.  
 
-| Option   | Default |
-|----------|---------|
-| duration | 350ms   |
-| delay    | 0       |
-| easing   | _sinusoidal in-out_ |
+```elm
+-- ... we add this to the case statement in our update function.
+    Show ->
+      UI.animate 
+      -- |> UI.spring UI.wobbly -- you can use a UI preset
+      -- or specify manually.
+         |> UI.spring 
+              { stiffness = 400
+              , damping = 28
+              }
+         |> UI.props 
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
+             ] 
+         |> onMenu model
 
-Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
+```
 
-Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
 
-However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queue` instead of `UI.animate`
+> Alternatively, we also have the option of defining a _duration_, a _delay_, and an _easing function_.  I've generally found that springs are a more natural way for animating user interfaces, but I believe there are some cases where easing and duration could be preferable.  Here's how it's done.
 
-> ### Spring-based Animation
-> Instead of using a duration and an easing function, you also have the option of animating by using a __spring__.  Using the math that models real-world springs, we can create organic animations by just defining two numbers, _stiffness_ and _damping_.  Here's an example of using a spring:
->
-  ```elm
+ ```elm
        UI.animate 
-           |> UI.spring { stiffness = 180
-                        , damping = 12
-                        }
+           |> UI.easing (\x -> x)  -- linear easing
+           |> UI.duration (0.5*second)
            |> UI.props 
                [ Left (UI.to 0) Px
                , Opacity (UI.to 1)
                ] 
            |> onMenu model
   ```
->  __Note:__ If you provide a spring, it will override any duration or easing you may have specified. 
->
-> A number of spring presets are provided in the library.
+> 
 
+> Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
+
+Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
+
+However, there may be a situation where we don't want our animation to be interrupted.  Instead we might want the current animation to play out completely and for our new animation to play directly afterwards.  To do this, we would use `UI.queue` instead of `UI.animate`
 
 
 # Example 2: Chaining Animations Together
