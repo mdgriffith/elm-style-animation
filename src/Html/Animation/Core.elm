@@ -118,7 +118,8 @@ update action model =
                   (model.elapsed + first.delay) - prev.at
 
             interruptions =
-                   [ { at = interruptionTime
+              List.take 1 model.interruption
+               ++ [ { at = interruptionTime
                      , anim = interrupt
                      }
                    ]
