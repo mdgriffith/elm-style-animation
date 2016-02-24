@@ -331,21 +331,22 @@ port tasks =
   app.tasks
 
 
-forwardToWidget = UI.forwardTo 
-                      Animate
-                      .style -- widget style getter
-                      (\w style -> { w | style = style }) -- widget style setter
+forwardToWidget = 
+    UI.forwardToIndex
+        Animate
+        .style -- widget style getter
+        (\w style -> { w | style = style }) -- widget style setter
                                     
 
 
 
 renderWidget : Int -> List Widget -> List (String, String)
 renderWidget i widgets = 
-                       Maybe.withDefault []
-                        <| Maybe.map (\(i, w) -> UI.render w.style)
-                        <| List.head
-                        <| List.filter (\(j,w) -> j == i) 
-                        <| List.indexedMap (,) widgets
+                 Maybe.withDefault []
+                  <| Maybe.map (\(i, w) -> UI.render w.style)
+                  <| List.head
+                  <| List.filter (\(j,w) -> j == i) 
+                  <| List.indexedMap (,) widgets
 
 
 
