@@ -14,6 +14,8 @@ import Time exposing (Time, second)
 import Signal exposing (Address)
 
 import Html.Animation as UI
+import Html.Animation.Properties exposing (..)
+
 import Easing exposing (easeInBounce, easeInSine, easeOutSine)
 
 
@@ -31,30 +33,39 @@ type alias Widget =
 
 -- UPDATE
 
-type Action = Rotate Int
+type Action = RotateWidget Int
             | RotateAllAxis Int
             | RotateCustomEasingDuration Int
             | ChangeColors Int
             | ChangeMultipleColors Int
-            | FadeInFadeOut Int
+            | FadeOutFadeIn Int
+            | FadeOut Int
             | Loopty Int
             | Spring Int
             | Animate Int UI.Action
+
+{-| Prepare a helper function manage effects and assign styles -}
+onWidget = 
+    UI.forwardToIndex
+        Animate
+        .style -- widget style getter
+        (\w style -> { w | style = style }) -- widget style setter
+                                    
 
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
-    Rotate i ->
+    RotateWidget i ->
       let 
         (widgets, fx) = 
               UI.queue -- queue up this animation 
                        -- as opposed to interrupting
                   |> UI.duration (1*second)
                   |> UI.props 
-                      [ UI.Rotate (UI.add 1) UI.Turn 
+                      [ Rotate (UI.add 1) Turn 
                       ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -66,11 +77,11 @@ update action model =
                        -- as opposed to interrupting
                   |> UI.duration (1*second)
                   |> UI.props 
-                      [ UI.RotateX (UI.add 1) UI.Turn
-                      , UI.RotateY (UI.add 1) UI.Turn
-                      , UI.Rotate (UI.add 1) UI.Turn
+                      [ RotateX (UI.add 1) Turn
+                      , RotateY (UI.add 1) Turn
+                      , Rotate (UI.add 1) Turn
                       ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -85,9 +96,9 @@ update action model =
                   |> UI.duration (2*second)
                   |> UI.easing easeInBounce
                   |> UI.props 
-                      [ UI.Rotate (UI.add 1) UI.Turn 
+                      [ Rotate (UI.add 1) Turn 
                       ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -101,20 +112,20 @@ update action model =
                     |> UI.duration (0.5*second)
                     |> UI.easing easeInSine
                     |> UI.props 
-                        [ UI.Rotate (UI.add -0.5) UI.Turn
-                        , UI.TranslateY (UI.to 50) UI.Px
-                        , UI.Rotate (UI.add 0.5) UI.Turn
+                        [ Rotate (UI.add -0.5) Turn
+                        , TranslateY (UI.to 50) Px
+                        , Rotate (UI.add 0.5) Turn
                         ] 
                   |> UI.andThen
                     |> UI.duration (0.5*second)
                     |> UI.easing easeOutSine
                     |> UI.props 
-                        [ UI.Rotate (UI.add -0.5) UI.Turn
-                        , UI.TranslateY (UI.to 0) UI.Px
-                        , UI.Rotate (UI.add 0.5) UI.Turn
+                        [ Rotate (UI.add -0.5) Turn
+                        , TranslateY (UI.to 0) Px
+                        , Rotate (UI.add 0.5) Turn
                         ] 
 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -126,14 +137,14 @@ update action model =
                 UI.queue 
                     |> UI.spring UI.noWobble
                     |> UI.props 
-                        [ UI.Scale (UI.to 1.5)
+                        [ Scale (UI.to 1.5)
                         ] 
                   |> UI.andThen
                     |> UI.spring UI.wobbly
                     |> UI.props 
-                        [ UI.Scale (UI.to 1.0)
+                        [ Scale (UI.to 1.0)
                         ] 
-                  |> forwardToWidget i model.widgets 
+                  |> onWidget i model.widgets 
       in
         ( { model | widgets = widgets }
         , fx )
@@ -147,12 +158,12 @@ update action model =
                   UI.animate -- animate is used to interrupt whatever current animation
                              -- is running and smoothely move to the new style
                       |> UI.props 
-                          [ UI.BackgroundColor 
+                          [ BackgroundColor 
                                 |> UI.toRGBA 100 100 100 1.0 
-                          , UI.BorderColor 
+                          , BorderColor 
                                 |> UI.toRGBA 100 100 100 1.0 
                           ] 
-                      |> forwardToWidget i model.widgets
+                      |> onWidget i model.widgets
                       
         in
           ( { model | widgets = widgets }
@@ -165,36 +176,53 @@ update action model =
                       UI.animate -- animate is used to interrupt whatever current animation
                                  -- is running and smoothely move to the new style
                           |> UI.props 
-                              [ UI.BackgroundColor
+                              [ BackgroundColor
                                     |> UI.toRGBA 100 100 100 1.0 
-                              , UI.BorderColor
+                              , BorderColor
                                     |> UI.toRGBA 100 100 100 1.0  
                               ] 
                       |> UI.andThen 
                           |> UI.props 
-                              [ UI.BackgroundColor
+                              [ BackgroundColor
                                     |> UI.toRGBA 178 201 14 1.0 
-                              , UI.BorderColor
+                              , BorderColor
                                     |> UI.toRGBA 178 201 14 1.0 
                               ] 
-                      |> forwardToWidget i model.widgets
+                      |> onWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
           , fx)
 
-    FadeInFadeOut i ->
+    FadeOutFadeIn i ->
        let 
           (widgets, fx) =
                     UI.animate
                         |> UI.props 
-                            [ UI.Opacity (UI.to 0)  
+                            [ Opacity (UI.to 0)  
                             ] 
                     |> UI.andThen
                         |> UI.props 
-                            [ UI.Opacity (UI.to 1)  
+                            [ Opacity (UI.to 1)  
                             ] 
-                    |> forwardToWidget i model.widgets
+                    |> onWidget i model.widgets
+
+        in
+          ( { model | widgets = widgets }
+          , fx )
+
+    FadeOut i ->
+       let 
+          (widgets, fx) =
+                    UI.animate
+                        |> UI.props 
+                            [ Opacity (UI.to 0)
+                            ] 
+                     |> UI.andThen
+                        |> UI.set 
+                            [ Display None
+                            ]
+                     |> onWidget i model.widgets
 
         in
           ( { model | widgets = widgets }
@@ -203,7 +231,7 @@ update action model =
 
     Animate i action ->
       let
-        (widgets, fx) = forwardToWidget i model.widgets action
+        (widgets, fx) = onWidget i model.widgets action
       in
         ( { model | widgets = widgets }
         , fx )
@@ -219,12 +247,14 @@ view address model =
                              , ("top", "0px")
                              , ("width", "100%")
                              , ("height", "100%")
-
                             ]
             in
               div [ style triggerStyle ]
 
-                  (List.indexedMap (\i w -> Html.Lazy.lazy (box address i) w) model.widgets)
+                  <| List.indexedMap 
+                       (\i w -> Html.Lazy.lazy2 (box address) i w) 
+                       model.widgets
+                  
 
 
 box : Address Action -> Int -> Widget -> Html
@@ -251,18 +281,19 @@ box address i widget =
 
 
 initialWidgetStyle = UI.init 
-                        [ UI.Rotate 0.0 UI.Turn
-                        , UI.RotateX 0.0 UI.Turn
-                        , UI.RotateY 0.0 UI.Turn
-                        , UI.TranslateY 0.0 UI.Px
-                        , UI.Rotate 0.0 UI.Turn
-                        , UI.Opacity 1
-                        , UI.BackgroundColor |> UI.rgba 58 40 69 1.0
-                        , UI.Color |> UI.rgba 255 255 255 1.0
-                        , UI.Scale 1.0
-                        , UI.BorderColor |> UI.rgb 136 96 161
-                        , UI.BorderWidth 4 UI.Px 
-                        , UI.BorderRadius 8 UI.Px
+                        [ Display InlineBlock
+                        , Rotate 0.0 Turn
+                        , RotateX 0.0 Turn
+                        , RotateY 0.0 Turn
+                        , TranslateY 0.0 Px
+                        , Rotate 0.0 Turn
+                        , Opacity 1
+                        , BackgroundColor |> UI.rgba 58 40 69 1.0
+                        , Color |> UI.rgba 255 255 255 1.0
+                        , Scale 1.0
+                        , BorderColor |> UI.rgb 136 96 161
+                        , BorderWidth 4 Px 
+                        , BorderRadius 8 Px
                         ]
 
 
@@ -274,7 +305,7 @@ init = (
           [  
               { label = "Rotate"
               , style = initialWidgetStyle
-              , action = Rotate
+              , action = RotateWidget
               }
           , 
               { label = "Rotate in All Kinds of Ways"
@@ -297,9 +328,14 @@ init = (
               , action = ChangeMultipleColors
               }
           , 
-              { label = "FadeIn FadeOut"
+              { label = "Fade Out Fade In"
               , style = initialWidgetStyle
-              , action = FadeInFadeOut
+              , action = FadeOutFadeIn
+              }
+          , 
+              { label = "Fade Out and display:none"
+              , style = initialWidgetStyle
+              , action = FadeOut
               }
           , 
               { label = "Loop About"
@@ -335,11 +371,7 @@ port tasks =
 
 
 
-forwardToWidget = UI.forwardTo 
-                      Animate
-                      .style -- widget style getter
-                      (\w style -> { w | style = style }) -- widget style setter
-                                    
+
 
 
 

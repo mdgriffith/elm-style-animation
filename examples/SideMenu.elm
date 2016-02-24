@@ -12,6 +12,7 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
+import Html.Animation.Properties exposing (..)
 
 
 
@@ -26,48 +27,35 @@ type Action = Show
             | Animate UI.Action
 
 
+{-| Prepare a helper function manage effects and assign styles -}
+onMenu =
+  UI.forwardTo 
+      Animate
+      .style
+      (\w style -> { w | style = style }) -- style setter 
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
     Show ->
-      let 
-        (anim, fx) = 
-              UI.animate 
-                 |> UI.duration (0.4*second)
-                 |> UI.props 
-                     [ UI.Left (UI.to 0) UI.Px
-                     , UI.Opacity (UI.to 1)
-                     ] 
-                 |> UI.on model.style
-
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      UI.animate 
+         |> UI.props 
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
+             ] 
+         |> onMenu model
 
     Hide ->
-      let 
-        (anim, fx) = 
-            UI.animate
-               |> UI.duration (0.4*second)
-               |> UI.props 
-                      [ UI.Left (UI.to -350) UI.Px
-                      , UI.Opacity (UI.to 0)
-                      ] 
-               |> UI.on model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
-
+        UI.animate
+           |> UI.props 
+                  [ Left (UI.to -350) Px
+                  , Opacity (UI.to 0)
+                  ] 
+           |> onMenu model
+ 
     Animate action ->
-      let
-        (anim, fx) = UI.update action model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      onMenu model action
 
 
 view : Address Action -> Model -> Html
@@ -78,7 +66,8 @@ view address model =
                              , ("top", "0px")
                              , ("width", "350px")
                              , ("height", "100%")
-                             , ("background-color", "#AAA")
+                             --, ("background-color", "#AAA")
+                             , ("border", "2px dashed #AAA")
                             ]
             in
               div [ onMouseEnter address Show
@@ -95,12 +84,14 @@ viewMenu : Address Action -> Model -> Html
 viewMenu address model =
                 let
                   menuStyle = [ ("position", "absolute")
-                                , ("top", "0px")
+                                , ("top", "-2px")
+                                , ("margin-left", "-2px")
                                 , ("padding", "25px")
                                 , ("width", "300px")
                                 , ("height", "100%")
                                 , ("background-color", "rgb(58,40,69)")
                                 , ("color", "white")
+                                , ("border", "2px solid rgb(58,40,69)")
                               ]
                 in
                   div [ style (menuStyle ++ (UI.render model.style)) ]
@@ -108,15 +99,15 @@ viewMenu address model =
                       , ul [] 
                            [ li [] [text "Some things"]
                            , li [] [text "in a list"]
-                            ]
+                           ]
                       ]
 
 
 
 init : ( Model, Effects Action )
 init = ( { style = UI.init 
-                      [ UI.Left -350.0 UI.Px
-                      , UI.Opacity 0.0 
+                      [ Left -350.0 Px
+                      , Opacity 0.0 
                       ]
          }
        , Effects.none )

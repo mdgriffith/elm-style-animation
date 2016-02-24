@@ -12,7 +12,7 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
-
+import Html.Animation.Properties exposing (..)
 
 type alias Model = 
             { style : UI.Animation 
@@ -24,43 +24,38 @@ type Action = ChangeColor
             | Animate UI.Action
 
 
+{-| Prepare a helper function manage effects and assign styles -}
+onModel =
+  UI.forwardTo 
+      Animate
+      .style
+      (\w style -> { w | style = style }) -- style setter 
+
+
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
     ChangeColor ->
-      let 
-        (anim, fx) = 
-            UI.animate 
-                  |> UI.props 
-                      [ UI.BackgroundColor 
-                            |> UI.toRGBA 100 100 100 1.0  
-                      ] 
-              |> UI.andThen -- create a new keyframe
-                  |> UI.duration (1*second)
-                  |> UI.props 
-                      [ UI.BackgroundColor 
-                            |> UI.toRGBA 178 201 14 1.0 
-                      ] 
-              |> UI.andThen 
-                  |> UI.props 
-                      [ UI.BackgroundColor 
-                            |> UI.toRGBA 58 40 69 1.0 
-                      ] 
-              |> UI.on model.style
-
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
-
+      UI.animate 
+            |> UI.props 
+                [ BackgroundColor 
+                      |> UI.toRGBA 100 100 100 1.0  
+                ] 
+        |> UI.andThen -- create a new keyframe
+            |> UI.duration (1*second)
+            |> UI.props 
+                [ BackgroundColor 
+                      |> UI.toRGBA 178 201 14 1.0 
+                ] 
+        |> UI.andThen 
+            |> UI.props 
+                [ BackgroundColor 
+                      |> UI.toRGBA 58 40 69 1.0 
+                ] 
+        |> onModel model
 
     Animate action ->
-      let
-        (anim, fx) = UI.update action model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      onModel model action
 
 
 view : Address Action -> Model -> Html
@@ -83,12 +78,10 @@ view address model =
                   [ text "Click to Change Color" ]
 
 
-
-
 init : ( Model, Effects Action )
 init = ( { style = 
               UI.init 
-                  [ UI.BackgroundColor 
+                  [ BackgroundColor 
                         |> UI.rgba 58 40 69 1.0 ]
          }
        , Effects.none )

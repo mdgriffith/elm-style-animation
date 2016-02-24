@@ -12,8 +12,9 @@ import Task
 import Time exposing (second)
 
 import Html.Animation as UI
+import Html.Animation.Properties exposing (..)
 
-
+import String exposing (concat)
 
 type alias Model = 
             { style : UI.Animation 
@@ -25,58 +26,55 @@ type Action = Transform
             | Animate UI.Action
 
 
+{-| Prepare a helper function manage effects and assign styles
+
+-}
+onModel =
+  UI.forwardTo 
+      Animate
+      .style
+      (\w style -> { w | style = style }) -- style setter 
+
 
 update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
  
     Transform ->
-      let 
-        (anim, fx) = 
-              UI.animate 
-                  |> UI.duration (0.5*second)
-                  |> UI.props 
-                      [ UI.Rotate (UI.to 20) UI.Deg
-                      ] 
-              |> UI.andThen
-                  |> UI.duration (0.7*second)
-                  |> UI.props 
-                      [ UI.TranslateY (UI.to -200) UI.Px
-                      ] 
-              |> UI.andThen
-                  |> UI.duration (0.7*second)
-                  |> UI.props 
-                      [ UI.Rotate UI.stay UI.Deg  -- <-  Here's the only new function! 
-                                                  --  UI.stay allows us to specify 
-                                                  --  the 2nd Rotate we mentioned in our init
-                      , UI.Rotate (UI.to 360) UI.Deg
-                      ] 
-                |> UI.andThen
-                  |> UI.duration (0.7*second)
-                  |> UI.props 
-                      [ UI.Rotate (UI.to 380) UI.Deg 
-                      ] 
-              |> UI.andThen
-                  |> UI.delay (1*second)
-                  |> UI.props 
-                      [ UI.Rotate (UI.to 0.0) UI.Deg
-                      , UI.TranslateY (UI.to 0.0) UI.Px
-                      , UI.Rotate (UI.to 0.0) UI.Deg
-                      ] 
-              |> UI.on model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
+      UI.animate 
+            |> UI.duration (0.5*second)
+            |> UI.props 
+                [ Rotate (UI.to 20) Deg
+                ] 
+        |> UI.andThen
+            |> UI.duration (0.7*second)
+            |> UI.props 
+                [ TranslateY (UI.to -200) Px
+                ] 
+        |> UI.andThen
+            |> UI.duration (0.7*second)
+            |> UI.props 
+                [  Rotate UI.stay Deg  -- <-  Here's the only new function! 
+                                            --  UI.stay allows us to specify 
+                                            --  the 2nd Rotate we mentioned in our init
+                , Rotate (UI.to 360) Deg
+                ] 
+          |> UI.andThen
+            |> UI.duration (0.7*second)
+            |> UI.props 
+                [ Rotate (UI.to 380) Deg 
+                ] 
+        |> UI.andThen
+            |> UI.delay (1*second)
+            |> UI.props 
+                [ Rotate (UI.to 0.0) Deg
+                , TranslateY (UI.to 0.0) Px
+                , Rotate (UI.to 0.0) Deg
+                ] 
+        |> onModel model
 
     Animate action ->
-      let
-        (anim, fx) = UI.update action model.style
-      in
-        ( { model | style = anim }
-        , Effects.map Animate fx )
-
-
+      onModel model action
 
 view : Address Action -> Model -> Html
 view address model =
@@ -94,22 +92,33 @@ view address model =
                              , ("background-color", "#AAA")
                              , ("cursor", "pointer")
                             ]
+              renderToString style = 
+                  String.concat
+                      <| List.map 
+                          (\(name, value) -> name ++ ": " ++ value)
+                          style
             in
-              div [ onClick address Transform
-                  , style <| boxStyle ++ (UI.render model.style)
-                  ]
+              div [ onClick address Transform ]
 
-                  [ h1 [ style [("padding","25px")]] 
-                       [ text "Click to see a Stacked Transform"]
+                  [ div [ style <| boxStyle ++ (UI.render model.style) ]
+                        [ h1 [ style [("padding","25px")]] 
+                             [ text "Click to see a Stacked Transform"]
+                        ]
+                  , small [ style [ ("position", "fixed")
+                                  , ("left","50px")
+                                  , ("top", "50px")
+                                  ]
+                          ] 
+                          [ text <| renderToString <| (UI.render model.style) ]
                   ]
 
 
 init : ( Model, Effects Action )
 init = ( { style = UI.init 
-                        [ UI.Rotate 0.0 UI.Deg
-                        , UI.TranslateY 0.0 UI.Px
-                        , UI.TranslateX 0.0 UI.Px
-                        , UI.Rotate 0.0 UI.Deg
+                        [ Rotate 0.0 Deg
+                        , TranslateY 0.0 Px
+                        , TranslateX 0.0 Px
+                        , Rotate 0.0 Deg
                         ]
          }
        , Effects.none )
