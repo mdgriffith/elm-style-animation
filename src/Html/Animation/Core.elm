@@ -1,4 +1,4 @@
-module Html.Animation.Core (Model, Action(..), StyleKeyframe, Style, Physics, DynamicTarget, Static, update, step, mapProp, bake, emptyEasing) where
+module Html.Animation.Core (Model, Action(..), StyleKeyframe, Interruption, Style, Physics, DynamicTarget, Static, update, step, mapProp, bake, emptyEasing) where
 
 import Time exposing (Time, second)
 import Effects exposing (Effects)
@@ -118,8 +118,7 @@ update action model =
                   (model.elapsed + first.delay) - prev.at
 
             interruptions =
-              model.interruption
-                ++ [ { at = interruptionTime
+                   [ { at = interruptionTime
                      , anim = interrupt
                      }
                    ]
