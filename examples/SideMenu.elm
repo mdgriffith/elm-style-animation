@@ -40,7 +40,6 @@ update action model =
   case action of
     Show ->
       UI.animate 
-         --|> UI.duration (0.4*second)
          |> UI.props 
              [ Left (UI.to 0) Px
              , Opacity (UI.to 1)
@@ -49,7 +48,6 @@ update action model =
 
     Hide ->
         UI.animate
-           --|> UI.duration (0.4*second)
            |> UI.props 
                   [ Left (UI.to -350) Px
                   , Opacity (UI.to 0)

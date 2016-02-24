@@ -112,8 +112,7 @@ emptyPhysics : a -> Core.Physics a
 emptyPhysics target =
   { target = target
   , physical =
-      { initial = 0
-      , position = 0
+      { position = 0
       , velocity = 0
       }
   , spring =

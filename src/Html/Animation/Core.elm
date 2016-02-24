@@ -546,8 +546,7 @@ transferVelocityProp maybeOld target =
                   <| { easing
                       | counterForcePhys =
                           Just
-                            <| { initial = 0
-                               , position = 0
+                            <| { position = 0
                                , velocity = deltaV
                                }
                      }
@@ -604,8 +603,7 @@ applyStep current dt maybeFrom physics =
             positioned =
               -- Kind of a hack to establish initial values :/
               if current == 0.0 && dt == 0.0 then
-                { initial = from
-                , position = from
+                { position = from
                 , velocity = physics.physical.velocity
                 }
               else
@@ -720,26 +718,9 @@ stepProp prop prev val =
       in
         Prop name (val from to) unit
 
-    Display mode -> Display mode
-      --let
-      --  from =
-      --    case prev of
-      --      Display mode ->
-      --        Just mode
-
-      --      _ ->
-      --        Nothing
-      --in
-      --  case from of
-      --    Nothing ->
-      --      Display mode
-      --    Just m ->
-      --      Display m
-      --  Display 
-      --    <| case mode of
-      --         DisplayMode to prev target ->
-      --            DisplayMode (val from to) prev target
-
+    Display mode -> 
+      Display mode
+     
     Opacity to ->
       let
         from =
