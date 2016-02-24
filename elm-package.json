@@ -1,5 +1,5 @@
 {
-    "version": "2.1.0",
+    "version": "3.0.0",
     "summary": "HTML Animations in Elm",
     "repository": "https://github.com/mdgriffith/elm-html-animation.git",
     "license": "BSD3",
@@ -7,8 +7,8 @@
         "src"
     ],
     "exposed-modules": [
-        "Html.Animation"
-    ,   "Html.Animation.Properties"
+        "Html.Animation",
+        "Html.Animation.Properties"
     ],
     "dependencies": {
         "elm-lang/core": "3.0.0 <= v < 4.0.0",
