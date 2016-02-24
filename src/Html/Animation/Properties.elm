@@ -1,18 +1,16 @@
-module Html.Animation.Properties (StyleProperty (..), Static, Length (..), Angle (..), DisplayMode (..)) where
+module Html.Animation.Properties (StyleProperty (..), Length (..), Angle (..), DisplayMode (..)) where
 
 
 {-|
 
 # All Animatable Style Properties
-@docs StyleProperty
+@docs StyleProperty, DisplayMode
 
 # Units
 @docs Length, Angle
 
 -}
 
-type alias Static =
-  Float
 
 {-| All currently animatable properties.
 -}
@@ -103,13 +101,20 @@ type Angle
   | Rad
   | Turn
 
-
+{-| A Display value used for the display property.
+A display mode is not animated but can be set using Html.Animation.set
+-}
 type DisplayMode
   = None
   | Inline
   | InlineBlock
   | Block
+  | Flex
+  | InlineFlex
+  | ListItem
 
+
+  
 
 
 

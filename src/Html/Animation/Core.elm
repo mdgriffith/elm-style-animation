@@ -1,4 +1,4 @@
-module Html.Animation.Core (Model, Action(..), StyleKeyframe, Style, Physics, DynamicTarget, update, step, mapProp, bake, emptyEasing) where
+module Html.Animation.Core (Model, Action(..), StyleKeyframe, Style, Physics, DynamicTarget, Static, update, step, mapProp, bake, emptyEasing) where
 
 import Time exposing (Time, second)
 import Effects exposing (Effects)
@@ -49,6 +49,8 @@ type alias Style =
 type alias DynamicTarget =
   Float -> Float -> Float
 
+type alias Static =
+  Float
 
 type alias Physics a =
   { target : a

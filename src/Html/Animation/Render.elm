@@ -175,7 +175,7 @@ name styleProp =
 
 
 -- renders a valid css value for a Style Property
-value : StyleProperty Static -> String
+value : StyleProperty Float -> String
 value prop =
   let
     val a =
@@ -842,6 +842,15 @@ displayMode mode =
 
                 Block ->
                   "block"
+
+                Flex ->
+                  "flex"
+
+                InlineFlex ->
+                  "inline-flex"
+
+                ListItem -> 
+                  "list-item"
 
 
              

@@ -10,8 +10,11 @@ Once you have the basic structure of how to use this library, you can refer to t
 # Base Definitions
 @docs Animation, Action
 
-# Creating an animation
-@docs animate, queue, stagger, props, delay, spring, duration, easing, andThen, on
+# Starting an animation
+@docs animate, queue, stagger
+
+# Creating animations
+@docs props, delay, spring, duration, easing, andThen, set
 
 # Animating Properties
 
@@ -40,8 +43,8 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 # Update a Style
 @docs update
 
-# Managing a list of styled widgets
-@docs forwardTo, forwardToIndex, forwardToAll
+# Managing Effects
+@docs on, forwardTo, forwardToIndex, forwardToAll
 
 -}
 
@@ -53,7 +56,7 @@ import Color
 import Html.Animation.Properties exposing (..)
 import Html.Animation.Render as Render
 import Html.Animation.Spring as Spring
-import Html.Animation.Core as Core
+import Html.Animation.Core as Core exposing (Static)
 
 
 {-| An Animation of CSS properties.
@@ -70,10 +73,7 @@ type alias KeyframeWithOptions =
   }
 
 
-{-| Actions to be run on an animation.
-You won't be constructing using this type directly, though it may show up in your type signatures.
-
-To start animations you'll be using the `animate`, `queue`, and `stagger` functions
+{-| A Temporary type that is used in constructing actions.
 -}
 type alias PreAction =
   { frames : List KeyframeWithOptions
@@ -85,6 +85,11 @@ type alias Dynamic =
   Core.Physics Core.DynamicTarget
 
 
+{-| Actions to be run on an animation.
+You won't be constructing this type directly, though it may show up in your type signatures.
+
+To start animations you'll be using the `animate`, `queue`, and `stagger` functions
+-}
 type Action
   = Staggered (Float -> Float -> Action)
   | Unstaggered PreAction
@@ -168,16 +173,21 @@ type alias SpringProps =
             , damping : Float
             }
 
-{-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
+{-| Animate based on spring physics.  
 
+You'll need to provide both a stiffness and a dampness to this function.
 
 __Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
 
-   UI.animate
-         |> UI.spring UI.noWobble
+     UI.animate
+         -- |> UI.spring UI.noWobble -- set using a UI preset
+         |> UI.spring 
+                { stiffness = 400
+                , damping = 28
+                }
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 -}
@@ -246,8 +256,8 @@ update action (A model) =
       UI.animate
          |> UI.duration (0.4*second)
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 
@@ -265,8 +275,8 @@ animate =
       UI.queue
          |> UI.duration (0.4*second)
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 
@@ -284,16 +294,17 @@ queue =
      UI.stagger
         (\i ->
            UI.animate
-             |> UI.delay (i * 0.05 * second) -- The delay is staggered based on list index
+             -- The delay is staggered based on list index
+             |> UI.delay (i * 0.05 * second) 
              |> UI.duration (0.3 * second)
              |> UI.props
-                 [ UI.Left (UI.to 200) UI.Px
+                 [ Left (UI.to 200) Px
                  ]
           |> UI.andThen
              |> UI.delay (2.0 * second)
              |> UI.duration (0.3 * second)
              |> UI.props
-                 [ UI.Left (UI.to -50) UI.Px
+                 [ Left (UI.to -50) Px
                  ]
         )
         |> forwardToAllWidgets model.widgets
@@ -312,8 +323,8 @@ However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare
      UI.animate
          |> UI.duration (0.4*second)
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px 
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 
@@ -407,34 +418,43 @@ applyKeyframeOptions options =
 
 
 
-{-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
-you can forward the update to a specific element in a list that has a Animation model.
+{-|  This function is used to handle the boilerplate of forwarding animation updates 
 
 To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
 
 So, for a model like the following
 
-    type alias Model = { widgets : List Widget }
+    type alias Model = { style : UI.Animation }
 
-    type alias Widget =
-              { style : UI.Animation
-              }
-You'd probably want to create a specialized version of `forwardTo`.
+Add an action to your Action type to capture the UI.Actions.
 
-    forwardToWidget = UI.forwardTo
-                        .style -- widget style getter
-                        (\w style -> { w | style = style }) -- widget style setter
+    type Action 
+          = Hide
+          | Animate UI.Action
 
-Which you can then use to apply an animation to a widget in a list.
 
-    (widgets, fx) =
-            UI.animate
-                |> UI.duration (5*second)
-                |> UI.props
-                    [ UI.Opacity (UI.to 0)
-                    ]
-                |> forwardToWidget i model.widgets
-                -- Where i is the index of the widget to update.
+Create a specialized version of `forwardTo`.
+
+    onModel = 
+      UI.forwardTo
+          Animate -- The action that captures UI.Action 
+          .style -- style getter
+          (\w style -> { w | style = style }) -- style setter
+
+Then, in your update function would look something like 
+
+
+      Hide ->
+        UI.animate
+            |> UI.duration (5*second)
+            |> UI.props
+                [ Opacity (UI.to 0)
+                ]
+            |> onModel model
+
+      Animate uiAction ->
+        onModel model uiAction
+
 
 -}
 forwardTo : (Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> a -> Action -> ( a, Effects b )
@@ -454,34 +474,52 @@ forwardTo toInternalAction styleGet styleSet widget action =
       )
 
 
-{-| Can be used in place of `on`.  Instead of applying an update directly to a Animation model,
-you can forward the update to a specific element in a list that has a Animation model.
+{-| Forward style updates to a specific element in a list that has a Animation model.
 
-To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
-
-So, for a model like the following
+For a model like the following
 
     type alias Model = { widgets : List Widget }
 
     type alias Widget =
               { style : UI.Animation
               }
-You'd probably want to create a specialized version of `forwardTo`.
+  
+    type Action 
+          = Hide
+          | Animate Int UI.Action -- where Int is the index of the widget we are animating
 
-    forwardToWidget = UI.forwardToIndex
-                        .style -- widget style getter
-                        (\w style -> { w | style = style }) -- widget style setter
+Create a specialized version of `forwardToIndex`.
 
-Which you can then use to apply an animation to a widget in a list.
+    onWidget = 
+      UI.forwardToIndex
+          Animate
+          .style -- widget style getter
+          (\w style -> { w | style = style }) -- widget style setter
 
-    (widgets, fx) =
+And in your update function:
+
+    Hide ->
+      let
+        (widgets, fx) =
             UI.animate
                 |> UI.duration (5*second)
                 |> UI.props
-                    [ UI.Opacity (UI.to 0)
+                    [ Opacity (UI.to 0)
                     ]
-                |> forwardToWidget i model.widgets
+                |> onWidget i model.widgets
                 -- Where i is the index of the widget to update.
+      in
+        ( { model | widgets = widgets }
+        , fx ) -- FX has already been `Effects.map`ped to Animate
+
+    Animate i action ->
+      let
+        (widgets, fx) = 
+            onWidget i model.widgets action
+      in
+        ( { model | widgets = widgets }
+        , fx )
+
 
 -}
 forwardToIndex : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
@@ -517,22 +555,60 @@ forwardToIndex toInternalAction styleGet styleSet i widgets action =
     ( widgets, Effects.batch effects )
 
 
-{-| Same as `forwardTo`, except it applies an update to every member of the list.
+{-| Like `forwardToIndex`, except it applies an update to every member of the list.
+It has the same set up as `forwardToIndex`, except:
+
+You'll need two helper functions
+
+  onWidget = 
+    UI.forwardToIndex
+        Animate
+        .style -- widget style getter
+        (\w style -> { w | style = style }) -- widget style setter
+                                      
+  onAllWidgets = 
+      UI.forwardToAll 
+          Animate
+          .style -- widget style getter
+          (\w style -> { w | style = style }) -- widget style setter
+
+
+
+And your update function will look like the following
+
+    Hide ->
+      let 
+        (widgets, fx) = 
+            UI.animate
+               |> UI.delay ((i * 0.05) * second)
+               |> UI.spring UI.wobbly
+               |> UI.props 
+                   [ Left (UI.to -70) Px
+                   ] 
+              |> onAllWidgets model.widgets 
+              -- apply an update to all widgets
+
+      in
+        ( { model | widgets = widgets }
+        , fx )
+
+    
+    -- But, in animate, you only need to forwad to a widget based on index
+    Animate i action ->
+      let
+        (widgets, fx) = 
+            onWidget i model.widgets action
+      in
+        ( { model | widgets = widgets }
+        , fx )
+
+
+
 
 -}
 forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Effects b )
 forwardToAll toInternalAction styleGet styleSet widgets action =
   let
-    --largestDuration = List.map
-    --                      (\i ->
-    --                        case resolve action i of
-    --                          Queue frames -> getFullDuration frames
-    --                          Interrupt frames -> getFullDuration frames
-    --                          _ -> 0.0
-    --                      )
-    --                      [1..List.length widgets]
-    --                |> List.maximum
-    --                |> Maybe.withDefault 0.0
     numWidgets =
       List.length widgets
 
@@ -546,7 +622,6 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
 
                 ( newStyle, fx ) =
                   Core.update
-                    --(normalizedDuration largestDuration (resolve action i))
                     (resolve action numWidgets i)
                     anim
               in
@@ -566,8 +641,8 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
      UI.animate
          |> UI.duration (0.4*second)
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 
@@ -589,17 +664,17 @@ props p action =
 
 
 
-{-| Create an animation frame that happens immediately with duration 0.  
-This is useful for setting display:none at the end of fading an element out.
+{-| Apply a style immediately.  This takes a list of static style properties, meaning the no `UI.to` functions, only concrete numbers and values.
 
 
     UI.animate
          |> UI.duration (0.4*second)
          |> UI.props
-             [ UI.Opacity (UI.to 1)
+             [ Opacity (UI.to 1)
              ]
+      |> UI.andThen
          |> UI.set
-             [ UI.Display UI.none
+             [ Display None
              ]
          |> UI.on model.style
 
@@ -630,13 +705,16 @@ set staticProps action =
               )
 
 
-{-| Specify a duration.  If not specified, the default is 350ms.
+{-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
 
-   UI.animate
+If an easing is specified but no duration, the default duration is 350ms.
+
+     UI.animate
+         |> UI.easing (\x -> x)  -- linear easing
          |> UI.duration (0.4*second)
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 -}
@@ -645,14 +723,15 @@ duration dur action =
   updateOrCreate action (\a -> { a | duration = Just dur })
 
 
-{-| Specify a delay.  If not specified, the default is 0.
+{-| Specify a delay.  
+If not specified, the default is 0.
 
-   UI.animate
+     UI.animate
          |> UI.duration (0.4*second)
          |> UI.delay (0.5*second)
          |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
              ]
          |> UI.on model.style
 -}
@@ -672,8 +751,7 @@ delay delay action =
     )
 
 
-{-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal
-in-out.
+{-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal in-out.
 
 -}
 easing : (Float -> Float) -> Action -> Action
@@ -683,22 +761,24 @@ easing ease action =
 
 
 
-{-| Append another keyframe.  This is used for multistage animations.  For example, to cycle through colors, we'd use the following:
+{-| Append another keyframe.  This is used for multistage animations.  
+
+For example, to cycle through colors, we'd use the following:
 
       UI.animate
               |> UI.props
-                  [ UI.BackgroundColor
+                  [ BackgroundColor
                         UI.toRGBA 100 100 100 1.0
                   ]
           |> UI.andThen -- create a new keyframe
               |> UI.duration (1*second)
               |> UI.props
-                  [ UI.BackgroundColor
+                  [ BackgroundColor
                         UI.toRGBA 178 201 14 1.0
                   ]
           |> UI.andThen
               |> UI.props
-                  [ UI.BackgroundColor
+                  [ BackgroundColor
                         UI.toRGBA 58 40 69 1.0
                   ]
           |> UI.on model.style
@@ -808,7 +888,7 @@ toColor color almostColor =
 
      UI.animate
             |> UI.props
-                [ UI.BackgroundColor
+                [ BackgroundColor
                       UI.toRGB 100 100 100
                 ]
             |> UI.on model.style
