@@ -1,4 +1,4 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToIndex, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, fastAndLoose, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
+module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToIndex, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -23,7 +23,7 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 @docs to, stay, add, minus
 
 # Spring Presets
-@docs noWobble, gentle, wobbly, stiff, fastAndLoose
+@docs noWobble, gentle, wobbly, stiff
 
 # Animating Colors
 @docs toColor, toRGB, toRGBA, toHSL, toHSLA
@@ -112,7 +112,8 @@ emptyPhysics : a -> Core.Physics a
 emptyPhysics target =
   { target = target
   , physical =
-      { position = 0
+      { initial = 0
+      , position = 0
       , velocity = 0
       }
   , spring =
@@ -163,53 +164,69 @@ init sty =
     A { empty | previous = deduped }
 
 
+type alias SpringProps = 
+            { stiffness : Float
+            , damping : Float
+            }
+
+{-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
+
+
+__Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
+
+   UI.animate
+         |> UI.spring UI.noWobble
+         |> UI.props
+             [ UI.Left UI.Px (UI.to 0)
+             , UI.Opacity (UI.to 1)
+             ]
+         |> UI.on model.style
+-}
+spring : SpringProps -> Action -> Action
+spring spring action =
+  let
+    newSpring = Just 
+      { destination = 1.0
+      , damping = spring.damping
+      , stiffness = spring.stiffness
+      }
+  in
+    updateOrCreate action (\a -> { a | spring = newSpring })
+
+
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
-noWobble : Spring.Model
+noWobble : SpringProps
 noWobble =
   { stiffness = 170
   , damping = 26
-  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-gentle : Spring.Model
+gentle : SpringProps
 gentle =
   { stiffness = 120
   , damping = 14
-  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-wobbly : Spring.Model
+wobbly : SpringProps
 wobbly =
   { stiffness = 180
   , damping = 12
-  , destination = 1
   }
 
 
 {-| A spring preset.
 -}
-stiff : Spring.Model
+stiff : SpringProps
 stiff =
   { stiffness = 210
   , damping = 20
-  , destination = 1
-  }
-
-
-{-| A spring preset.
--}
-fastAndLoose : Spring.Model
-fastAndLoose =
-  { stiffness = 400
-  , damping = 28
-  , destination = 1
   }
 
 
@@ -665,22 +682,6 @@ easing ease action =
   updateOrCreate action (\a -> { a | easing = Just ease })
 
 
-{-| Animate based on spring physics.  You'll need to provide both a stiffness and a dampness to this function.
-
-
-__Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
-
-   UI.animate
-         |> UI.spring UI.noWobble
-         |> UI.props
-             [ UI.Left UI.Px (UI.to 0)
-             , UI.Opacity (UI.to 1)
-             ]
-         |> UI.on model.style
--}
-spring : Spring.Model -> Action -> Action
-spring spring action =
-  updateOrCreate action (\a -> { a | spring = Just spring })
 
 
 {-| Append another keyframe.  This is used for multistage animations.  For example, to cycle through colors, we'd use the following:

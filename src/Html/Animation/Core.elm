@@ -546,7 +546,8 @@ transferVelocityProp maybeOld target =
                   <| { easing
                       | counterForcePhys =
                           Just
-                            <| { position = 0
+                            <| { initial = 0
+                               , position = 0
                                , velocity = deltaV
                                }
                      }
@@ -599,28 +600,29 @@ applyStep current dt maybeFrom physics =
       case physics.easing of
         Nothing ->
           let
-            newPhysical =
-              physics.physical
 
-            newSpring =
-              physics.spring
-
-            pos =
+            positioned =
               -- Kind of a hack to establish initial values :/
               if current == 0.0 && dt == 0.0 then
-                from
+                { initial = from
+                , position = from
+                , velocity = physics.physical.velocity
+                }
               else
-                physics.physical.position
+                physics.physical
+   
+            newSpring =
+              physics.spring
 
             targeted =
               { newSpring
                 | destination = physics.target from 1.0
               }
 
-            positioned =
-              { newPhysical
-                | position = pos
-              }
+            --positioned =
+            --  { newPhysical
+            --    | position = pos
+            --  }
 
             finalPhysical =
               Spring.update dt targeted positioned
