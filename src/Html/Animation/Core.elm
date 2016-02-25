@@ -109,20 +109,20 @@ update action model =
               List.head
                 <| List.reverse model.interruption
 
-            interruptionTime =
-              case last of
-                Nothing ->
-                  model.elapsed + first.delay
-
-                Just prev ->
-                  (model.elapsed + first.delay) - prev.at
-
             interruptions =
-              List.take 1 model.interruption
-               ++ [ { at = interruptionTime
-                     , anim = interrupt
-                     }
-                   ]
+              case last of 
+                Nothing ->
+                  [ { at = model.elapsed + first.delay
+                    , anim = interrupt
+                    }
+                  ]
+                Just prev ->
+                   prev ::
+                      [ { at = (model.elapsed + first.delay) - prev.at
+                        , anim = interrupt
+                        }
+                      ]
+
           in
             ( { model
                 | interruption = interruptions
@@ -139,7 +139,7 @@ update action model =
           Just interruption ->
             if elapsed >= interruption.at then
               interrupt now model interruption.anim 
-                      (Maybe.withDefault [] <| List.tail model.interruption)
+                      ( List.drop 1 model.interruption )
             else
               case List.head model.anim of
                 Nothing ->
@@ -184,17 +184,26 @@ tick model current elapsed dt start now =
     -- animation is finished, switch to new frame
     let
       anims =
-        Maybe.withDefault []
-          <| List.tail model.anim
+        List.drop 1 model.anim
 
       previous =
         bake current model.previous
+
+      -- if an animation finishes, but there is still an interruption pending
+      -- Revise the expected interruption time down
+      interruption =
+        List.map 
+            (\inter -> 
+                { inter | at = inter.at - elapsed }
+            )
+            model.interruption
     in
       ( { model
           | elapsed = 0.0
           , start = Just now
           , previous = previous
           , anim = initializeFrame previous anims
+          , interruption = interruption
         }
       , Effects.tick Tick
       )
@@ -1619,10 +1628,6 @@ findNearProp state prop propCount =
       Render.debugName a == Render.debugName b
   in
     findBy (matchPropID prop) state
-
-
-
---countOccurance : -> Int
 
 
 countOccurance x pool =
