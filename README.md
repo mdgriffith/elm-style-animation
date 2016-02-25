@@ -192,18 +192,18 @@ We also have option of chaining animations together.  So, let's make a square th
       UI.animate 
               |> UI.props 
                   [ BackgroundColor 
-                      UI.toRgba 100 100 100 1.0
+                      UI.toRGBA 100 100 100 1.0
                   ] 
           |> UI.andThen -- create a new keyframe
               |> UI.duration (1*second)
               |> UI.props 
                   [ BackgroundColor 
-                      UI.toRgba 178 201 14 1.0
+                      UI.toRGBA 178 201 14 1.0
                   ] 
           |> UI.andThen 
               |> UI.props 
                   [ BackgroundColor 
-                      UI.toRgba 58 40 69 1.0 
+                      UI.toRGBA 58 40 69 1.0 
                   ] 
           |> onMenu
 

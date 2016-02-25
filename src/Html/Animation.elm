@@ -947,17 +947,6 @@ toHSLA h s l a prop =
       (to rgba.alpha)
 
 
-{-| Fade a color to a specific alpha level
-
--}
-
-
-
---fade : Float -> ColorProperty -> StyleProperty (Physics DynamicTarget)
---fade alpha prop =
---    prop stay stay stay (to alpha)
-
-
 {-| Specify an initial Color-based property using a Color from the elm core Color module.
 
 -}
