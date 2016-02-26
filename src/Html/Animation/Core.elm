@@ -113,13 +113,19 @@ update action model =
               case last of 
                 Nothing ->
                   [ { at = model.elapsed + first.delay
-                    , anim = interrupt
+                    , anim = List.map 
+                                  (\i -> { i | delay = 0 } )
+                                     interrupt
+                             -- remove delay because we're 
+                             -- already accounting for it
                     }
                   ]
                 Just prev ->
                    prev ::
                       [ { at = (model.elapsed + first.delay) - prev.at
-                        , anim = interrupt
+                        , anim = List.map 
+                                    (\i -> { i | delay = 0 })
+                                       interrupt
                         }
                       ]
 
@@ -177,45 +183,48 @@ continue model elapsed start =
 
 tick : Model -> StyleKeyframe -> Time -> Time -> Time -> Time -> ( Model, Effects Action )
 tick model current elapsed dt start now =
-  if dt == 0 then
-    -- Nothing has happened
-    continue model elapsed start
-  else if done elapsed current then
-    -- animation is finished, switch to new frame
-    let
-      anims =
-        List.drop 1 model.anim
+  let 
+    frameElapsed = elapsed - current.delay
+  in
+    if dt == 0 || frameElapsed < 0 then
+      -- Nothing has happened
+      continue model elapsed start
+    else if done frameElapsed current then
+      -- animation is finished, switch to new frame
+      let
+        anims =
+          List.drop 1 model.anim
 
-      previous =
-        bake current model.previous
+        previous =
+          bake current model.previous
 
-      -- if an animation finishes, but there is still an interruption pending
-      -- Revise the expected interruption time down
-      interruption =
-        List.map 
-            (\inter -> 
-                { inter | at = inter.at - elapsed }
-            )
-            model.interruption
-    in
+        -- if an animation finishes, but there is still an interruption pending
+        -- Revise the expected interruption time down
+        interruption =
+          List.map 
+              (\inter -> 
+                  { inter | at = inter.at - elapsed }
+              )
+              model.interruption
+      in
+        ( { model
+            | elapsed = 0.0
+            , start = Just now
+            , previous = previous
+            , anim = initializeFrame previous anims
+            , interruption = interruption
+          }
+        , Effects.tick Tick
+        )
+    else
+      -- normal tick
       ( { model
-          | elapsed = 0.0
-          , start = Just now
-          , previous = previous
-          , anim = initializeFrame previous anims
-          , interruption = interruption
+          | elapsed = elapsed
+          , start = Just start
+          , anim = mapTo 0 (\a -> step a model.previous frameElapsed dt) model.anim
         }
       , Effects.tick Tick
       )
-  else
-    -- normal tick
-    ( { model
-        | elapsed = elapsed
-        , start = Just start
-        , anim = mapTo 0 (\a -> step a model.previous elapsed dt) model.anim
-      }
-    , Effects.tick Tick
-    )
 
 
 getTimes : Time -> Model -> ( Time, Time, Time )

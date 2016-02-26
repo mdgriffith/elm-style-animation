@@ -314,11 +314,12 @@ Here's how we're able to do this in Html.Animation.
 First, we define our initial style.  This will define the order that the transforms will appear. 
 
 ```elm
-initialWidgetStyle = UI.init 
-                        [ Rotate 0 Deg
-                        , TranslateY 0 Px
-                        , Rotate 0 Deg
-                        ]
+initialWidgetStyle = 
+              UI.init 
+                  [ Rotate 0 Deg
+                  , TranslateY 0 Px
+                  , Rotate 0 Deg
+                  ]
 
 ```
 
