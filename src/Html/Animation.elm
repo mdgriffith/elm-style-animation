@@ -903,8 +903,8 @@ toRGB r g b prop =
 
        UI.animate
             |> UI.props
-                [ UI.BackgroundColor
-                      UI.toRGBA 100 100 100 1.0
+                [ BackgroundColor
+                    UI.toRGBA 100 100 100 1.0
                 ]
             |> UI.on model.style
 

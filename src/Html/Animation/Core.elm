@@ -94,9 +94,17 @@ update : Action -> Model -> ( Model, Effects Action )
 update action model =
   case action of
     Queue anims ->
-      ( { model | anim = model.anim ++ anims }
-      , Effects.tick Tick
-      )
+      case List.head model.anim of
+        Nothing ->
+            ( { model 
+                  | anim = initializeFrame model.previous anims }
+            , Effects.tick Tick
+            )
+
+        Just a ->
+          ( { model | anim = model.anim ++ anims }
+          , Effects.tick Tick
+          )
 
     Interrupt interrupt ->
       case List.head interrupt of
@@ -126,6 +134,8 @@ update action model =
                         , anim = List.map 
                                     (\i -> { i | delay = 0 })
                                        interrupt
+                                 -- remove delay because we're 
+                                 -- already accounting for it
                         }
                       ]
 
@@ -700,7 +710,7 @@ velocity oldPos newPos dt =
 
 
 step : StyleKeyframe -> Style -> Time -> Time -> StyleKeyframe
-step frame prev current dt =
+step frame prev time dt =
   let
     style =
       List.foldl
@@ -715,7 +725,7 @@ step frame prev current dt =
                 acc
 
               Just prevX ->
-                acc ++ [ stepProp x prevX <| applyStep current dt ]
+                acc ++ [ stepProp x prevX <| applyStep time dt ]
         )
         []
         frame.target
