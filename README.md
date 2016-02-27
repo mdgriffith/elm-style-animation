@@ -159,7 +159,7 @@ Instead of using a duration and an easing function, this library defaults to ani
 ```
 
 
-> Alternatively, we also have the option of defining a _duration_, a _delay_, and an _easing function_.  I've generally found that springs are a more natural way for animating user interfaces, but I believe there are some cases where easing and duration could be preferable.  Here's how it's done.
+> Alternatively, we also have the option of defining a _duration_, and an _easing function_.  I've generally found that springs are a more natural way for animating user interfaces, but I believe there are some cases where easing and duration could be preferable.  Here's how it's done.
 
  ```elm
        UI.animate 
@@ -172,7 +172,7 @@ Instead of using a duration and an easing function, this library defaults to ani
            |> onMenu model
   ```
 > 
-
+> __Note__ The duration you provide will not do anything unless you also provide an easing function.  This is because spring based animations set the duration dynamically.
 > Make sure to check out this [library](http://package.elm-lang.org/packages/Dandandan/Easing/2.0.1/Easing#easing-functions) if you're looking for easing functions.
 
 Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
@@ -195,7 +195,6 @@ We also have option of chaining animations together.  So, let's make a square th
                       UI.toRGBA 100 100 100 1.0
                   ] 
           |> UI.andThen -- create a new keyframe
-              |> UI.duration (1*second)
               |> UI.props 
                   [ BackgroundColor 
                       UI.toRGBA 178 201 14 1.0
@@ -210,7 +209,7 @@ We also have option of chaining animations together.  So, let's make a square th
 ```
 
 
-In this case we can use `UI.andThen` to create a new key frame.  This new keyframe will have it's own independent duration, easing, and properties.  Again, it can be interrupted at any point.
+In this case we can use `UI.andThen` to create a new key frame.  This new keyframe will have it's own independent delay, properties, and spring (or easing + duration).  Again, it can be interrupted at any point.
 
 
 # Example 3: Managing Multiple Animations
