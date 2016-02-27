@@ -50,7 +50,7 @@ __Note__ all properties that are going to be animated need to be accounted for i
 
 ```elm
 import Html.Animation as UI
-import Html.Animation.Properties
+import Html.Animation.Properties exposing (..)
 
 type alias Model = { style : UI.Animation }
 
