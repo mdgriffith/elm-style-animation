@@ -1,7 +1,39 @@
-module Html.Animation.Render (name, value, id, debugName) where
+module Html.Animation.Render (render, name, value, id, debugName, prefix) where
 
 import Html.Animation.Properties exposing (..)
 import String exposing (concat)
+
+
+{-| Render style properties into their css values.
+
+-}
+render : List (StyleProperty Float) -> List ( String, String )
+render styleProps =
+  let
+    rendered =
+      List.map (\prop -> ( name prop, value prop )) styleProps
+
+    props =
+      List.filter (\( name, _ ) -> name /= "transform") rendered
+
+    transforms =
+      List.map (snd)
+        <| List.filter (\( name, _ ) -> name == "transform") rendered
+
+    combinedTransforms =
+      if List.length transforms == 0 then
+        []
+      else
+        [ ( "transform"
+          , String.concat
+              (List.intersperse
+                " "
+                transforms
+              )
+          )
+        ]
+  in
+    List.concatMap prefix (props ++ combinedTransforms)
 
 
 name : StyleProperty a -> String
@@ -175,6 +207,8 @@ name styleProp =
 
 
 -- renders a valid css value for a Style Property
+
+
 value : StyleProperty Float -> String
 value prop =
   let
@@ -423,6 +457,45 @@ renderColor x y z a =
       ++ ")"
 
 
+iePrefix : String
+iePrefix =
+  "-ms-"
+
+
+webkitPrefix : String
+webkitPrefix =
+  "-webkit-"
+
+
+{-| Add a prefix to a name/value pair, if needed.
+
+-}
+prefix : ( String, String ) -> List ( String, String )
+prefix stylePair =
+  let
+    propName =
+      fst stylePair
+
+    propValue =
+      snd stylePair
+  in
+    case propName of
+      "transform" -> 
+        [ stylePair
+        , ( iePrefix ++ propName, propValue )
+        , ( webkitPrefix ++ propName, propValue )
+        ]
+
+      "transform-origin" ->
+        [ stylePair
+        , ( iePrefix ++ propName, propValue )
+        , ( webkitPrefix ++ propName, propValue )
+        ]
+
+      _ ->
+        [ stylePair ]
+
+
 {-| Used to match properties without units so that mismatched units can be detected.
 
 -}
@@ -593,6 +666,7 @@ debugName prop =
 
     Perspective _ ->
       "perspective"
+
 
 id : StyleProperty a -> String
 id prop =
@@ -830,27 +904,24 @@ angleUnit unit =
 
 displayMode : DisplayMode -> String
 displayMode mode =
-              case mode of 
-                None ->
-                  "none"
+  case mode of
+    None ->
+      "none"
 
-                Inline ->
-                  "inline"
+    Inline ->
+      "inline"
 
-                InlineBlock ->
-                  "inline-block"
+    InlineBlock ->
+      "inline-block"
 
-                Block ->
-                  "block"
+    Block ->
+      "block"
 
-                Flex ->
-                  "flex"
+    Flex ->
+      "flex"
 
-                InlineFlex ->
-                  "inline-flex"
+    InlineFlex ->
+      "inline-flex"
 
-                ListItem -> 
-                  "list-item"
-
-
-             
+    ListItem ->
+      "list-item"

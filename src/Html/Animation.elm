@@ -1018,73 +1018,10 @@ hsla h s l a prop =
 -}
 render : Animation -> List ( String, String )
 render (A model) =
-  let
-    currentAnim =
-      List.head model.anim
-  in
-    case currentAnim of
+    case List.head model.anim of
       Nothing ->
-        let
-          rendered =
-            List.map renderProp model.previous
-
-          props =
-            List.filter (\( name, _ ) -> name /= "transform") rendered
-
-          transforms = 
-            List.map (snd) 
-              <| List.filter (\( name, _ ) -> name == "transform") rendered
-
-          combinedTransforms = 
-            if List.length transforms == 0 then
-              []
-            else
-              [( "transform"
-              , String.concat
-                  (List.intersperse
-                    " "
-                    transforms
-                  )
-              )]
-            
-        in
-          props ++ combinedTransforms
-
+        Render.render model.previous
+        
       Just anim ->
-        -- Combine all transform properties
-        let
-          baked =
-            Core.bake anim model.previous
-
-          rendered =
-            List.map renderProp baked
-
-          props =
-            List.filter (\( name, _ ) -> name /= "transform") rendered
-
-          transforms = 
-            List.map (snd) 
-              <| List.filter (\( name, _ ) -> name == "transform") rendered
-
-          combinedTransforms = 
-            if List.length transforms == 0 then
-              []
-            else
-              [( "transform"
-              , String.concat
-                  (List.intersperse
-                    " "
-                    transforms
-                  )
-              )]
-        in
-          props ++ combinedTransforms
-
-
-renderProp : StyleProperty Static -> ( String, String )
-renderProp prop =
-  ( Render.name prop
-  , Render.value prop
-  )
-
-
+        Render.render <| Core.bake anim model.previous
+       
