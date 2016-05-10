@@ -90,26 +90,22 @@ defaultEasing x =
   (1 - cos (pi * x)) / 2
 
 
-update : Action -> Model -> ( Model, Sub Action )
+update : Action -> Model -> Model
 update action model =
   case action of
     Queue anims ->
       case List.head model.anim of
         Nothing ->
-            ( { model 
-                  | anim = initializeFrame model.previous anims }
-            , AnimationFrame.times Tick
-            )
+            { model | anim = initializeFrame model.previous anims }
+            
 
         Just a ->
-          ( { model | anim = model.anim ++ anims }
-          , AnimationFrame.times Tick
-          )
+          { model | anim = model.anim ++ anims }
+          
 
     Interrupt interrupt ->
       case List.head interrupt of
-        Nothing ->
-          ( model, Sub.none )
+        Nothing -> model
 
         Just first ->
           let
@@ -140,11 +136,10 @@ update action model =
                       ]
 
           in
-            ( { model
-                | interruption = interruptions
-              }
-            , AnimationFrame.times Tick
-            )
+            { model
+              | interruption = interruptions
+            }
+            
 
     Tick now ->
       let
@@ -169,29 +164,27 @@ update action model =
           Nothing ->
             case List.head model.anim of
               Nothing ->
-                ( { model
+                { model
                     | elapsed = 0.0
                     , start = Nothing
                     , anim = []
                   }
-                , Sub.none
-                )
+                
 
               Just current ->
                 tick model current elapsed dt start now
 
 
-continue : Model -> Time -> Time -> ( Model, Sub Action )
+continue : Model -> Time -> Time -> Model
 continue model elapsed start =
-  ( { model
+    { model
       | elapsed = elapsed
       , start = Just start
     }
-  , AnimationFrame.times Tick
-  )
+  
 
 
-tick : Model -> StyleKeyframe -> Time -> Time -> Time -> Time -> ( Model, Sub Action )
+tick : Model -> StyleKeyframe -> Time -> Time -> Time -> Time -> Model
 tick model current elapsed dt start now =
   let 
     frameElapsed = elapsed - current.delay
@@ -217,24 +210,22 @@ tick model current elapsed dt start now =
               )
               model.interruption
       in
-        ( { model
-            | elapsed = 0.0
-            , start = Just now
-            , previous = previous
-            , anim = initializeFrame previous anims
-            , interruption = interruption
-          }
-        , AnimationFrame.times Tick
-        )
+        { model
+          | elapsed = 0.0
+          , start = Just now
+          , previous = previous
+          , anim = initializeFrame previous anims
+          , interruption = interruption
+        }
+        
     else
       -- normal tick
-      ( { model
+      { model
           | elapsed = elapsed
           , start = Just start
           , anim = mapTo 0 (\a -> step a model.previous frameElapsed dt) model.anim
-        }
-      , AnimationFrame.times Tick
-      )
+      }
+      
 
 
 getTimes : Time -> Model -> ( Time, Time, Time )
@@ -271,7 +262,7 @@ getTimes now model =
       ( prelimStart, prelimElapsed, prelimDt )
 
 
-interrupt : Time -> Model -> List StyleKeyframe -> List Interruption -> ( Model, Sub Action )
+interrupt : Time -> Model -> List StyleKeyframe -> List Interruption -> Model
 interrupt now model interruption remaining =
   let
     ( previous, newAnims ) =
@@ -286,15 +277,14 @@ interrupt now model interruption remaining =
           , mapTo 0 (\a -> transferVelocity frame a) interruption
           )
   in
-    ( { model
-        | anim = initializeFrame previous newAnims
-        , elapsed = 0.0
-        , start = Nothing
-        , previous = previous
-        , interruption = remaining
-      }
-    , AnimationFrame.times Tick
-    )
+    { model
+      | anim = initializeFrame previous newAnims
+      , elapsed = 0.0
+      , start = Nothing
+      , previous = previous
+      , interruption = remaining
+    }
+    
 
 
 initializeFrame : Style -> List StyleKeyframe -> List StyleKeyframe

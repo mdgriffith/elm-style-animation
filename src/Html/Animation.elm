@@ -1,4 +1,4 @@
-module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToIndex, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
 -- where
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -44,7 +44,7 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 @docs update
 
 # Managing Commands
-@docs on, forwardTo, forwardToIndex, forwardToAll
+@docs on
 
 -}
 
@@ -244,10 +244,10 @@ See any of the examples at [https://github.com/mdgriffith/elm-html-animation](ht
 update : Action -> Animation -> Animation
 update action (A model) =
   let
-    ( newModel, fx ) =
+    newModel =
       Core.update (resolve action 1 0) model
   in
-    ( A newModel, Sub.map Internal fx )
+    A newModel
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -328,7 +328,7 @@ However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare
          |> UI.on model.style
 
 -}
-on : Animation -> Action -> ( Animation, Sub Action )
+on : Animation -> Action -> Animation
 on model action =
   update action model
 
@@ -417,222 +417,222 @@ applyKeyframeOptions options =
 
 
 
-{-|  This function is used to handle the boilerplate of forwarding animation updates, and can be used in place of `on`.
+--|  This function is used to handle the boilerplate of forwarding animation updates, and can be used in place of `on`.
 
-To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
+--To use this function, you'll need to supply a getter and a setter function for getting and setting the style model.
 
-So, for a model like the following
+--So, for a model like the following
 
-    type alias Model = { style : UI.Animation }
+--    type alias Model = { style : UI.Animation }
 
-Add an action to your Action type to capture the UI.Actions.
+--Add an action to your Action type to capture the UI.Actions.
 
-    type Action 
-          = Hide
-          | Animate UI.Action
-
-
-Create a specialized version of `forwardTo`.
-
-    onModel = 
-      UI.forwardTo
-          Animate -- The action that captures UI.Action 
-          .style -- style getter
-          (\w style -> { w | style = style }) -- style setter
-
-Then, in your update function would look something like 
+--    type Action 
+--          = Hide
+--          | Animate UI.Action
 
 
-      Hide ->
-        UI.animate
-            |> UI.duration (5*second)
-            |> UI.props
-                [ Opacity (UI.to 0)
-                ]
-            |> onModel model
+--Create a specialized version of `forwardTo`.
 
-      Animate uiAction ->
-        onModel model uiAction
+--    onModel = 
+--      UI.forwardTo
+--          Animate -- The action that captures UI.Action 
+--          .style -- style getter
+--          (\w style -> { w | style = style }) -- style setter
 
-
--}
-forwardTo : (Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> a -> Action -> ( a, Sub b )
-forwardTo toInternalAction styleGet styleSet widget action =
-    let
-      ( A anim ) =
-        styleGet widget
-
-      ( newStyle, fx ) =
-        Core.update (resolve action 1 0) anim
-
-    in
-      ( styleSet widget (A newStyle)
-      , Sub.map
-          (\a -> toInternalAction (Internal a))
-          fx
-      )
+--Then, in your update function would look something like 
 
 
-{-| Forward style updates to a specific element in a list that has a Animation model.
+--      Hide ->
+--        UI.animate
+--            |> UI.duration (5*second)
+--            |> UI.props
+--                [ Opacity (UI.to 0)
+--                ]
+--            |> onModel model
 
-For a model like the following
+--      Animate uiAction ->
+--        onModel model uiAction
 
-    type alias Model = { widgets : List Widget }
 
-    type alias Widget =
-              { style : UI.Animation
-              }
+
+--forwardTo : (Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> a -> Action -> ( a, Sub b )
+--forwardTo toInternalAction styleGet styleSet widget action =
+--    let
+--      ( A anim ) =
+--        styleGet widget
+
+--      ( newStyle, fx ) =
+--        Core.update (resolve action 1 0) anim
+
+--    in
+--      ( styleSet widget (A newStyle)
+--      , Sub.map
+--          (\a -> toInternalAction (Internal a))
+--          fx
+--      )
+
+
+--| Forward style updates to a specific element in a list that has a Animation model.
+
+--For a model like the following
+
+--    type alias Model = { widgets : List Widget }
+
+--    type alias Widget =
+--              { style : UI.Animation
+--              }
   
-    type Action 
-          = Hide
-          | Animate Int UI.Action -- where Int is the index of the widget we are animating
+--    type Action 
+--          = Hide
+--          | Animate Int UI.Action -- where Int is the index of the widget we are animating
 
-Create a specialized version of `forwardToIndex`.
+--Create a specialized version of `forwardToIndex`.
 
-    onWidget = 
-      UI.forwardToIndex
-          Animate
-          .style -- widget style getter
-          (\w style -> { w | style = style }) -- widget style setter
+--    onWidget = 
+--      UI.forwardToIndex
+--          Animate
+--          .style -- widget style getter
+--          (\w style -> { w | style = style }) -- widget style setter
 
-And in your update function:
+--And in your update function:
 
-    Hide ->
-      let
-        (widgets, fx) =
-            UI.animate
-                |> UI.duration (5*second)
-                |> UI.props
-                    [ Opacity (UI.to 0)
-                    ]
-                |> onWidget i model.widgets
-                -- Where i is the index of the widget to update.
-      in
-        ( { model | widgets = widgets }
-        , fx ) -- FX has already been `Effects.map`ped to Animate
+--    Hide ->
+--      let
+--        (widgets, fx) =
+--            UI.animate
+--                |> UI.duration (5*second)
+--                |> UI.props
+--                    [ Opacity (UI.to 0)
+--                    ]
+--                |> onWidget i model.widgets
+--                -- Where i is the index of the widget to update.
+--      in
+--        ( { model | widgets = widgets }
+--        , fx ) -- FX has already been `Effects.map`ped to Animate
 
-    Animate i action ->
-      let
-        (widgets, fx) = 
-            onWidget i model.widgets action
-      in
-        ( { model | widgets = widgets }
-        , fx )
-
-
--}
-forwardToIndex : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Sub b )
-forwardToIndex toInternalAction styleGet styleSet i widgets action =
-  let
-    numWidgets =
-      List.length widgets
-
-    ( widgets, effects ) =
-      List.unzip
-        <| List.indexedMap
-            (\j widget ->
-              if j == i then
-                let
-                  (A anim) =
-                    styleGet widget
-
-                  ( newStyle, fx ) =
-                    Core.update
-                      (resolve action numWidgets i)
-                      anim
-                in
-                  ( styleSet widget (A newStyle)
-                  , Sub.map
-                      (\a -> toInternalAction i (Internal a))
-                      fx
-                  )
-              else
-                ( widget, Sub.none )
-            )
-            widgets
-  in
-    ( widgets, Sub.batch effects )
+--    Animate i action ->
+--      let
+--        (widgets, fx) = 
+--            onWidget i model.widgets action
+--      in
+--        ( { model | widgets = widgets }
+--        , fx )
 
 
-{-| Like `forwardToIndex`, except it applies an update to every member of the list.
-It has the same set up as `forwardToIndex`, except:
 
-You'll need two helper functions
+--forwardToIndex : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Sub b )
+--forwardToIndex toInternalAction styleGet styleSet i widgets action =
+--  let
+--    numWidgets =
+--      List.length widgets
 
-  onWidget = 
-    UI.forwardToIndex
-        Animate
-        .style -- widget style getter
-        (\w style -> { w | style = style }) -- widget style setter
+--    ( widgets, effects ) =
+--      List.unzip
+--        <| List.indexedMap
+--            (\j widget ->
+--              if j == i then
+--                let
+--                  (A anim) =
+--                    styleGet widget
+
+--                  ( newStyle, fx ) =
+--                    Core.update
+--                      (resolve action numWidgets i)
+--                      anim
+--                in
+--                  ( styleSet widget (A newStyle)
+--                  , Sub.map
+--                      (\a -> toInternalAction i (Internal a))
+--                      fx
+--                  )
+--              else
+--                ( widget, Sub.none )
+--            )
+--            widgets
+--  in
+--    ( widgets, Sub.batch effects )
+
+
+--| Like `forwardToIndex`, except it applies an update to every member of the list.
+--It has the same set up as `forwardToIndex`, except:
+
+--You'll need two helper functions
+
+--  onWidget = 
+--    UI.forwardToIndex
+--        Animate
+--        .style -- widget style getter
+--        (\w style -> { w | style = style }) -- widget style setter
                                       
-  onAllWidgets = 
-      UI.forwardToAll 
-          Animate
-          .style -- widget style getter
-          (\w style -> { w | style = style }) -- widget style setter
+--  onAllWidgets = 
+--      UI.forwardToAll 
+--          Animate
+--          .style -- widget style getter
+--          (\w style -> { w | style = style }) -- widget style setter
 
 
 
-And your update function will look like the following
+--And your update function will look like the following
 
-    Hide ->
-      let 
-        (widgets, fx) = 
-            UI.animate
-               |> UI.delay ((i * 0.05) * second)
-               |> UI.spring UI.wobbly
-               |> UI.props 
-                   [ Left (UI.to -70) Px
-                   ] 
-              |> onAllWidgets model.widgets 
-              -- apply an update to all widgets
+--    Hide ->
+--      let 
+--        (widgets, fx) = 
+--            UI.animate
+--               |> UI.delay ((i * 0.05) * second)
+--               |> UI.spring UI.wobbly
+--               |> UI.props 
+--                   [ Left (UI.to -70) Px
+--                   ] 
+--              |> onAllWidgets model.widgets 
+--              -- apply an update to all widgets
 
-      in
-        ( { model | widgets = widgets }
-        , fx )
+--      in
+--        ( { model | widgets = widgets }
+--        , fx )
 
     
-    -- But, in animate, you only need to forwad to a widget based on index
-    Animate i action ->
-      let
-        (widgets, fx) = 
-            onWidget i model.widgets action
-      in
-        ( { model | widgets = widgets }
-        , fx )
+--    -- But, in animate, you only need to forwad to a widget based on index
+--    Animate i action ->
+--      let
+--        (widgets, fx) = 
+--            onWidget i model.widgets action
+--      in
+--        ( { model | widgets = widgets }
+--        , fx )
 
 
 
 
--}
-forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Sub b )
-forwardToAll toInternalAction styleGet styleSet widgets action =
-  let
-    numWidgets =
-      List.length widgets
 
-    ( widgets, effects ) =
-      List.unzip
-        <| List.indexedMap
-            (\i widget ->
-              let
-                (A anim) =
-                  styleGet widget
+--forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Sub b )
+--forwardToAll toInternalAction styleGet styleSet widgets action =
+--  let
+--    numWidgets =
+--      List.length widgets
 
-                ( newStyle, fx ) =
-                  Core.update
-                    (resolve action numWidgets i)
-                    anim
-              in
-                ( styleSet widget (A newStyle)
-                , Sub.map
-                    (\a -> toInternalAction i (Internal a))
-                    fx
-                )
-            )
-            widgets
-  in
-    ( widgets, Sub.batch effects )
+--    ( widgets, effects ) =
+--      List.unzip
+--        <| List.indexedMap
+--            (\i widget ->
+--              let
+--                (A anim) =
+--                  styleGet widget
+
+--                ( newStyle, fx ) =
+--                  Core.update
+--                    (resolve action numWidgets i)
+--                    anim
+--              in
+--                ( styleSet widget (A newStyle)
+--                , Sub.map
+--                    (\a -> toInternalAction i (Internal a))
+--                    fx
+--                )
+--            )
+--            widgets
+--  in
+--    ( widgets, Sub.batch effects )
 
 
 {-| Specify the properties that should be animated

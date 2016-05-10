@@ -10985,65 +10985,61 @@ var _user$project$Html_Animation_Core$initializeFrame = F2(
 			},
 			anims);
 	});
+var _user$project$Html_Animation_Core$interrupt = F4(
+	function (now, model, interruption, remaining) {
+		var _p108 = function () {
+			var _p109 = _elm_lang$core$List$head(model.anim);
+			if (_p109.ctor === 'Nothing') {
+				return {ctor: '_Tuple2', _0: model.previous, _1: interruption};
+			} else {
+				var _p110 = _p109._0;
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Html_Animation_Core$bake, _p110, model.previous),
+					_1: A3(
+						_user$project$Html_Animation_Core$mapTo,
+						0,
+						function (a) {
+							return A2(_user$project$Html_Animation_Core$transferVelocity, _p110, a);
+						},
+						interruption)
+				};
+			}
+		}();
+		var previous = _p108._0;
+		var newAnims = _p108._1;
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				anim: A2(_user$project$Html_Animation_Core$initializeFrame, previous, newAnims),
+				elapsed: 0.0,
+				start: _elm_lang$core$Maybe$Nothing,
+				previous: previous,
+				interruption: remaining
+			});
+	});
 var _user$project$Html_Animation_Core$getTimes = F2(
 	function (now, model) {
 		var prelimStart = function () {
-			var _p108 = model.start;
-			if (_p108.ctor === 'Nothing') {
+			var _p111 = model.start;
+			if (_p111.ctor === 'Nothing') {
 				return now;
 			} else {
-				return _p108._0;
+				return _p111._0;
 			}
 		}();
 		var prelimElapsed = now - prelimStart;
 		var prelimDt = prelimElapsed - model.elapsed;
 		return (_elm_lang$core$Native_Utils.cmp(prelimDt, 300) > 0) ? {ctor: '_Tuple3', _0: now - model.elapsed, _1: model.elapsed, _2: 0} : {ctor: '_Tuple3', _0: prelimStart, _1: prelimElapsed, _2: prelimDt};
 	});
-var _user$project$Html_Animation_Core$defaultEasing = function (x) {
-	return (1 - _elm_lang$core$Basics$cos(_elm_lang$core$Basics$pi * x)) / 2;
-};
-var _user$project$Html_Animation_Core$defaultDuration = 0.35 * _elm_lang$core$Time$second;
-var _user$project$Html_Animation_Core$emptyEasing = {
-	ease: _user$project$Html_Animation_Core$defaultEasing,
-	counterForce: {stiffness: 170, damping: 26, destination: 1},
-	counterForcePhys: _elm_lang$core$Maybe$Nothing,
-	duration: _user$project$Html_Animation_Core$defaultDuration
-};
-var _user$project$Html_Animation_Core$Model = F5(
-	function (a, b, c, d, e) {
-		return {start: a, elapsed: b, anim: c, previous: d, interruption: e};
-	});
-var _user$project$Html_Animation_Core$Interruption = F2(
-	function (a, b) {
-		return {at: a, anim: b};
-	});
-var _user$project$Html_Animation_Core$StyleKeyframe = F2(
-	function (a, b) {
-		return {target: a, delay: b};
-	});
-var _user$project$Html_Animation_Core$Physics = F4(
-	function (a, b, c, d) {
-		return {target: a, physical: b, spring: c, easing: d};
-	});
-var _user$project$Html_Animation_Core$Easing = F4(
-	function (a, b, c, d) {
-		return {ease: a, counterForce: b, counterForcePhys: c, duration: d};
-	});
-var _user$project$Html_Animation_Core$Tick = function (a) {
-	return {ctor: 'Tick', _0: a};
-};
 var _user$project$Html_Animation_Core$continue = F3(
 	function (model, elapsed, start) {
-		return {
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					elapsed: elapsed,
-					start: _elm_lang$core$Maybe$Just(start)
-				}),
-			_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-		};
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				elapsed: elapsed,
+				start: _elm_lang$core$Maybe$Just(start)
+			});
 	});
 var _user$project$Html_Animation_Core$tick = F6(
 	function (model, current, elapsed, dt, start, now) {
@@ -11062,76 +11058,31 @@ var _user$project$Html_Animation_Core$tick = F6(
 					model.interruption);
 				var previous = A2(_user$project$Html_Animation_Core$bake, current, model.previous);
 				var anims = A2(_elm_lang$core$List$drop, 1, model.anim);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							elapsed: 0.0,
-							start: _elm_lang$core$Maybe$Just(now),
-							previous: previous,
-							anim: A2(_user$project$Html_Animation_Core$initializeFrame, previous, anims),
-							interruption: interruption
-						}),
-					_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-				};
+				return _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						elapsed: 0.0,
+						start: _elm_lang$core$Maybe$Just(now),
+						previous: previous,
+						anim: A2(_user$project$Html_Animation_Core$initializeFrame, previous, anims),
+						interruption: interruption
+					});
 			} else {
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							elapsed: elapsed,
-							start: _elm_lang$core$Maybe$Just(start),
-							anim: A3(
-								_user$project$Html_Animation_Core$mapTo,
-								0,
-								function (a) {
-									return A4(_user$project$Html_Animation_Core$step, a, model.previous, frameElapsed, dt);
-								},
-								model.anim)
-						}),
-					_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-				};
+				return _elm_lang$core$Native_Utils.update(
+					model,
+					{
+						elapsed: elapsed,
+						start: _elm_lang$core$Maybe$Just(start),
+						anim: A3(
+							_user$project$Html_Animation_Core$mapTo,
+							0,
+							function (a) {
+								return A4(_user$project$Html_Animation_Core$step, a, model.previous, frameElapsed, dt);
+							},
+							model.anim)
+					});
 			}
 		}
-	});
-var _user$project$Html_Animation_Core$interrupt = F4(
-	function (now, model, interruption, remaining) {
-		var _p109 = function () {
-			var _p110 = _elm_lang$core$List$head(model.anim);
-			if (_p110.ctor === 'Nothing') {
-				return {ctor: '_Tuple2', _0: model.previous, _1: interruption};
-			} else {
-				var _p111 = _p110._0;
-				return {
-					ctor: '_Tuple2',
-					_0: A2(_user$project$Html_Animation_Core$bake, _p111, model.previous),
-					_1: A3(
-						_user$project$Html_Animation_Core$mapTo,
-						0,
-						function (a) {
-							return A2(_user$project$Html_Animation_Core$transferVelocity, _p111, a);
-						},
-						interruption)
-				};
-			}
-		}();
-		var previous = _p109._0;
-		var newAnims = _p109._1;
-		return {
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					anim: A2(_user$project$Html_Animation_Core$initializeFrame, previous, newAnims),
-					elapsed: 0.0,
-					start: _elm_lang$core$Maybe$Nothing,
-					previous: previous,
-					interruption: remaining
-				}),
-			_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-		};
 	});
 var _user$project$Html_Animation_Core$update = F2(
 	function (action, model) {
@@ -11141,31 +11092,23 @@ var _user$project$Html_Animation_Core$update = F2(
 				var _p114 = _p112._0;
 				var _p113 = _elm_lang$core$List$head(model.anim);
 				if (_p113.ctor === 'Nothing') {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								anim: A2(_user$project$Html_Animation_Core$initializeFrame, model.previous, _p114)
-							}),
-						_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-					};
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							anim: A2(_user$project$Html_Animation_Core$initializeFrame, model.previous, _p114)
+						});
 				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{
-								anim: A2(_elm_lang$core$Basics_ops['++'], model.anim, _p114)
-							}),
-						_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-					};
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							anim: A2(_elm_lang$core$Basics_ops['++'], model.anim, _p114)
+						});
 				}
 			case 'Interrupt':
 				var _p119 = _p112._0;
 				var _p115 = _elm_lang$core$List$head(_p119);
 				if (_p115.ctor === 'Nothing') {
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Sub$none};
+					return model;
 				} else {
 					var _p118 = _p115._0;
 					var last = _elm_lang$core$List$head(
@@ -11208,13 +11151,9 @@ var _user$project$Html_Animation_Core$update = F2(
 									]));
 						}
 					}();
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{interruption: interruptions}),
-						_1: _elm_lang$animation_frame$AnimationFrame$times(_user$project$Html_Animation_Core$Tick)
-					};
+					return _elm_lang$core$Native_Utils.update(
+						model,
+						{interruption: interruptions});
 				}
 			default:
 				var _p125 = _p112._0;
@@ -11243,24 +11182,53 @@ var _user$project$Html_Animation_Core$update = F2(
 				} else {
 					var _p124 = _elm_lang$core$List$head(model.anim);
 					if (_p124.ctor === 'Nothing') {
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									elapsed: 0.0,
-									start: _elm_lang$core$Maybe$Nothing,
-									anim: _elm_lang$core$Native_List.fromArray(
-										[])
-								}),
-							_1: _elm_lang$core$Platform_Sub$none
-						};
+						return _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								elapsed: 0.0,
+								start: _elm_lang$core$Maybe$Nothing,
+								anim: _elm_lang$core$Native_List.fromArray(
+									[])
+							});
 					} else {
 						return A6(_user$project$Html_Animation_Core$tick, model, _p124._0, elapsed, dt, start, _p125);
 					}
 				}
 		}
 	});
+var _user$project$Html_Animation_Core$defaultEasing = function (x) {
+	return (1 - _elm_lang$core$Basics$cos(_elm_lang$core$Basics$pi * x)) / 2;
+};
+var _user$project$Html_Animation_Core$defaultDuration = 0.35 * _elm_lang$core$Time$second;
+var _user$project$Html_Animation_Core$emptyEasing = {
+	ease: _user$project$Html_Animation_Core$defaultEasing,
+	counterForce: {stiffness: 170, damping: 26, destination: 1},
+	counterForcePhys: _elm_lang$core$Maybe$Nothing,
+	duration: _user$project$Html_Animation_Core$defaultDuration
+};
+var _user$project$Html_Animation_Core$Model = F5(
+	function (a, b, c, d, e) {
+		return {start: a, elapsed: b, anim: c, previous: d, interruption: e};
+	});
+var _user$project$Html_Animation_Core$Interruption = F2(
+	function (a, b) {
+		return {at: a, anim: b};
+	});
+var _user$project$Html_Animation_Core$StyleKeyframe = F2(
+	function (a, b) {
+		return {target: a, delay: b};
+	});
+var _user$project$Html_Animation_Core$Physics = F4(
+	function (a, b, c, d) {
+		return {target: a, physical: b, spring: c, easing: d};
+	});
+var _user$project$Html_Animation_Core$Easing = F4(
+	function (a, b, c, d) {
+		return {ease: a, counterForce: b, counterForcePhys: c, duration: d};
+	});
+var _user$project$Html_Animation_Core$Tick = function (a) {
+	return {ctor: 'Tick', _0: a};
+};
 var _user$project$Html_Animation_Core$Interrupt = function (a) {
 	return {ctor: 'Interrupt', _0: a};
 };
@@ -11555,141 +11523,22 @@ var _user$project$Html_Animation$init = function (sty) {
 			_user$project$Html_Animation$empty,
 			{previous: deduped}));
 };
-var _user$project$Html_Animation$Internal = function (a) {
-	return {ctor: 'Internal', _0: a};
-};
 var _user$project$Html_Animation$update = F2(
 	function (action, _p11) {
 		var _p12 = _p11;
-		var _p13 = A2(
+		var newModel = A2(
 			_user$project$Html_Animation_Core$update,
 			A3(_user$project$Html_Animation$resolve, action, 1, 0),
 			_p12._0);
-		var newModel = _p13._0;
-		var fx = _p13._1;
-		return {
-			ctor: '_Tuple2',
-			_0: _user$project$Html_Animation$A(newModel),
-			_1: A2(_elm_lang$core$Platform_Sub$map, _user$project$Html_Animation$Internal, fx)
-		};
+		return _user$project$Html_Animation$A(newModel);
 	});
 var _user$project$Html_Animation$on = F2(
 	function (model, action) {
 		return A2(_user$project$Html_Animation$update, action, model);
 	});
-var _user$project$Html_Animation$forwardTo = F5(
-	function (toInternalAction, styleGet, styleSet, widget, action) {
-		var _p14 = styleGet(widget);
-		var anim = _p14._0;
-		var _p15 = A2(
-			_user$project$Html_Animation_Core$update,
-			A3(_user$project$Html_Animation$resolve, action, 1, 0),
-			anim);
-		var newStyle = _p15._0;
-		var fx = _p15._1;
-		return {
-			ctor: '_Tuple2',
-			_0: A2(
-				styleSet,
-				widget,
-				_user$project$Html_Animation$A(newStyle)),
-			_1: A2(
-				_elm_lang$core$Platform_Sub$map,
-				function (a) {
-					return toInternalAction(
-						_user$project$Html_Animation$Internal(a));
-				},
-				fx)
-		};
-	});
-var _user$project$Html_Animation$forwardToIndex = F6(
-	function (toInternalAction, styleGet, styleSet, i, widgets, action) {
-		var numWidgets = _elm_lang$core$List$length(widgets);
-		var _p16 = _elm_lang$core$List$unzip(
-			A2(
-				_elm_lang$core$List$indexedMap,
-				F2(
-					function (j, widget) {
-						if (_elm_lang$core$Native_Utils.eq(j, i)) {
-							var _p17 = styleGet(widget);
-							var anim = _p17._0;
-							var _p18 = A2(
-								_user$project$Html_Animation_Core$update,
-								A3(_user$project$Html_Animation$resolve, action, numWidgets, i),
-								anim);
-							var newStyle = _p18._0;
-							var fx = _p18._1;
-							return {
-								ctor: '_Tuple2',
-								_0: A2(
-									styleSet,
-									widget,
-									_user$project$Html_Animation$A(newStyle)),
-								_1: A2(
-									_elm_lang$core$Platform_Sub$map,
-									function (a) {
-										return A2(
-											toInternalAction,
-											i,
-											_user$project$Html_Animation$Internal(a));
-									},
-									fx)
-							};
-						} else {
-							return {ctor: '_Tuple2', _0: widget, _1: _elm_lang$core$Platform_Sub$none};
-						}
-					}),
-				widgets));
-		var widgets = _p16._0;
-		var effects = _p16._1;
-		return {
-			ctor: '_Tuple2',
-			_0: widgets,
-			_1: _elm_lang$core$Platform_Sub$batch(effects)
-		};
-	});
-var _user$project$Html_Animation$forwardToAll = F5(
-	function (toInternalAction, styleGet, styleSet, widgets, action) {
-		var numWidgets = _elm_lang$core$List$length(widgets);
-		var _p19 = _elm_lang$core$List$unzip(
-			A2(
-				_elm_lang$core$List$indexedMap,
-				F2(
-					function (i, widget) {
-						var _p20 = styleGet(widget);
-						var anim = _p20._0;
-						var _p21 = A2(
-							_user$project$Html_Animation_Core$update,
-							A3(_user$project$Html_Animation$resolve, action, numWidgets, i),
-							anim);
-						var newStyle = _p21._0;
-						var fx = _p21._1;
-						return {
-							ctor: '_Tuple2',
-							_0: A2(
-								styleSet,
-								widget,
-								_user$project$Html_Animation$A(newStyle)),
-							_1: A2(
-								_elm_lang$core$Platform_Sub$map,
-								function (a) {
-									return A2(
-										toInternalAction,
-										i,
-										_user$project$Html_Animation$Internal(a));
-								},
-								fx)
-						};
-					}),
-				widgets));
-		var widgets = _p19._0;
-		var effects = _p19._1;
-		return {
-			ctor: '_Tuple2',
-			_0: widgets,
-			_1: _elm_lang$core$Platform_Sub$batch(effects)
-		};
-	});
+var _user$project$Html_Animation$Internal = function (a) {
+	return {ctor: 'Internal', _0: a};
+};
 var _user$project$Html_Animation$Unstaggered = function (a) {
 	return {ctor: 'Unstaggered', _0: a};
 };
@@ -11710,21 +11559,21 @@ var _user$project$Html_Animation$Staggered = function (a) {
 };
 var _user$project$Html_Animation$stagger = _user$project$Html_Animation$Staggered;
 var _user$project$Html_Animation$andThen = function (stag) {
-	var _p22 = stag;
-	switch (_p22.ctor) {
+	var _p13 = stag;
+	switch (_p13.ctor) {
 		case 'Internal':
-			return _user$project$Html_Animation$Internal(_p22._0);
+			return _user$project$Html_Animation$Internal(_p13._0);
 		case 'Staggered':
-			return _user$project$Html_Animation$Staggered(_p22._0);
+			return _user$project$Html_Animation$Staggered(_p13._0);
 		default:
-			var _p23 = _p22._0;
+			var _p14 = _p13._0;
 			return _user$project$Html_Animation$Unstaggered(
 				_elm_lang$core$Native_Utils.update(
-					_p23,
+					_p14,
 					{
 						frames: A2(
 							_elm_lang$core$Basics_ops['++'],
-							_p23.frames,
+							_p14.frames,
 							_elm_lang$core$Native_List.fromArray(
 								[_user$project$Html_Animation$emptyKeyframeWithOptions]))
 					}));
@@ -11732,21 +11581,21 @@ var _user$project$Html_Animation$andThen = function (stag) {
 };
 var _user$project$Html_Animation$updateOrCreate = F2(
 	function (action, fn) {
-		var _p24 = action;
-		switch (_p24.ctor) {
+		var _p15 = action;
+		switch (_p15.ctor) {
 			case 'Internal':
-				return _user$project$Html_Animation$Internal(_p24._0);
+				return _user$project$Html_Animation$Internal(_p15._0);
 			case 'Staggered':
-				return _user$project$Html_Animation$Staggered(_p24._0);
+				return _user$project$Html_Animation$Staggered(_p15._0);
 			default:
-				var _p26 = _p24._0;
+				var _p17 = _p15._0;
 				return _user$project$Html_Animation$Unstaggered(
 					_elm_lang$core$Native_Utils.update(
-						_p26,
+						_p17,
 						{
 							frames: function () {
-								var _p25 = _elm_lang$core$List$reverse(_p26.frames);
-								if (_p25.ctor === '[]') {
+								var _p16 = _elm_lang$core$List$reverse(_p17.frames);
+								if (_p16.ctor === '[]') {
 									return _elm_lang$core$Native_List.fromArray(
 										[
 											fn(_user$project$Html_Animation$emptyKeyframeWithOptions)
@@ -11755,8 +11604,8 @@ var _user$project$Html_Animation$updateOrCreate = F2(
 									return _elm_lang$core$List$reverse(
 										A2(
 											_elm_lang$core$List_ops['::'],
-											fn(_p25._0),
-											_p25._1));
+											fn(_p16._0),
+											_p16._1));
 								}
 							}()
 						}));
