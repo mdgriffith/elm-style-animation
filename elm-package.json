@@ -1,18 +1,18 @@
 {
-    "version": "3.0.4",
-    "summary": "HTML Animations in Elm",
-    "repository": "https://github.com/mdgriffith/elm-html-animation.git",
-    "license": "BSD3",
+    "version": "3.0.4", 
+    "summary": "HTML Animations in Elm", 
+    "repository": "https://github.com/mdgriffith/elm-html-animation.git", 
+    "license": "BSD3", 
     "source-directories": [
         "src"
-    ],
+    ], 
     "exposed-modules": [
-        "Html.Animation",
+        "Html.Animation", 
         "Html.Animation.Properties"
-    ],
+    ], 
     "dependencies": {
-        "elm-lang/core": "3.0.0 <= v < 4.0.0",
-        "evancz/elm-effects": "2.0.1 <= v < 3.0.0"
-    },
-    "elm-version": "0.16.0 <= v < 0.17.0"
+        "elm-lang/core": "4.0.0 <= v < 5.0.0",
+        "elm-lang/animation-frame": "1.0.0 <= v < 2.0.0"
+    }, 
+    "elm-version": "0.17.0 <= v < 0.18.0"
 }

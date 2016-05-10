@@ -1,5 +1,4 @@
-
-module Html.Animation.Spring (Model, Physical, update, atRest, duration) where
+module Html.Animation.Spring exposing (Model, Physical, update, atRest, duration)
 
 import Time exposing (Time, second)
 import Debug

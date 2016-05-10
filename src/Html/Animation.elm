@@ -1,5 +1,5 @@
-module Html.Animation (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToIndex, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla) where
-
+module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, forwardTo, forwardToIndex, forwardToAll, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+-- where
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
 The easiest way to get started with this library is to check out the examples that are included with the [source code](https://github.com/mdgriffith/elm-html-animation).
@@ -43,12 +43,11 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 # Update a Style
 @docs update
 
-# Managing Effects
+# Managing Commands
 @docs on, forwardTo, forwardToIndex, forwardToAll
 
 -}
 
-import Effects exposing (Effects)
 import Time exposing (Time, second)
 import String exposing (concat)
 import List
@@ -242,13 +241,13 @@ stiff =
 {-| Update an animation.  This will probably only show up once in your code.
 See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
 -}
-update : Action -> Animation -> ( Animation, Effects Action )
+update : Action -> Animation -> Animation
 update action (A model) =
   let
     ( newModel, fx ) =
       Core.update (resolve action 1 0) model
   in
-    ( A newModel, Effects.map Internal fx )
+    ( A newModel, Sub.map Internal fx )
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -329,7 +328,7 @@ However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare
          |> UI.on model.style
 
 -}
-on : Animation -> Action -> ( Animation, Effects Action )
+on : Animation -> Action -> ( Animation, Sub Action )
 on model action =
   update action model
 
@@ -457,7 +456,7 @@ Then, in your update function would look something like
 
 
 -}
-forwardTo : (Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> a -> Action -> ( a, Effects b )
+forwardTo : (Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> a -> Action -> ( a, Sub b )
 forwardTo toInternalAction styleGet styleSet widget action =
     let
       ( A anim ) =
@@ -468,7 +467,7 @@ forwardTo toInternalAction styleGet styleSet widget action =
 
     in
       ( styleSet widget (A newStyle)
-      , Effects.map
+      , Sub.map
           (\a -> toInternalAction (Internal a))
           fx
       )
@@ -522,7 +521,7 @@ And in your update function:
 
 
 -}
-forwardToIndex : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Effects b )
+forwardToIndex : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> Int -> List a -> Action -> ( List a, Sub b )
 forwardToIndex toInternalAction styleGet styleSet i widgets action =
   let
     numWidgets =
@@ -543,16 +542,16 @@ forwardToIndex toInternalAction styleGet styleSet i widgets action =
                       anim
                 in
                   ( styleSet widget (A newStyle)
-                  , Effects.map
+                  , Sub.map
                       (\a -> toInternalAction i (Internal a))
                       fx
                   )
               else
-                ( widget, Effects.none )
+                ( widget, Sub.none )
             )
             widgets
   in
-    ( widgets, Effects.batch effects )
+    ( widgets, Sub.batch effects )
 
 
 {-| Like `forwardToIndex`, except it applies an update to every member of the list.
@@ -606,7 +605,7 @@ And your update function will look like the following
 
 
 -}
-forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Effects b )
+forwardToAll : (Int -> Action -> b) -> (a -> Animation) -> (a -> Animation -> a) -> List a -> Action -> ( List a, Sub b )
 forwardToAll toInternalAction styleGet styleSet widgets action =
   let
     numWidgets =
@@ -626,14 +625,14 @@ forwardToAll toInternalAction styleGet styleSet widgets action =
                     anim
               in
                 ( styleSet widget (A newStyle)
-                , Effects.map
+                , Sub.map
                     (\a -> toInternalAction i (Internal a))
                     fx
                 )
             )
             widgets
   in
-    ( widgets, Effects.batch effects )
+    ( widgets, Sub.batch effects )
 
 
 {-| Specify the properties that should be animated

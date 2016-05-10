@@ -1,4 +1,4 @@
-module Html.Animation.Render (render, name, value, id, debugName, prefix) where
+module Html.Animation.Render exposing (render, name, value, id, debugName, prefix)
 
 import Html.Animation.Properties exposing (..)
 import String exposing (concat)

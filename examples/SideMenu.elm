@@ -1,16 +1,14 @@
 
 
-import StartApp exposing (start)
-
+--import StartApp exposing (start)
+--import Effects exposing (Never)
+import Html.App as Html
+--import Signal exposing (Address)
+import Task
+import Time exposing (second)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Effects exposing (Effects, Never)
-import Signal exposing (Address)
-import Task
-
-import Time exposing (second)
-
 import Html.Animation as UI
 import Html.Animation.Properties exposing (..)
 
@@ -24,106 +22,124 @@ type alias Model =
 
 type Action = Show 
             | Hide
-            | Animate UI.Action
+            | Animate Float
+
+
+
+
+--styles = 
+  
+
 
 
 {-| Prepare a helper function manage effects and assign styles -}
-onMenu =
-  UI.forwardTo 
-      Animate
-      .style
-      (\w style -> { w | style = style }) -- style setter 
+--onMenu =
+--  UI.forwardTo 
+--      Animate
+--      .style
+--      (\w style -> { w | style = style }) -- style setter 
 
 
-update : Action -> Model -> ( Model, Effects Action )
+update : Action -> Model -> ( Model, Cmd Action )
 update action model =
   case action of
     Show ->
-      UI.animate 
-         |> UI.props 
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
-             ] 
-         |> onMenu model
+      (model, Cmd.none)
+    --   let
+    --      (newStyle, fx) = 
+    --        UI.animate
+    --           |> UI.props 
+    --                  [ Left (UI.to 0) Px
+    --                  , Opacity (UI.to 1)
+    --                  ] 
+    --           |> UI.on model.style
+    --    in
+    --      ( {model| style = newStyle}
+    --      , Cmd.none
+    --      )
 
     Hide ->
-        UI.animate
-           |> UI.props 
-                  [ Left (UI.to -350) Px
-                  , Opacity (UI.to 0)
-                  ] 
-           |> onMenu model
+      (model, Cmd.none)
+      --let
+      --  (newStyle, fx) = 
+      --    UI.animate
+      --       |> UI.props 
+      --              [ Left (UI.to -350) Px
+      --              , Opacity (UI.to 0)
+      --              ] 
+      --       |> UI.on model.style
+      --in
+      --  ( {model| style = newStyle}
+      --  , Cmd.none
+      --  )
+
  
-    Animate action ->
-      onMenu model action
+    Animate time ->
+      let
+        _ = Debug.log "test" (toString time)
+      in
+        (model, Cmd.none)
+      --let
+      --  (newModel, fx) = onMenu model action
+      --in
+      --  (newModel, Cmd.none)
 
 
-view : Address Action -> Model -> Html
-view address model =
-            let
-              triggerStyle = [ ("position", "absolute")
-                             , ("left", "0px")
-                             , ("top", "0px")
-                             , ("width", "350px")
-                             , ("height", "100%")
-                             --, ("background-color", "#AAA")
-                             , ("border", "2px dashed #AAA")
-                            ]
-            in
-              div [ onMouseEnter address Show
-                  , onMouseLeave address Hide
-                  , style triggerStyle  
-                  ]
+view :  Model -> Html Action
+view model =
+    div [ onMouseEnter Show
+        , onMouseLeave Hide
+        , style [ ("position", "absolute")
+                 , ("left", "0px")
+                 , ("top", "0px")
+                 , ("width", "350px")
+                 , ("height", "100%")
+                 , ("border", "2px dashed #AAA")
+                ]
+        ]
+        [ h1 [ style [("padding","25px")]] 
+             [ text "Hover here to see menu!"]
+        , div [ style ([ ("position", "absolute")
+                      , ("top", "-2px")
+                      , ("margin-left", "-2px")
+                      , ("padding", "25px")
+                      , ("width", "300px")
+                      , ("height", "100%")
+                      , ("background-color", "rgb(58,40,69)")
+                      , ("color", "white")
+                      , ("border", "2px solid rgb(58,40,69)")
+                      ])
+                    --] ++ (UI.render model.style)) 
+              ]
+              [ h1 [] [ text "Hidden Menu"]
+              , ul [] 
+                   [ li [] [text "Some things"]
+                   , li [] [text "in a list"]
+                   ]
+              ]
+        ]
 
-                  [ h1 [ style [("padding","25px")]] 
-                       [ text "Hover here to see menu!"]
-                  , viewMenu address model 
-                  ]
-
-viewMenu : Address Action -> Model -> Html
-viewMenu address model =
-                let
-                  menuStyle = [ ("position", "absolute")
-                                , ("top", "-2px")
-                                , ("margin-left", "-2px")
-                                , ("padding", "25px")
-                                , ("width", "300px")
-                                , ("height", "100%")
-                                , ("background-color", "rgb(58,40,69)")
-                                , ("color", "white")
-                                , ("border", "2px solid rgb(58,40,69)")
-                              ]
-                in
-                  div [ style (menuStyle ++ (UI.render model.style)) ]
-                      [ h1 [] [ text "Hidden Menu"]
-                      , ul [] 
-                           [ li [] [text "Some things"]
-                           , li [] [text "in a list"]
-                           ]
-                      ]
+subscriptions : Model -> Sub Action
+subscriptions model =
+  Time.every second Animate
 
 
 
-init : ( Model, Effects Action )
+init : ( Model, Cmd Action )
 init = ( { style = UI.init 
                       [ Left -350.0 Px
                       , Opacity 0.0 
                       ]
          }
-       , Effects.none )
+       , Cmd.none )
 
-app =
-  StartApp.start
-    { init = init
-    , update = update
-    , view = view
-    , inputs = []
-    }
+
 
 main =
-  app.html
+  Html.program
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+    }
 
-
-port tasks : Signal (Task.Task Never ())
-port tasks =
-  app.tasks

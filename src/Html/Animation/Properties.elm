@@ -1,4 +1,4 @@
-module Html.Animation.Properties (StyleProperty (..), Length (..), Angle (..), DisplayMode (..)) where
+module Html.Animation.Properties exposing (StyleProperty (..), Length (..), Angle (..), DisplayMode (..))
 
 
 {-|

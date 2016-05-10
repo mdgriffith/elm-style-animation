@@ -1,11 +1,11 @@
-module Html.Animation.Core (Model, Action(..), StyleKeyframe, Interruption, Style, Physics, DynamicTarget, Static, update, step, mapProp, bake, emptyEasing) where
+module Html.Animation.Core exposing (Model, Action(..), StyleKeyframe, Interruption, Style, Physics, DynamicTarget, Static, update, step, mapProp, bake, emptyEasing) -- where
 
 import Time exposing (Time, second)
-import Effects exposing (Effects)
 import Html.Animation.Properties exposing (..)
 import Html.Animation.Spring as Spring
 import Html.Animation.Render as Render
 import Debug
+import AnimationFrame
 
 
 type alias Model =
@@ -90,7 +90,7 @@ defaultEasing x =
   (1 - cos (pi * x)) / 2
 
 
-update : Action -> Model -> ( Model, Effects Action )
+update : Action -> Model -> ( Model, Sub Action )
 update action model =
   case action of
     Queue anims ->
@@ -98,18 +98,18 @@ update action model =
         Nothing ->
             ( { model 
                   | anim = initializeFrame model.previous anims }
-            , Effects.tick Tick
+            , AnimationFrame.times Tick
             )
 
         Just a ->
           ( { model | anim = model.anim ++ anims }
-          , Effects.tick Tick
+          , AnimationFrame.times Tick
           )
 
     Interrupt interrupt ->
       case List.head interrupt of
         Nothing ->
-          ( model, Effects.none )
+          ( model, Sub.none )
 
         Just first ->
           let
@@ -143,7 +143,7 @@ update action model =
             ( { model
                 | interruption = interruptions
               }
-            , Effects.tick Tick
+            , AnimationFrame.times Tick
             )
 
     Tick now ->
@@ -174,24 +174,24 @@ update action model =
                     , start = Nothing
                     , anim = []
                   }
-                , Effects.none
+                , Sub.none
                 )
 
               Just current ->
                 tick model current elapsed dt start now
 
 
-continue : Model -> Time -> Time -> ( Model, Effects Action )
+continue : Model -> Time -> Time -> ( Model, Sub Action )
 continue model elapsed start =
   ( { model
       | elapsed = elapsed
       , start = Just start
     }
-  , Effects.tick Tick
+  , AnimationFrame.times Tick
   )
 
 
-tick : Model -> StyleKeyframe -> Time -> Time -> Time -> Time -> ( Model, Effects Action )
+tick : Model -> StyleKeyframe -> Time -> Time -> Time -> Time -> ( Model, Sub Action )
 tick model current elapsed dt start now =
   let 
     frameElapsed = elapsed - current.delay
@@ -224,7 +224,7 @@ tick model current elapsed dt start now =
             , anim = initializeFrame previous anims
             , interruption = interruption
           }
-        , Effects.tick Tick
+        , AnimationFrame.times Tick
         )
     else
       -- normal tick
@@ -233,7 +233,7 @@ tick model current elapsed dt start now =
           , start = Just start
           , anim = mapTo 0 (\a -> step a model.previous frameElapsed dt) model.anim
         }
-      , Effects.tick Tick
+      , AnimationFrame.times Tick
       )
 
 
@@ -271,7 +271,7 @@ getTimes now model =
       ( prelimStart, prelimElapsed, prelimDt )
 
 
-interrupt : Time -> Model -> List StyleKeyframe -> List Interruption -> ( Model, Effects Action )
+interrupt : Time -> Model -> List StyleKeyframe -> List Interruption -> ( Model, Sub Action )
 interrupt now model interruption remaining =
   let
     ( previous, newAnims ) =
@@ -293,7 +293,7 @@ interrupt now model interruption remaining =
         , previous = previous
         , interruption = remaining
       }
-    , Effects.tick Tick
+    , AnimationFrame.times Tick
     )
 
 

@@ -1,4 +1,4 @@
-module Html.Animation.Debug (..) where
+module Html.Animation.Debug exposing (..)
 
 
 import Html exposing (..)
