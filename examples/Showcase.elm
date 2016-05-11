@@ -1,25 +1,13 @@
-
-
-import StartApp exposing (start)
-
-
+import Time exposing (Time, second)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.Lazy
-import Effects exposing (Effects, Never)
-import Task
-
-import Time exposing (Time, second)
-import Signal exposing (Address)
-
 import Html.Animation as UI
 import Html.Animation.Properties exposing (..)
-
-import Easing exposing (easeInBounce, easeInSine, easeOutSine)
-
-
--- MODEL
+import Html.App as Html
+import AnimationFrame
+--import Easing exposing (easeInBounce, easeInSine, easeOutSine)
 
 type alias Model = { widgets : List Widget }
 
@@ -30,9 +18,6 @@ type alias Widget =
           , action : (Int -> Action)
           }
 
-
--- UPDATE
-
 type Action = RotateWidget Int
             | RotateAllAxis Int
             | RotateCustomEasingDuration Int
@@ -42,240 +27,296 @@ type Action = RotateWidget Int
             | FadeOut Int
             | Loopty Int
             | Spring Int
-            | Animate Int UI.Action
+            | Animate Time
 
-{-| Prepare a helper function manage effects and assign styles -}
-onWidget = 
-    UI.forwardToIndex
-        Animate
-        .style -- widget style getter
-        (\w style -> { w | style = style }) -- widget style setter
                                     
 
+mapToIndex : Int -> (a -> a) -> List a -> List a
+mapToIndex j fn list =
+          List.indexedMap
+              (\i x ->
+                if i == j then
+                  fn x
+                else
+                  x
+              ) list
 
-update : Action -> Model -> ( Model, Effects Action )
+
+
+
+update : Action -> Model -> ( Model, Cmd Action )
 update action model =
   case action of
     RotateWidget i ->
       let 
-        (widgets, fx) = 
-              UI.queue -- queue up this animation 
-                       -- as opposed to interrupting
-                  |> UI.duration (1*second)
-                  |> UI.props 
-                      [ Rotate (UI.add 1) Turn 
-                      ] 
-                  |> onWidget i model.widgets 
+        widgets = 
+          UI.queue -- queue up this animation 
+                   -- as opposed to interrupting
+              |> UI.duration (1*second)
+              |> UI.props 
+                  [ Rotate (UI.add 1) Turn 
+                  ] 
+              |> (\act -> mapToIndex i 
+                              (\widget -> 
+                                  { widget 
+                                      | style = UI.on widget.style act
+                                  }
+                              ) model.widgets)
       in
         ( { model | widgets = widgets }
-        , fx )
+        , Cmd.none )
 
     RotateAllAxis i ->
       let 
-        (widgets, fx) = 
-              UI.queue -- queue up this animation 
-                       -- as opposed to interrupting
-                  |> UI.duration (1*second)
-                  |> UI.props 
-                      [ RotateX (UI.add 1) Turn
-                      , RotateY (UI.add 1) Turn
-                      , Rotate (UI.add 1) Turn
-                      ] 
-                  |> onWidget i model.widgets 
+        widgets = 
+          UI.queue -- queue up this animation 
+                   -- as opposed to interrupting
+              |> UI.duration (1*second)
+              |> UI.props 
+                  [ RotateX (UI.add 1) Turn
+                  , RotateY (UI.add 1) Turn
+                  , Rotate (UI.add 1) Turn
+                  ] 
+               |> (\act -> mapToIndex i 
+                              (\widget -> 
+                                  { widget 
+                                      | style = UI.on widget.style act
+                                  }
+                              ) model.widgets)
       in
         ( { model | widgets = widgets }
-        , fx )
+        , Cmd.none )
 
 
 
     RotateCustomEasingDuration i ->
       let 
-        (widgets, fx) = 
-                UI.queue -- queue up this animation 
-                          -- as opposed to interrupting
-                  |> UI.duration (2*second)
-                  |> UI.easing easeInBounce
-                  |> UI.props 
-                      [ Rotate (UI.add 1) Turn 
-                      ] 
-                  |> onWidget i model.widgets 
+        widgets = 
+          UI.queue -- queue up this animation 
+                    -- as opposed to interrupting
+            --|> UI.duration (2*second)
+            --|> UI.easing easeInBounce
+            |> UI.props 
+                [ Rotate (UI.add 1) Turn 
+                ] 
+            |> (\act -> mapToIndex i 
+                  (\widget -> 
+                      { widget 
+                          | style = UI.on widget.style act
+                      }
+                  ) model.widgets)
       in
         ( { model | widgets = widgets }
-        , fx )
+        , Cmd.none )
 
 
     Loopty i ->
       let 
-        (widgets, fx) = 
+        widgets = 
                 UI.queue -- queue up this animation 
                          -- as opposed to interrupting
-                    |> UI.duration (0.5*second)
-                    |> UI.easing easeInSine
+                    --|> UI.duration (0.5*second)
+                    --|> UI.easing easeInSine
                     |> UI.props 
                         [ Rotate (UI.add -0.5) Turn
                         , TranslateY (UI.to 50) Px
                         , Rotate (UI.add 0.5) Turn
                         ] 
                   |> UI.andThen
-                    |> UI.duration (0.5*second)
-                    |> UI.easing easeOutSine
+                    --|> UI.duration (0.5*second)
+                    --|> UI.easing easeOutSine
                     |> UI.props 
                         [ Rotate (UI.add -0.5) Turn
                         , TranslateY (UI.to 0) Px
                         , Rotate (UI.add 0.5) Turn
                         ] 
-
-                  |> onWidget i model.widgets 
+                   |> (\act -> mapToIndex i 
+                              (\widget -> 
+                                  { widget 
+                                      | style = UI.on widget.style act
+                                  }
+                              ) model.widgets)
       in
         ( { model | widgets = widgets }
-        , fx )
+        , Cmd.none )
 
 
     Spring i ->
       let 
-        (widgets, fx) = 
-                UI.queue 
-                    |> UI.spring UI.noWobble
-                    |> UI.props 
-                        [ Scale (UI.to 1.5)
-                        ] 
-                  |> UI.andThen
-                    |> UI.spring UI.wobbly
-                    |> UI.props 
-                        [ Scale (UI.to 1.0)
-                        ] 
-                  |> onWidget i model.widgets 
+        widgets = 
+          UI.queue 
+              |> UI.spring UI.noWobble
+              |> UI.props 
+                  [ Scale (UI.to 1.5)
+                  ] 
+            |> UI.andThen
+              |> UI.spring UI.wobbly
+              |> UI.props 
+                  [ Scale (UI.to 1.0)
+                  ] 
+             |> (\act -> mapToIndex i 
+                        (\widget -> 
+                            { widget 
+                                | style = UI.on widget.style act
+                            }
+                        ) model.widgets)
       in
         ( { model | widgets = widgets }
-        , fx )
+        , Cmd.none )
 
 
 
 
     ChangeColors i ->
        let 
-          (widgets, fx) = 
-                  UI.animate -- animate is used to interrupt whatever current animation
-                             -- is running and smoothely move to the new style
-                      |> UI.props 
-                          [ BackgroundColor 
-                                |> UI.toRGBA 100 100 100 1.0 
-                          , BorderColor 
-                                |> UI.toRGBA 100 100 100 1.0 
-                          ] 
-                      |> onWidget i model.widgets
+          widgets = 
+            UI.animate -- animate is used to interrupt whatever current animation
+                       -- is running and smoothely move to the new style
+                |> UI.props 
+                    [ BackgroundColor 
+                          |> UI.toRGBA 100 100 100 1.0 
+                    , BorderColor 
+                          |> UI.toRGBA 100 100 100 1.0 
+                    ] 
+                 |> (\act -> mapToIndex i 
+                              (\widget -> 
+                                  { widget 
+                                      | style = UI.on widget.style act
+                                  }
+                              ) model.widgets)
                       
         in
           ( { model | widgets = widgets }
-          , fx )
+          , Cmd.none )
 
 
     ChangeMultipleColors i ->
        let 
-          (widgets, fx) = 
-                      UI.animate -- animate is used to interrupt whatever current animation
-                                 -- is running and smoothely move to the new style
-                          |> UI.props 
-                              [ BackgroundColor
-                                    |> UI.toRGBA 100 100 100 1.0 
-                              , BorderColor
-                                    |> UI.toRGBA 100 100 100 1.0  
-                              ] 
-                      |> UI.andThen 
-                          |> UI.props 
-                              [ BackgroundColor
-                                    |> UI.toRGBA 178 201 14 1.0 
-                              , BorderColor
-                                    |> UI.toRGBA 178 201 14 1.0 
-                              ] 
-                      |> onWidget i model.widgets
+          widgets = 
+            UI.animate -- animate is used to interrupt whatever current animation
+                       -- is running and smoothely move to the new style
+                |> UI.props 
+                    [ BackgroundColor
+                          |> UI.toRGBA 100 100 100 1.0 
+                    , BorderColor
+                          |> UI.toRGBA 100 100 100 1.0  
+                    ] 
+            |> UI.andThen 
+                |> UI.props 
+                    [ BackgroundColor
+                          |> UI.toRGBA 178 201 14 1.0 
+                    , BorderColor
+                          |> UI.toRGBA 178 201 14 1.0 
+                    ] 
+             |> (\act -> mapToIndex i 
+                            (\widget -> 
+                                { widget 
+                                    | style = UI.on widget.style act
+                                }
+                            ) model.widgets)
 
         in
           ( { model | widgets = widgets }
-          , fx)
+          , Cmd.none )
 
     FadeOutFadeIn i ->
        let 
-          (widgets, fx) =
-                    UI.animate
-                        |> UI.props 
-                            [ Opacity (UI.to 0)  
-                            ] 
-                    |> UI.andThen
-                        |> UI.props 
-                            [ Opacity (UI.to 1)  
-                            ] 
-                    |> onWidget i model.widgets
-
+          widgets =
+            UI.animate
+                |> UI.props 
+                    [ Opacity (UI.to 0)  
+                    ] 
+            |> UI.andThen
+                |> UI.props 
+                    [ Opacity (UI.to 1)  
+                    ] 
+             |> (\act -> mapToIndex i 
+                            (\widget -> 
+                                { widget 
+                                    | style = UI.on widget.style act
+                                }
+                            ) model.widgets)
         in
           ( { model | widgets = widgets }
-          , fx )
+          , Cmd.none )
 
     FadeOut i ->
        let 
-          (widgets, fx) =
-                    UI.animate
-                        |> UI.props 
-                            [ Opacity (UI.to 0)
-                            ] 
-                     |> UI.andThen
-                        |> UI.set 
-                            [ Display None
-                            ]
-                     |> onWidget i model.widgets
-
+         widgets =
+          UI.animate
+              |> UI.props 
+                  [ Opacity (UI.to 0)
+                  ] 
+           |> UI.andThen
+              |> UI.set 
+                  [ Display None
+                  ]
+            |> (\act -> mapToIndex i 
+                            (\widget -> 
+                                { widget 
+                                    | style = UI.on widget.style act
+                                }
+                            ) model.widgets)
         in
           ( { model | widgets = widgets }
-          , fx )
+          , Cmd.none )
 
 
-    Animate i action ->
-      let
-        (widgets, fx) = onWidget i model.widgets action
+    Animate time ->
+      let 
+        --_ = Debug.log "test" (toString time)
+        newWidgets = 
+           List.map 
+              (\widget ->
+                  { widget | style = UI.tick time widget.style }
+              ) 
+              model.widgets
       in
-        ( { model | widgets = widgets }
-        , fx )
+        ( { model 
+              | widgets = newWidgets
+          }
+        , Cmd.none)
 
 
 -- VIEW
 
-view : Address Action -> Model -> Html
-view address model =
-            let
-              triggerStyle = [ ("position", "relative")
-                             , ("left", "0px")
-                             , ("top", "0px")
-                             , ("width", "100%")
-                             , ("height", "100%")
-                            ]
-            in
-              div [ style triggerStyle ]
+view : Model -> Html Action
+view model =
+  let
+    triggerStyle = [ ("position", "relative")
+                   , ("left", "0px")
+                   , ("top", "0px")
+                   , ("width", "100%")
+                   , ("height", "100%")
+                  ]
+  in
+    div [ style triggerStyle ]
 
-                  <| List.indexedMap 
-                       (\i w -> Html.Lazy.lazy2 (box address) i w) 
-                       model.widgets
+        <| List.indexedMap 
+             (\i w -> Html.Lazy.lazy2 box i w) 
+             model.widgets
                   
 
 
-box : Address Action -> Int -> Widget -> Html
-box address i widget = 
-               let
-                  boxStyle = [ ("position", "relative")
-                              , ("display", "inline-block")
-                                , ("margin", "50px 50px")
-                                , ("padding", "25px")
-                                , ("text-align", "center")
-                                , ("width", "100px")
-                                , ("height", "100px")
-                                , ("color", "white")
-                                , ("cursor", "pointer")
-                                , ("border-style", "solid")
-                                , ("vertical-align", "middle")
-                              ]
-                in
-                  div [ style (boxStyle ++ UI.render widget.style) 
-                      , onClick address (widget.action i) ]
-                      [ text widget.label ]
+box : Int -> Widget -> Html Action
+box i widget = 
+   let
+      boxStyle = [ ("position", "relative")
+                  , ("display", "inline-block")
+                    , ("margin", "50px 50px")
+                    , ("padding", "25px")
+                    , ("text-align", "center")
+                    , ("width", "100px")
+                    , ("height", "100px")
+                    , ("color", "white")
+                    , ("cursor", "pointer")
+                    , ("border-style", "solid")
+                    , ("vertical-align", "middle")
+                  ]
+    in
+      div [ style (boxStyle ++ UI.render widget.style) 
+          , onClick (widget.action i) ]
+          [ text widget.label ]
 
 
 
@@ -298,9 +339,8 @@ initialWidgetStyle = UI.init
 
 
 
-init : ( Model, Effects Action )
+init : ( Model, Cmd Action )
 init = (
-
       { widgets =  
           [  
               { label = "Rotate"
@@ -349,24 +389,20 @@ init = (
             }
           ]
       }, 
-    Effects.none )
+    Cmd.none )
 
 
-app =
-  StartApp.start
-    { init = init
-    , update = update
-    , view = view
-    , inputs = []
-    }
+subscriptions : Model -> Sub Action
+subscriptions model =
+  AnimationFrame.times Animate
 
 main =
-  app.html
-
-
-port tasks : Signal (Task.Task Never ())
-port tasks =
-  app.tasks
+  Html.program
+    { init = init
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+    }
 
 
 
