@@ -12,11 +12,21 @@ type alias Model =
             { style : UI.Animation 
             }
 
--- UPDATE
-
 type Action = Show 
             | Hide
             | Animate Float
+
+
+styles = 
+  { open = 
+      [ Left 0.0 Px
+      , Opacity  1.0
+      ] 
+  , closed = 
+      [ Left -350.0 Px
+      , Opacity 0.0
+      ] 
+  }
 
 
 
@@ -26,12 +36,9 @@ update action model =
     Show ->
       ( { model
             | style =  
-                UI.animate
-                 |> UI.props 
-                        [ Left (UI.to 0) Px
-                        , Opacity (UI.to 1)
-                        ] 
-                 |> UI.on model.style
+                UI.animateTo 
+                    styles.open
+                    model.style
       }
       , Cmd.none
       )
@@ -39,12 +46,9 @@ update action model =
     Hide ->
         ( { model
               | style =  
-                  UI.animate
-                     |> UI.props 
-                            [ Left (UI.to -350) Px
-                            , Opacity (UI.to 0)
-                            ] 
-                     |> UI.on model.style 
+                  UI.animateTo
+                     styles.closed
+                     model.style 
           }
         , Cmd.none
         )
@@ -97,11 +101,7 @@ subscriptions model =
 
 
 init : ( Model, Cmd Action )
-init = ( { style = UI.init 
-                      [ Left -350.0 Px
-                      , Opacity 0.0 
-                      ]
-         }
+init = ( { style = UI.init styles.closed }
        , Cmd.none )
 
 

@@ -1,5 +1,5 @@
-module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
--- where
+module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, animateTo, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, toStyle, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
 The easiest way to get started with this library is to check out the examples that are included with the [source code](https://github.com/mdgriffith/elm-html-animation).
@@ -23,7 +23,9 @@ These functions specify the value for a StyleProperty.
 After taking an argument, these functions have `Float -> Float -> Float` as their signature.
 This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
 
-@docs to, stay, add, minus
+@docs to, stay, add, minus, toStyle
+
+@docs animateTo
 
 # Spring Presets
 @docs noWobble, gentle, wobbly, stiff
@@ -61,27 +63,27 @@ import Html.Animation.Core as Core exposing (Static)
 {-| An Animation of CSS properties.
 -}
 type Animation
-  = A Core.Model
+    = A Core.Model
 
 
 type alias KeyframeWithOptions =
-  { frame : Core.StyleKeyframe
-  , duration : Maybe Time
-  , easing : Maybe (Float -> Float)
-  , spring : Maybe Spring.Model
-  }
+    { frame : Core.StyleKeyframe
+    , duration : Maybe Time
+    , easing : Maybe (Float -> Float)
+    , spring : Maybe Spring.Model
+    }
 
 
 {-| A Temporary type that is used in constructing actions.
 -}
 type alias PreAction =
-  { frames : List KeyframeWithOptions
-  , action : List Core.StyleKeyframe -> Core.Action
-  }
+    { frames : List KeyframeWithOptions
+    , action : List Core.StyleKeyframe -> Core.Action
+    }
 
 
 type alias Dynamic =
-  Core.Physics Core.DynamicTarget
+    Core.Physics Core.DynamicTarget
 
 
 {-| Actions to be run on an animation.
@@ -90,50 +92,50 @@ You won't be constructing this type directly, though it may show up in your type
 To start animations you'll be using the `animate`, `queue`, and `stagger` functions
 -}
 type Action
-  = Staggered (Float -> Float -> Action)
-  | Unstaggered PreAction
-  | Internal Core.Action
+    = Staggered (Float -> Float -> Action)
+    | Unstaggered PreAction
+    | Internal Core.Action
 
 
 empty : Core.Model
 empty =
-  { elapsed = 0.0
-  , start = Nothing
-  , anim = []
-  , previous = []
-  , interruption = []
-  }
+    { elapsed = 0.0
+    , start = Nothing
+    , anim = []
+    , previous = []
+    , interruption = []
+    }
 
 
 emptyKeyframe : Core.StyleKeyframe
 emptyKeyframe =
-  { target = []
-  , delay = 0.0
-  }
+    { target = []
+    , delay = 0.0
+    }
 
 
 emptyPhysics : a -> Core.Physics a
 emptyPhysics target =
-  { target = target
-  , physical =
-      { position = 0
-      , velocity = 0
-      }
-  , spring =
-      { stiffness = noWobble.stiffness
-      , damping = noWobble.damping
-      , destination = 1
-      }
-  , easing = Nothing
-  }
+    { target = target
+    , physical =
+        { position = 0
+        , velocity = 0
+        }
+    , spring =
+        { stiffness = noWobble.stiffness
+        , damping = noWobble.damping
+        , destination = 1
+        }
+    , easing = Nothing
+    }
 
 
 emptyKeyframeWithOptions =
-  { frame = emptyKeyframe
-  , duration = Nothing
-  , easing = Nothing
-  , spring = Nothing
-  }
+    { frame = emptyKeyframe
+    , duration = Nothing
+    , easing = Nothing
+    , spring = Nothing
+    }
 
 
 {-| Create an initial style for your init model.
@@ -143,36 +145,37 @@ __Note__ All properties that you animate must be present in the init or else tha
 -}
 init : Core.Style -> Animation
 init sty =
-  let
-    deduped =
-      List.foldr
-        (\x acc ->
-          if
-            List.any
-              (\y ->
-                Render.id x
-                  == Render.id y
-                  && Render.name x
-                  /= "transform"
-              )
-              acc
-          then
-            acc
-          else
-            x :: acc
-        )
-        []
-        sty
-  in
-    A { empty | previous = deduped }
+    let
+        deduped =
+            List.foldr
+                (\x acc ->
+                    if
+                        List.any
+                            (\y ->
+                                Render.id x
+                                    == Render.id y
+                                    && Render.name x
+                                    /= "transform"
+                            )
+                            acc
+                    then
+                        acc
+                    else
+                        x :: acc
+                )
+                []
+                sty
+    in
+        A { empty | previous = deduped }
 
 
-type alias SpringProps = 
-            { stiffness : Float
-            , damping : Float
-            }
+type alias SpringProps =
+    { stiffness : Float
+    , damping : Float
+    }
 
-{-| Animate based on spring physics.  
+
+{-| Animate based on spring physics.
 
 You'll need to provide both a stiffness and a dampness to this function.
 
@@ -180,7 +183,7 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
 
      UI.animate
          -- |> UI.spring UI.noWobble -- set using a UI preset
-         |> UI.spring 
+         |> UI.spring
                 { stiffness = 400
                 , damping = 28
                 }
@@ -192,50 +195,51 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
 -}
 spring : SpringProps -> Action -> Action
 spring spring action =
-  let
-    newSpring = Just 
-      { destination = 1.0
-      , damping = spring.damping
-      , stiffness = spring.stiffness
-      }
-  in
-    updateOrCreate action (\a -> { a | spring = newSpring })
+    let
+        newSpring =
+            Just
+                { destination = 1.0
+                , damping = spring.damping
+                , stiffness = spring.stiffness
+                }
+    in
+        updateOrCreate action (\a -> { a | spring = newSpring })
 
 
 {-| A spring preset.  Probably should be your initial goto for using springs.
 -}
 noWobble : SpringProps
 noWobble =
-  { stiffness = 170
-  , damping = 26
-  }
+    { stiffness = 170
+    , damping = 26
+    }
 
 
 {-| A spring preset.
 -}
 gentle : SpringProps
 gentle =
-  { stiffness = 120
-  , damping = 14
-  }
+    { stiffness = 120
+    , damping = 14
+    }
 
 
 {-| A spring preset.
 -}
 wobbly : SpringProps
 wobbly =
-  { stiffness = 180
-  , damping = 12
-  }
+    { stiffness = 180
+    , damping = 12
+    }
 
 
 {-| A spring preset.
 -}
 stiff : SpringProps
 stiff =
-  { stiffness = 210
-  , damping = 20
-  }
+    { stiffness = 210
+    , damping = 20
+    }
 
 
 {-| Update an animation.  This will probably only show up once in your code.
@@ -243,11 +247,11 @@ See any of the examples at [https://github.com/mdgriffith/elm-html-animation](ht
 -}
 update : Action -> Animation -> Animation
 update action (A model) =
-  let
-    newModel =
-      Core.update (resolve action 1 0) model
-  in
-    A newModel
+    let
+        newModel =
+            Core.update (resolve action 1 0) model
+    in
+        A newModel
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -263,17 +267,17 @@ update action (A model) =
 -}
 animate : Action
 animate =
-  Unstaggered
-    <| { frames = []
-       , action = Core.Interrupt
-       }
+    Unstaggered
+        <| { frames = []
+           , action = Core.Interrupt
+           }
 
 
 {-| Step the animation
 -}
 tick : Float -> Animation -> Animation
-tick time model = update (Internal (Core.Tick time)) model
-
+tick time model =
+    update (Internal (Core.Tick time)) model
 
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
@@ -289,10 +293,10 @@ tick time model = update (Internal (Core.Tick time)) model
 -}
 queue : Action
 queue =
-  Unstaggered
-    <| { frames = []
-       , action = Core.Queue
-       }
+    Unstaggered
+        <| { frames = []
+           , action = Core.Queue
+           }
 
 
 {-| Can be used to stagger animations on a list of widgets.
@@ -301,7 +305,7 @@ queue =
         (\i ->
            UI.animate
              -- The delay is staggered based on list index
-             |> UI.delay (i * 0.05 * second) 
+             |> UI.delay (i * 0.05 * second)
              |> UI.duration (0.3 * second)
              |> UI.props
                  [ Left (UI.to 200) Px
@@ -318,9 +322,7 @@ queue =
 -}
 stagger : (Float -> Float -> Action) -> Action
 stagger =
-  Staggered
-
-
+    Staggered
 
 
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
@@ -329,7 +331,7 @@ However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare
      UI.animate
          |> UI.duration (0.4*second)
          |> UI.props
-             [ Left (UI.to 0) Px 
+             [ Left (UI.to 0) Px
              , Opacity (UI.to 1)
              ]
          |> UI.on model.style
@@ -337,7 +339,7 @@ However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare
 -}
 on : Animation -> Action -> Animation
 on model action =
-  update action model
+    update action model
 
 
 {-| Resolve the stagger if there is one, and apply springs if present.
@@ -345,77 +347,75 @@ on model action =
 -}
 resolve : Action -> Int -> Int -> Core.Action
 resolve stag t i =
-  case stag of
-    Unstaggered preaction ->
-      preaction.action
-        <| List.map
-            applyKeyframeOptions
-            preaction.frames
+    case stag of
+        Unstaggered preaction ->
+            preaction.action
+                <| List.map applyKeyframeOptions
+                    preaction.frames
 
-    Staggered s ->
-      resolve (s (toFloat t) (toFloat i)) t i
+        Staggered s ->
+            resolve (s (toFloat t) (toFloat i)) t i
 
-    Internal ia ->
-      ia
+        Internal ia ->
+            ia
 
 
 applyKeyframeOptions : KeyframeWithOptions -> Core.StyleKeyframe
 applyKeyframeOptions options =
-  let
-    frame =
-      options.frame
+    let
+        frame =
+            options.frame
 
-    applyOpt prop =
-      let
-        addOptions a =
-          let
-            newSpring =
-              case options.spring of
-                Nothing ->
-                  a.spring
+        applyOpt prop =
+            let
+                addOptions a =
+                    let
+                        newSpring =
+                            case options.spring of
+                                Nothing ->
+                                    a.spring
 
-                Just partialSpring ->
-                  let
-                    oldSpring =
-                      a.spring
-                  in
-                    { oldSpring
-                      | stiffness = partialSpring.stiffness
-                      , damping = partialSpring.damping
-                    }
+                                Just partialSpring ->
+                                    let
+                                        oldSpring =
+                                            a.spring
+                                    in
+                                        { oldSpring
+                                            | stiffness = partialSpring.stiffness
+                                            , damping = partialSpring.damping
+                                        }
 
-            newEasing =
-              Core.emptyEasing
+                        newEasing =
+                            Core.emptyEasing
 
-            withEase =
-              Maybe.map
-                (\ease ->
-                  { newEasing | ease = ease }
-                )
-                options.easing
+                        withEase =
+                            Maybe.map
+                                (\ease ->
+                                    { newEasing | ease = ease }
+                                )
+                                options.easing
 
-            withDuration =
-              case options.duration of
-                Nothing ->
-                  withEase
+                        withDuration =
+                            case options.duration of
+                                Nothing ->
+                                    withEase
 
-                Just dur ->
-                  case withEase of
-                    Nothing ->
-                      Just { newEasing | duration = dur }
+                                Just dur ->
+                                    case withEase of
+                                        Nothing ->
+                                            Just { newEasing | duration = dur }
 
-                    Just ease ->
-                      Just { ease | duration = dur }
-          in
-            { a
-              | spring = newSpring
-              , easing = withDuration
-            }
-      in
-        Core.mapProp addOptions prop
-  in
-    { frame | target = List.map applyOpt frame.target }
-
+                                        Just ease ->
+                                            Just { ease | duration = dur }
+                    in
+                        { a
+                            | spring = newSpring
+                            , easing = withDuration
+                        }
+            in
+                Core.mapProp addOptions prop
+    in
+        { frame | target = List.map applyOpt frame.target }
 
 
 {-| Specify the properties that should be animated
@@ -430,20 +430,18 @@ applyKeyframeOptions options =
 
 -}
 props : List (StyleProperty Dynamic) -> Action -> Action
-props p action =
-  updateOrCreate
-    action
-    (\a ->
-      let
-        frame =
-          a.frame
+props style action =
+    updateOrCreate action
+        (\a ->
+            let
+                frame =
+                    a.frame
 
-        updatedFrame =
-          { frame | target = p }
-      in
-        { a | frame = updatedFrame }
-    )
-
+                updatedFrame =
+                    { frame | target = style }
+            in
+                { a | frame = updatedFrame }
+        )
 
 
 {-| Apply a style immediately.  This takes a list of static style properties, meaning the no `UI.to` functions, only concrete numbers and values.
@@ -462,29 +460,29 @@ props p action =
 
 -}
 set : List (StyleProperty Static) -> Action -> Action
-set staticProps action = 
-          let
-            dynamic = List.map 
-                        (Core.mapProp (\x -> to x)) 
-                        staticProps
-          in
-            updateOrCreate
-              action
-              (\a ->
+set staticProps action =
+    let
+        dynamic =
+            List.map (Core.mapProp (\x -> to x))
+                staticProps
+    in
+        updateOrCreate action
+            (\a ->
                 let
-                  frame =
-                    a.frame
+                    frame =
+                        a.frame
 
-                  updatedFrame =
-                    { frame 
-                        | target = dynamic
-                    }
+                    updatedFrame =
+                        { frame
+                            | target = dynamic
+                        }
                 in
-                  { a | frame = updatedFrame
-                      , duration = Just 0
-                      , easing = Just (\x -> x) 
-                  }
-              )
+                    { a
+                        | frame = updatedFrame
+                        , duration = Just 0
+                        , easing = Just (\x -> x)
+                    }
+            )
 
 
 {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
@@ -502,10 +500,10 @@ If an easing is specified but no duration, the default duration is 350ms.
 -}
 duration : Time -> Action -> Action
 duration dur action =
-  updateOrCreate action (\a -> { a | duration = Just dur })
+    updateOrCreate action (\a -> { a | duration = Just dur })
 
 
-{-| Specify a delay.  
+{-| Specify a delay.
 If not specified, the default is 0.
 
      UI.animate
@@ -519,18 +517,17 @@ If not specified, the default is 0.
 -}
 delay : Time -> Action -> Action
 delay delay action =
-  updateOrCreate
-    action
-    (\a ->
-      let
-        frame =
-          a.frame
+    updateOrCreate action
+        (\a ->
+            let
+                frame =
+                    a.frame
 
-        updatedFrame =
-          { frame | delay = delay }
-      in
-        { a | frame = updatedFrame }
-    )
+                updatedFrame =
+                    { frame | delay = delay }
+            in
+                { a | frame = updatedFrame }
+        )
 
 
 {-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal in-out.
@@ -538,12 +535,10 @@ delay delay action =
 -}
 easing : (Float -> Float) -> Action -> Action
 easing ease action =
-  updateOrCreate action (\a -> { a | easing = Just ease })
+    updateOrCreate action (\a -> { a | easing = Just ease })
 
 
-
-
-{-| Append another keyframe.  This is used for multistage animations.  
+{-| Append another keyframe.  This is used for multistage animations.
 
 For example, to cycle through colors, we'd use the following:
 
@@ -567,87 +562,139 @@ For example, to cycle through colors, we'd use the following:
 -}
 andThen : Action -> Action
 andThen stag =
-  case stag of
-    Internal ia ->
-      Internal ia
+    case stag of
+        Internal ia ->
+            Internal ia
 
-    Staggered s ->
-      Staggered s
+        Staggered s ->
+            Staggered s
 
-    Unstaggered preaction ->
-      Unstaggered
-        <| { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
+        Unstaggered preaction ->
+            Unstaggered
+                <| { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
 
 
 {-| Update the last Core.StyleKeyframe in the queue.  If the queue is empty, create a new Core.StyleKeyframe and update that.
 -}
 updateOrCreate : Action -> (KeyframeWithOptions -> KeyframeWithOptions) -> Action
 updateOrCreate action fn =
-  case action of
-    Internal ia ->
-      Internal ia
+    case action of
+        Internal ia ->
+            Internal ia
 
-    Staggered s ->
-      Staggered s
+        Staggered s ->
+            Staggered s
 
-    Unstaggered preaction ->
-      Unstaggered
-        <| { preaction
-            | frames =
-                case List.reverse preaction.frames of
-                  [] ->
-                    [ fn emptyKeyframeWithOptions ]
+        Unstaggered preaction ->
+            Unstaggered
+                <| { preaction
+                    | frames =
+                        case List.reverse preaction.frames of
+                            [] ->
+                                [ fn emptyKeyframeWithOptions ]
 
-                  cur :: rem ->
-                    List.reverse ((fn cur) :: rem)
-           }
+                            cur :: rem ->
+                                List.reverse ((fn cur) :: rem)
+                   }
+
+
+
+animateTo : Core.Style -> Animation -> Animation
+animateTo style model =
+        animate
+         |> toStyle style
+         |> on model
+
+
+{-| Animate to a statically specified style.
+
+-}
+toStyle : Core.Style -> Action -> Action
+toStyle sty action =
+    let
+        deduped =
+            List.foldr
+                (\x acc ->
+                    if
+                        List.any
+                            (\y ->
+                                Render.id x
+                                    == Render.id y
+                                    && Render.name x
+                                    /= "transform"
+                            )
+                            acc
+                    then
+                        acc
+                    else
+                        x :: acc
+                )
+                []
+                sty
+
+        dynamicStyle = 
+          List.map (Core.mapProp (\x -> to x)) deduped
+
+    in
+     updateOrCreate action
+        (\a ->
+            let
+                frame =
+                    a.frame
+
+                updatedFrame =
+                    { frame | target = dynamicStyle }
+            in
+                { a | frame = updatedFrame }
+        )
 
 
 {-| Animate a StyleProperty to a value.
 -}
 to : Float -> Dynamic
 to target =
-  emptyPhysics
-    <| (\from current -> ((target - from) * current) + from)
+    emptyPhysics
+        <| (\from current -> ((target - from) * current) + from)
 
 
 {-| Animate a StyleProperty by adding to its existing value
 -}
 add : Float -> Dynamic
 add mod =
-  emptyPhysics
-    <| (\from current -> 
-            let
-              target = from + mod
-            in
-              ((target - from) * current) + from
-        )
+    emptyPhysics
+        <| (\from current ->
+                let
+                    target =
+                        from + mod
+                in
+                    ((target - from) * current) + from
+           )
 
 
 {-| Animate a StyleProperty by subtracting to its existing value
 -}
 minus : Float -> Dynamic
 minus mod =
-   emptyPhysics
-    <| (\from current -> 
-            let
-              target = from - mod
-            in
-              ((target - from) * current) + from
-        )
+    emptyPhysics
+        <| (\from current ->
+                let
+                    target =
+                        from - mod
+                in
+                    ((target - from) * current) + from
+           )
 
 
 {-| Keep an animation where it is!  This is useful for stacking transforms.
 -}
 stay : Dynamic
 stay =
-  emptyPhysics
-    <| (\from current -> from)
-
+    emptyPhysics
+        <| (\from current -> from)
 
 
 type alias ColorProperty =
-  Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic
+    Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic
 
 
 {-| Animate a color-based property, given a color from the Color elm module.
@@ -655,15 +702,14 @@ type alias ColorProperty =
 -}
 toColor : Color.Color -> ColorProperty -> StyleProperty Dynamic
 toColor color almostColor =
-  let
-    rgba =
-      Color.toRgb color
-  in
-    almostColor
-      (to <| toFloat rgba.red)
-      (to <| toFloat rgba.green)
-      (to <| toFloat rgba.blue)
-      (to rgba.alpha)
+    let
+        rgba =
+            Color.toRgb color
+    in
+        almostColor (to <| toFloat rgba.red)
+            (to <| toFloat rgba.green)
+            (to <| toFloat rgba.blue)
+            (to rgba.alpha)
 
 
 {-| Animate a color-based style property to an rgb color.  Note: this leaves the alpha channel where it is.
@@ -678,7 +724,7 @@ toColor color almostColor =
 -}
 toRGB : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toRGB r g b prop =
-  prop (to r) (to g) (to b) (to 1.0)
+    prop (to r) (to g) (to b) (to 1.0)
 
 
 {-| Animate a color-based style property to an rgba color.
@@ -694,7 +740,7 @@ toRGB r g b prop =
 -}
 toRGBA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toRGBA r g b a prop =
-  prop (to r) (to g) (to b) (to a)
+    prop (to r) (to g) (to b) (to a)
 
 
 {-| Animate a color-based style property to an hsl color. Note: this leaves the alpha channel where it is.
@@ -702,15 +748,14 @@ toRGBA r g b a prop =
 -}
 toHSL : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toHSL h s l prop =
-  let
-    rgba =
-      Color.toRgb <| Color.hsl h s l
-  in
-    prop
-      (to <| toFloat rgba.red)
-      (to <| toFloat rgba.green)
-      (to <| toFloat rgba.blue)
-      (to rgba.alpha)
+    let
+        rgba =
+            Color.toRgb <| Color.hsl h s l
+    in
+        prop (to <| toFloat rgba.red)
+            (to <| toFloat rgba.green)
+            (to <| toFloat rgba.blue)
+            (to rgba.alpha)
 
 
 {-| Animate a color-based style property to an hsla color.
@@ -718,15 +763,14 @@ toHSL h s l prop =
 -}
 toHSLA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
 toHSLA h s l a prop =
-  let
-    rgba =
-      Color.toRgb <| Color.hsl h s l
-  in
-    prop
-      (to <| toFloat rgba.red)
-      (to <| toFloat rgba.green)
-      (to <| toFloat rgba.blue)
-      (to rgba.alpha)
+    let
+        rgba =
+            Color.toRgb <| Color.hsl h s l
+    in
+        prop (to <| toFloat rgba.red)
+            (to <| toFloat rgba.green)
+            (to <| toFloat rgba.blue)
+            (to rgba.alpha)
 
 
 {-| Specify an initial Color-based property using a Color from the elm core Color module.
@@ -734,15 +778,14 @@ toHSLA h s l a prop =
 -}
 fromColor : Color.Color -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 fromColor color almostColor =
-  let
-    rgba =
-      Color.toRgb color
-  in
-    almostColor
-      (toFloat rgba.red)
-      (toFloat rgba.green)
-      (toFloat rgba.blue)
-      (rgba.alpha)
+    let
+        rgba =
+            Color.toRgb color
+    in
+        almostColor (toFloat rgba.red)
+            (toFloat rgba.green)
+            (toFloat rgba.blue)
+            (rgba.alpha)
 
 
 {-| Specify an initial Color-based property using rgb
@@ -750,7 +793,7 @@ fromColor color almostColor =
 -}
 rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 rgb r g b prop =
-  prop r g b 1.0
+    prop r g b 1.0
 
 
 {-| Specify an initial Color-based property using rgba
@@ -758,7 +801,7 @@ rgb r g b prop =
 -}
 rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 rgba r g b a prop =
-  prop r g b a
+    prop r g b a
 
 
 {-| Specify an initial Color-based property using hsl
@@ -766,15 +809,14 @@ rgba r g b a prop =
 -}
 hsl : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 hsl h s l prop =
-  let
-    rgba =
-      Color.toRgb <| Color.hsl h s l
-  in
-    prop
-      (toFloat rgba.red)
-      (toFloat rgba.blue)
-      (toFloat rgba.green)
-      rgba.alpha
+    let
+        rgba =
+            Color.toRgb <| Color.hsl h s l
+    in
+        prop (toFloat rgba.red)
+            (toFloat rgba.blue)
+            (toFloat rgba.green)
+            rgba.alpha
 
 
 {-| Specify an initial Color-based property using hsla
@@ -782,15 +824,14 @@ hsl h s l prop =
 -}
 hsla : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
 hsla h s l a prop =
-  let
-    rgba =
-      Color.toRgb <| Color.hsla h s l a
-  in
-    prop
-      (toFloat rgba.red)
-      (toFloat rgba.blue)
-      (toFloat rgba.green)
-      rgba.alpha
+    let
+        rgba =
+            Color.toRgb <| Color.hsla h s l a
+    in
+        prop (toFloat rgba.red)
+            (toFloat rgba.blue)
+            (toFloat rgba.green)
+            rgba.alpha
 
 
 {-| Render into concrete css that can be directly applied to 'style' in elm-html
@@ -801,9 +842,8 @@ hsla h s l a prop =
 render : Animation -> List ( String, String )
 render (A model) =
     case List.head model.anim of
-      Nothing ->
-        Render.render model.previous
-        
-      Just anim ->
-        Render.render <| Core.bake anim model.previous
-       
+        Nothing ->
+            Render.render model.previous
+
+        Just anim ->
+            Render.render <| Core.bake anim model.previous
