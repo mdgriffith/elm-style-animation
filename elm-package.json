@@ -7,8 +7,9 @@
         "src"
     ], 
     "exposed-modules": [
-        "Html.Animation", 
-        "Html.Animation.Properties"
+        "Style", 
+        "Style.Svg.Properties",
+        "Style.Html.Properties"
     ], 
     "dependencies": {
         "elm-lang/core": "4.0.0 <= v < 5.0.0",

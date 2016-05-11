@@ -1,4 +1,4 @@
-module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, animateTo, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, toStyle, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+module Style exposing (Animation, Action, html, svg, init, update, render, animate, queue, stagger, on, animateTo, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, toStyle, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -8,7 +8,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 
 # Base Definitions
-@docs Animation, Action
+@docs Animation, Action, html, svg
 
 # Starting an animation
 @docs animate, queue, stagger
@@ -54,10 +54,9 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List
 import Color
-import Html.Animation.Properties exposing (..)
-import Html.Animation.Render as Render
-import Html.Animation.Spring as Spring
-import Html.Animation.Core as Core exposing (Static)
+import Style.Properties
+import Style.Spring as Spring
+import Style.Core as Core exposing (Static)
 
 
 {-| An Animation of CSS properties.
@@ -65,6 +64,18 @@ import Html.Animation.Core as Core exposing (Static)
 type Animation
     = A Core.Model
 
+type alias StyleProperty a = Style.Properties.StyleProperty a
+
+
+{-| An Html Style
+-}
+html htmlProps = 
+    List.map Style.Properties.Html htmlProps
+
+{-| An Svg Style
+-}
+svg svgProps = 
+    List.map Style.Properties.Svg svgProps
 
 type alias KeyframeWithOptions =
     { frame : Core.StyleKeyframe
@@ -152,10 +163,8 @@ init sty =
                     if
                         List.any
                             (\y ->
-                                Render.id x
-                                    == Render.id y
-                                    && Render.name x
-                                    /= "transform"
+                                Style.Properties.id x
+                                    == Style.Properties.id y
                             )
                             acc
                     then
@@ -413,7 +422,7 @@ applyKeyframeOptions options =
                             , easing = withDuration
                         }
             in
-                Core.mapProp addOptions prop
+                Style.Properties.mapProp addOptions prop
     in
         { frame | target = List.map applyOpt frame.target }
 
@@ -463,7 +472,7 @@ set : List (StyleProperty Static) -> Action -> Action
 set staticProps action =
     let
         dynamic =
-            List.map (Core.mapProp (\x -> to x))
+            List.map (Style.Properties.mapProp (\x -> to x))
                 staticProps
     in
         updateOrCreate action
@@ -618,10 +627,8 @@ toStyle sty action =
                     if
                         List.any
                             (\y ->
-                                Render.id x
-                                    == Render.id y
-                                    && Render.name x
-                                    /= "transform"
+                                Style.Properties.id x
+                                    == Style.Properties.id y
                             )
                             acc
                     then
@@ -633,7 +640,7 @@ toStyle sty action =
                 sty
 
         dynamicStyle = 
-          List.map (Core.mapProp (\x -> to x)) deduped
+          List.map (Style.Properties.mapProp (\x -> to x)) deduped
 
     in
      updateOrCreate action
@@ -836,14 +843,18 @@ hsla h s l a prop =
 
 {-| Render into concrete css that can be directly applied to 'style' in elm-html
 
-    div [ style (UI.render widget.style) ] [ ]
+    div [ style UI.render widget.style) ] [ ]
 
 -}
 render : Animation -> List ( String, String )
 render (A model) =
     case List.head model.anim of
         Nothing ->
-            Render.render model.previous
+            Style.Properties.render model.previous
 
         Just anim ->
-            Render.render <| Core.bake anim model.previous
+            Style.Properties.render <| Core.bake anim model.previous
+
+
+
+
