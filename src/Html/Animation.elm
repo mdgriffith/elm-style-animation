@@ -1,4 +1,4 @@
-module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+module Html.Animation exposing (Animation, Action, init, update, render, animate, queue, stagger, on, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
 -- where
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -44,7 +44,7 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 @docs update
 
 # Managing Commands
-@docs on
+@docs on, tick
 
 -}
 
@@ -267,6 +267,13 @@ animate =
     <| { frames = []
        , action = Core.Interrupt
        }
+
+
+{-| Step the animation
+-}
+tick : Float -> Animation -> Animation
+tick time model = update (Internal (Core.Tick time)) model
+
 
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.

@@ -11539,6 +11539,14 @@ var _user$project$Html_Animation$on = F2(
 var _user$project$Html_Animation$Internal = function (a) {
 	return {ctor: 'Internal', _0: a};
 };
+var _user$project$Html_Animation$tick = F2(
+	function (time, model) {
+		return A2(
+			_user$project$Html_Animation$update,
+			_user$project$Html_Animation$Internal(
+				_user$project$Html_Animation_Core$Tick(time)),
+			model);
+	});
 var _user$project$Html_Animation$Unstaggered = function (a) {
 	return {ctor: 'Unstaggered', _0: a};
 };
@@ -11726,15 +11734,63 @@ var _user$project$Main$update = F2(
 		var _p0 = action;
 		switch (_p0.ctor) {
 			case 'Show':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							style: A2(
+								_user$project$Html_Animation$on,
+								model.style,
+								A2(
+									_user$project$Html_Animation$props,
+									_elm_lang$core$Native_List.fromArray(
+										[
+											A2(
+											_user$project$Html_Animation_Properties$Left,
+											_user$project$Html_Animation$to(0),
+											_user$project$Html_Animation_Properties$Px),
+											_user$project$Html_Animation_Properties$Opacity(
+											_user$project$Html_Animation$to(1))
+										]),
+									_user$project$Html_Animation$animate))
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 			case 'Hide':
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							style: A2(
+								_user$project$Html_Animation$on,
+								model.style,
+								A2(
+									_user$project$Html_Animation$props,
+									_elm_lang$core$Native_List.fromArray(
+										[
+											A2(
+											_user$project$Html_Animation_Properties$Left,
+											_user$project$Html_Animation$to(-350),
+											_user$project$Html_Animation_Properties$Px),
+											_user$project$Html_Animation_Properties$Opacity(
+											_user$project$Html_Animation$to(0))
+										]),
+									_user$project$Html_Animation$animate))
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 			default:
-				var _p1 = A2(
-					_elm_lang$core$Debug$log,
-					'test',
-					_elm_lang$core$Basics$toString(_p0._0));
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							style: A2(_user$project$Html_Animation$tick, _p0._0, model.style)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
 var _user$project$Main$Model = function (a) {
@@ -11744,7 +11800,7 @@ var _user$project$Main$Animate = function (a) {
 	return {ctor: 'Animate', _0: a};
 };
 var _user$project$Main$subscriptions = function (model) {
-	return A2(_elm_lang$core$Time$every, _elm_lang$core$Time$second, _user$project$Main$Animate);
+	return _elm_lang$animation_frame$AnimationFrame$times(_user$project$Main$Animate);
 };
 var _user$project$Main$Hide = {ctor: 'Hide'};
 var _user$project$Main$Show = {ctor: 'Show'};
@@ -11787,18 +11843,21 @@ var _user$project$Main$view = function (model) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html_Attributes$style(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								{ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
-								{ctor: '_Tuple2', _0: 'top', _1: '-2px'},
-								{ctor: '_Tuple2', _0: 'margin-left', _1: '-2px'},
-								{ctor: '_Tuple2', _0: 'padding', _1: '25px'},
-								{ctor: '_Tuple2', _0: 'width', _1: '300px'},
-								{ctor: '_Tuple2', _0: 'height', _1: '100%'},
-								{ctor: '_Tuple2', _0: 'background-color', _1: 'rgb(58,40,69)'},
-								{ctor: '_Tuple2', _0: 'color', _1: 'white'},
-								{ctor: '_Tuple2', _0: 'border', _1: '2px solid rgb(58,40,69)'}
-							]))
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Native_List.fromArray(
+								[
+									{ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
+									{ctor: '_Tuple2', _0: 'top', _1: '-2px'},
+									{ctor: '_Tuple2', _0: 'margin-left', _1: '-2px'},
+									{ctor: '_Tuple2', _0: 'padding', _1: '25px'},
+									{ctor: '_Tuple2', _0: 'width', _1: '300px'},
+									{ctor: '_Tuple2', _0: 'height', _1: '100%'},
+									{ctor: '_Tuple2', _0: 'background-color', _1: 'rgb(58,40,69)'},
+									{ctor: '_Tuple2', _0: 'color', _1: 'white'},
+									{ctor: '_Tuple2', _0: 'border', _1: '2px solid rgb(58,40,69)'}
+								]),
+							_user$project$Html_Animation$render(model.style)))
 					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
