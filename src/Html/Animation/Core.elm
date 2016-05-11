@@ -4,8 +4,6 @@ import Time exposing (Time, second)
 import Html.Animation.Properties exposing (..)
 import Html.Animation.Spring as Spring
 import Html.Animation.Render as Render
-import Debug
-import AnimationFrame
 
 
 type alias Model =
@@ -552,7 +550,10 @@ transferVelocityProp maybeOld target =
 
               -- how many milliseconds to take the sample at
               eased =
-                easing.ease (sampleSize / easing.duration)
+                if easing.duration <= 0 then
+                  1.0
+                else
+                  easing.ease (sampleSize / easing.duration)
 
               easeV =
                 velocity 0 eased sampleSize
@@ -653,7 +654,10 @@ applyStep current dt maybeFrom physics =
         Just easing ->
           let
             eased =
-              easing.ease (current / easing.duration)
+              if easing.duration <= 0 then
+                1.0
+              else
+                easing.ease (current / easing.duration)
 
             physical =
               physics.physical
