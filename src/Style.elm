@@ -1,4 +1,4 @@
-module Style exposing (Animation, Action, html, svg, init, update, render, animate, queue, stagger, on, animateTo, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, toStyle, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+module Style exposing (Animation, Action, html, svg, init, update, render, renderAttr, animate, queue, stagger, on, animateTo, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, toStyle, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -34,7 +34,7 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 @docs toColor, toRGB, toRGBA, toHSL, toHSLA
 
 # Render a Animation into CSS
-@docs render
+@docs render, renderAttr
 
 # Setting the starting style
 @docs init
@@ -422,7 +422,7 @@ applyKeyframeOptions options =
                             , easing = withDuration
                         }
             in
-                Style.Properties.mapProp addOptions prop
+                Style.Properties.map addOptions prop
     in
         { frame | target = List.map applyOpt frame.target }
 
@@ -472,7 +472,7 @@ set : List (StyleProperty Static) -> Action -> Action
 set staticProps action =
     let
         dynamic =
-            List.map (Style.Properties.mapProp (\x -> to x))
+            List.map (Style.Properties.map (\x -> to x))
                 staticProps
     in
         updateOrCreate action
@@ -640,7 +640,7 @@ toStyle sty action =
                 sty
 
         dynamicStyle = 
-          List.map (Style.Properties.mapProp (\x -> to x)) deduped
+          List.map (Style.Properties.map (\x -> to x)) deduped
 
     in
      updateOrCreate action
@@ -855,6 +855,19 @@ render (A model) =
         Just anim ->
             Style.Properties.render <| Core.bake anim model.previous
 
+
+{-| Render into svg attributes.
+
+    div (Style.renderAttr widget.style) [ ]
+
+-}
+renderAttr (A model) =
+    case List.head model.anim of
+        Nothing ->
+            Style.Properties.renderAttr model.previous
+
+        Just anim ->
+            Style.Properties.renderAttr <| Core.bake anim model.previous
 
 
 
