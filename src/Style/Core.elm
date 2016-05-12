@@ -573,7 +573,7 @@ mapTo i fn xs =
 bake : StyleKeyframe -> Style -> Style
 bake frame style =
     fill
-        (List.map (mapProp toStatic)
+        (List.map (map toStatic)
             frame.target
         )
         style

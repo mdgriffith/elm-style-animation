@@ -1037,8 +1037,8 @@ displayMode mode =
 -------------------------------
 
 
-mapProp : (a -> b) -> Property a -> Property b
-mapProp fn prop =
+map : (a -> b) -> Property a -> Property b
+map fn prop =
     case prop of
         Prop n a u ->
             Prop n (fn a) u

@@ -1,4 +1,4 @@
-module Style.Properties exposing (StyleProperty(..), id, mapProp, propIs, stepProp, baseName, render)
+module Style.Properties exposing (StyleProperty(..), id, map, propIs, stepProp, baseName, render, renderAttr)
 -- where
 {-|
 
@@ -28,11 +28,11 @@ id prop =
         Svg property -> "svg-" ++ SvgProps.id property
 
 
-mapProp : (a -> b) -> StyleProperty a -> StyleProperty b
-mapProp fn prop = 
+map : (a -> b) -> StyleProperty a -> StyleProperty b
+map fn prop = 
     case prop of 
-        Html property -> Html <| HtmlProps.mapProp fn property
-        Svg property -> Svg <| SvgProps.mapProp fn property
+        Html property -> Html <| HtmlProps.map fn property
+        Svg property -> Svg <| SvgProps.map fn property
 
 
 propIs : (a -> Bool) -> StyleProperty a -> Bool
@@ -70,3 +70,13 @@ render props =
                 Svg property -> []
     in
         List.concatMap renderCSSProp props
+
+
+renderAttr props = 
+    let 
+        renderAttrProp prop = 
+            case prop of 
+                Html property -> []
+                Svg property -> SvgProps.render [property]
+    in
+        List.concatMap renderAttrProp props
