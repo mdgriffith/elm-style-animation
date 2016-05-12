@@ -98,9 +98,153 @@ map fn prop =
 
 
 propIs : (a -> Bool) -> Property a -> Bool
-propIs pred prop = True
+propIs pred prop = 
+        case prop of 
+            X a -> pred a
+            Y a -> pred a
+            Cx a -> pred a
+            Cy a -> pred a
+            R a -> pred a
+            Rx a -> pred a
+            Ry a -> pred a
+            D a -> pred a
+            Points a -> pred a
+            --Transform a -> Transform pred a
+            Width a -> pred a
+            Height a -> pred a
 
 
 stepProp : Property a -> Property b -> (Maybe b -> a -> a) -> Property a
-stepProp prop prev val = prop
+stepProp prop prev val = 
+    case prop of
+        X to ->
+            let
+                from =
+                    case prev of
+                        X x ->
+                            Just x
 
+                        _ ->
+                            Nothing
+            in
+                X (val from to)
+
+        Y to ->
+            let
+                from =
+                    case prev of
+                        Y x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Y (val from to)
+
+        Cx to ->
+            let
+                from =
+                    case prev of
+                        Cx x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Cx (val from to)
+
+        Cy to ->
+            let
+                from =
+                    case prev of
+                        Cy x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Cy (val from to)
+
+        R to ->
+            let
+                from =
+                    case prev of
+                        R x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                R (val from to)
+
+        Rx to ->
+            let
+                from =
+                    case prev of
+                        Rx x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Rx (val from to)
+
+        Ry to ->
+            let
+                from =
+                    case prev of
+                        Ry x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Ry (val from to)
+
+        D to ->
+            let
+                from =
+                    case prev of
+                        D x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                D (val from to)
+
+        Points to ->
+            let
+                from =
+                    case prev of
+                        Points x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Points (val from to)
+
+        Width to ->
+            let
+                from =
+                    case prev of
+                        Width x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Width (val from to)
+
+        Height to ->
+            let
+                from =
+                    case prev of
+                        Height x ->
+                            Just x
+
+                        _ ->
+                            Nothing
+            in
+                Height (val from to)

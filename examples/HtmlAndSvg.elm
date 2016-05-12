@@ -3,10 +3,7 @@ import Html.App
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-
-
 import AnimationFrame
-
 import Style
 import Style.Svg.Properties as Svg
 import Style.Html.Properties exposing (..)

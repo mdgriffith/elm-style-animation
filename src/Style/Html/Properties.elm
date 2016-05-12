@@ -1212,18 +1212,6 @@ map fn prop =
 
 propIs : (a -> Bool) -> Property a -> Bool
 propIs pred prop =
-    --let
-    --    pred prop =
-    --        case prop.easing of
-    --            Nothing ->
-    --                Spring.atRest prop.spring prop.physical
-
-    --            Just easing ->
-    --                time
-    --                    >= easing.duration
-    --                    && easing.counterForcePhys
-    --                    == Nothing
-    --in
         case prop of
             Prop _ a _ ->
                 pred a
