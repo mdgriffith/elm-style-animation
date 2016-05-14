@@ -2,7 +2,7 @@ module Style.Core exposing (Model, Action(..), Keyframe, Interruption, Style, Ph
 --where
 
 import Time exposing (Time, second)
-import Style.Properties exposing (..)
+import Style.Properties exposing (Property)
 import Style.Spring as Spring
 
 
@@ -296,7 +296,7 @@ initializeFrame style anims =
                 Just frame ->
                     let
                         matched = 
-                            zipWith (\a b -> baseName a.current == baseName b) frame.properties style
+                            zipWith (\a b -> Style.Properties.baseName a.current == Style.Properties.baseName b) frame.properties style
 
                     in
                         List.map 
@@ -307,15 +307,15 @@ initializeFrame style anims =
                                             warn = 
                                                 Debug.log "elm-html-animation"
                                                     ("There is no initial value for '"
-                                                    ++ id a.current
+                                                    ++ Style.Properties.id a.current
                                                     ++ "', though it is queued to be animated.  Define an initial value for '"
-                                                    ++ id a.current
+                                                    ++ Style.Properties.id a.current
                                                     ++ "'")
                                         in
                                             Just warn
                                             
                                     Just b ->
-                                        if id a.current == id b then
+                                        if Style.Properties.id a.current == Style.Properties.id b then
                                             Nothing
                                         else
                                             let
@@ -323,9 +323,9 @@ initializeFrame style anims =
                                                      Debug.log "elm-html-animation"
                                                         ("Wrong units provided.  "
                                                         ++ "An initial value was given as '"
-                                                        ++ id b
+                                                        ++ Style.Properties.id b
                                                         ++ "' versus the animation which was given as '"
-                                                        ++ id a.current
+                                                        ++ Style.Properties.id a.current
                                                         ++ "'.")
                                             in
                                                 Just warn
@@ -346,7 +346,7 @@ done time frame =
                     time >= easing.duration
                  && easing.counterForcePhys == Nothing
     in
-        List.all (\p -> propIs finished p.current) frame.properties
+        List.all (\p -> Style.Properties.is finished p.current) frame.properties
 
 
 
@@ -355,7 +355,7 @@ done time frame =
 transferVelocity : Keyframe -> Keyframe -> Keyframe
 transferVelocity old new =
     let
-        matched = zipWith (\a b -> id a.current == id b.current) old.properties new.properties
+        matched = zipWith (\a b -> Style.Properties.id a.current == Style.Properties.id b.current) old.properties new.properties
 
         newProperties = 
             List.map 
@@ -366,7 +366,7 @@ transferVelocity old new =
 
                         Just b ->
                             let
-                                newCurrent = map2 transferVelocityProp a.current b.current
+                                newCurrent = Style.Properties.map2 transferVelocityProp a.current b.current
                             in
                                 { b | current = newCurrent }
                 ) matched
@@ -441,7 +441,7 @@ step : Time -> Time -> Style -> Keyframe -> Keyframe
 step time dt style frame =
      let
         newProperties = 
-                zipWith (\a b -> id a.current == id b) frame.properties style 
+                zipWith (\a b -> Style.Properties.id a.current == Style.Properties.id b) frame.properties style 
                  |> List.map 
                         (\(a, maybeB) -> 
                             case maybeB of 
@@ -450,7 +450,7 @@ step time dt style frame =
 
                                 Just b ->
                                     { a
-                                      | current = map3 (applyStep time dt) a.target b a.current
+                                      | current = Style.Properties.map3 (applyStep time dt) a.target b a.current
                                     }
                         )
     in
@@ -558,7 +558,7 @@ bake frame style =
     fill style
         <| List.map 
             (\prop ->
-                map (\phys -> phys.physical.position) prop.current
+                Style.Properties.map (\phys -> phys.physical.position) prop.current
             )
             frame.properties
         
@@ -590,7 +590,7 @@ zipWith fn listA listB =
 
 fill : Style -> Style -> Style
 fill existing new = 
-        zipWith (\a b -> id a == id b) existing new 
+        zipWith (\a b -> Style.Properties.id a == Style.Properties.id b) existing new 
      |> List.map (\(a, maybeB) -> Maybe.withDefault a maybeB )
 
 

@@ -1261,8 +1261,8 @@ map fn prop =
         Points a -> Points (List.map fn a)
 
 
-propIs : (a -> Bool) -> Property a -> Bool
-propIs pred prop =
+is : (a -> Bool) -> Property a -> Bool
+is pred prop =
     case prop of
         Display mode ->
             True
