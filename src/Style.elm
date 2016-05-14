@@ -1,4 +1,4 @@
-module Style exposing (Animation, Action, html, svg, init, update, render, renderAttr, animate, queue, stagger, on, delay, duration, easing, spring, andThen, set, tick, to, noWobble, gentle, wobbly, stiff, fromColor, rgb, rgba, hsl, hsla)
+module Style exposing (Animation, Action, init, update, render, renderAttr, animate, queue, stagger, on, delay, duration, easing, spring, andThen, set, tick, to, noWobble, gentle, wobbly, stiff, fromColor, rgb, rgba, hsl, hsla)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -8,7 +8,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 
 # Base Definitions
-@docs Animation, Action, html, svg
+@docs Animation, Action
 
 # Starting an animation
 @docs animate, queue, stagger
@@ -18,7 +18,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 # Animating Properties
 
-These functions specify the value for a StyleProperty.
+These functions specify the value for a Property.
 
 After taking an argument, these functions have `Float -> Float -> Float` as their signature.
 This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
@@ -59,18 +59,8 @@ import Style.Core as Core exposing (Static)
 type Animation
     = A Core.Model
 
-type alias StyleProperty a = Style.Properties.StyleProperty a
+type alias Property a = Style.Properties.Property a
 
-
-{-| An Html Style
--}
-html htmlProps = 
-    List.map Style.Properties.Html htmlProps
-
-{-| An Svg Style
--}
-svg svgProps = 
-    List.map Style.Properties.Svg svgProps
 
 type alias KeyframeWithOptions =
     { frame : Core.Keyframe
@@ -260,7 +250,7 @@ stiff =
               )
           |> Style.on model.style
 -}
-update : (Style.Properties.StyleProperty Float -> Style.Properties.StyleProperty Float) -> Action -> Action
+update : (Style.Properties.Property Float -> Style.Properties.Property Float) -> Action -> Action
 update styleUpdate action = action
     -- let
 
@@ -674,7 +664,7 @@ to sty action =
 {-| Specify an initial Color-based property using a Color from the elm core Color module.
 
 -}
-fromColor : Color.Color -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+fromColor : Color.Color -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
 fromColor color almostColor =
     let
         rgba =
@@ -689,7 +679,7 @@ fromColor color almostColor =
 {-| Specify an initial Color-based property using rgb
 
 -}
-rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
 rgb r g b prop =
     prop r g b 1.0
 
@@ -697,7 +687,7 @@ rgb r g b prop =
 {-| Specify an initial Color-based property using rgba
 
 -}
-rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
 rgba r g b a prop =
     prop r g b a
 
@@ -705,7 +695,7 @@ rgba r g b a prop =
 {-| Specify an initial Color-based property using hsl
 
 -}
-hsl : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+hsl : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
 hsl h s l prop =
     let
         rgba =
@@ -720,7 +710,7 @@ hsl h s l prop =
 {-| Specify an initial Color-based property using hsla
 
 -}
-hsla : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> StyleProperty Static) -> StyleProperty Static
+hsla : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
 hsla h s l a prop =
     let
         rgba =

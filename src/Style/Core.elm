@@ -29,17 +29,17 @@ type Action
 
 
 {-| Represent a style animation.
-This is a list of StylePropertys, but instead of having a static value like '5',
+This is a list of Propertys, but instead of having a static value like '5',
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
 type alias Keyframe =
-    { properties : List DynamicStyleProperty
+    { properties : List DynamicProperty
     , delay : Time
     }
 
 
-type alias DynamicStyleProperty = 
-        Targeted (StyleProperty Physics) (StyleProperty Static)
+type alias DynamicProperty = 
+        Targeted (Property Physics) (Property Static)
 
 type alias Targeted current target
     = { current : current
@@ -49,7 +49,7 @@ type alias Targeted current target
 {-| Represent a CSS style as a list of style properties with concrete values.
 -}
 type alias Style =
-    List (StyleProperty Static)
+    List (Property Static)
 
 type alias Static =
     Float
