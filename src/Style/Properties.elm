@@ -1,4 +1,4 @@
-module Style.Properties exposing (..)
+module Style.Properties exposing (Property (..), baseName, is, id, map, map2, map3, render, renderAttr)
 
 --where
 
