@@ -1,4 +1,4 @@
-module Style.Core exposing (Model, Action(..), StyleKeyframe, Interruption, Style, Physics, DynamicTarget, Static, update, step, bake, emptyEasing)
+module Style.Core exposing (Model, Action(..), Keyframe, Interruption, Style, Physics, Static, update, bake, emptyEasing)
 --where
 
 import Time exposing (Time, second)
@@ -9,7 +9,7 @@ import Style.Spring as Spring
 type alias Model =
     { start : Maybe Time
     , elapsed : Time
-    , anim : List StyleKeyframe
+    , anim : List Keyframe
     , previous : Style
     , interruption : List Interruption
     }
@@ -17,14 +17,14 @@ type alias Model =
 
 type alias Interruption =
     { at : Time
-    , anim : List StyleKeyframe
+    , anim : List Keyframe
     }
 
 
 {-| -}
 type Action
-    = Queue (List StyleKeyframe)
-    | Interrupt (List StyleKeyframe)
+    = Queue (List Keyframe)
+    | Interrupt (List Keyframe)
     | Tick Time
 
 
@@ -32,29 +32,31 @@ type Action
 This is a list of StylePropertys, but instead of having a static value like '5',
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
-type alias StyleKeyframe =
-    { target : List (StyleProperty (Physics DynamicTarget))
+type alias Keyframe =
+    { properties : List DynamicStyleProperty
     , delay : Time
     }
 
+
+type alias DynamicStyleProperty = 
+        Targeted (StyleProperty Physics) (StyleProperty Static)
+
+type alias Targeted current target
+    = { current : current
+      , target : target
+      }
 
 {-| Represent a CSS style as a list of style properties with concrete values.
 -}
 type alias Style =
     List (StyleProperty Static)
 
-
-type alias DynamicTarget =
-    Float -> Float -> Float
-
-
 type alias Static =
     Float
 
 
-type alias Physics a =
-    { target : a
-    , physical : Spring.Physical
+type alias Physics =
+    { physical : Spring.Physical
     , spring : Spring.Model
     , easing : Maybe Easing
     }
@@ -182,16 +184,16 @@ continue model elapsed start =
     }
 
 
-tick : Model -> StyleKeyframe -> Time -> Time -> Time -> Time -> Model
-tick model current elapsed dt start now =
+tick : Model -> Keyframe -> Time -> Time -> Time -> Time -> Model
+tick model current totalElapsed dt start now =
     let
-        frameElapsed =
-            elapsed - current.delay
+        elapsed =
+            totalElapsed - current.delay
     in
-        if dt == 0 || frameElapsed < 0 then
+        if dt == 0 || elapsed < 0 then
             -- Nothing has happened
-            continue model elapsed start
-        else if done frameElapsed current then
+            continue model totalElapsed start
+        else if done elapsed current then
             -- animation is finished, switch to new frame
             let
                 anims =
@@ -205,7 +207,7 @@ tick model current elapsed dt start now =
                 interruption =
                     List.map
                         (\inter ->
-                            { inter | at = inter.at - elapsed }
+                            { inter | at = inter.at - totalElapsed }
                         )
                         model.interruption
             in
@@ -221,7 +223,7 @@ tick model current elapsed dt start now =
             { model
                 | elapsed = elapsed
                 , start = Just start
-                , anim = mapTo 0 (\a -> step a model.previous frameElapsed dt) model.anim
+                , anim = mapTo 0 (step elapsed dt model.previous) model.anim
             }
 
 
@@ -259,7 +261,7 @@ getTimes now model =
             ( prelimStart, prelimElapsed, prelimDt )
 
 
-interrupt : Time -> Model -> List StyleKeyframe -> List Interruption -> Model
+interrupt : Time -> Model -> List Keyframe -> List Interruption -> Model
 interrupt now model interruption remaining =
     let
         ( previous, newAnims ) =
@@ -283,7 +285,7 @@ interrupt now model interruption remaining =
         }
 
 
-initializeFrame : Style -> List StyleKeyframe -> List StyleKeyframe
+initializeFrame : Style -> List Keyframe -> List Keyframe
 initializeFrame style anims =
     let
         warn =
@@ -291,50 +293,48 @@ initializeFrame style anims =
                 Nothing ->
                     []
 
-                Just first ->
-                    List.foldl
-                        (\x acc ->
-                            -- need to know how many times x has shown up already.
-                            let
-                                xI =
-                                    countOccurance x acc
-                            in
-                                case findNearProp style x xI of
-                                    Nothing ->
-                                        let
-                                            warn =
-                                                Debug.log "elm-html-animation"
-                                                    <| "There is no initial value for '"
-                                                    ++ id x
-                                                    ++ "', though it is queued to be animated.  Define an initial value for '"
-                                                    ++ id x
-                                                    ++ "'"
-                                        in
-                                            acc
+                Just frame ->
+                    let
+                        matched = 
+                            zipWith (\a b -> baseName a.current == baseName b) frame.properties style
 
-                                    Just prevX ->
-                                        if id x == id prevX then
-                                            acc ++ [ x ]
+                    in
+                        List.map 
+                            (\(a, maybeB) -> 
+                                case maybeB of 
+                                    Nothing ->
+                                        let 
+                                            warn = 
+                                                Debug.log "elm-html-animation"
+                                                    ("There is no initial value for '"
+                                                    ++ id a.current
+                                                    ++ "', though it is queued to be animated.  Define an initial value for '"
+                                                    ++ id a.current
+                                                    ++ "'")
+                                        in
+                                            Just warn
+                                            
+                                    Just b ->
+                                        if id a.current == id b then
+                                            Nothing
                                         else
                                             let
                                                 warn =
-                                                    Debug.log "elm-html-animation"
-                                                        <| "Wrong units provided.  "
+                                                     Debug.log "elm-html-animation"
+                                                        ("Wrong units provided.  "
                                                         ++ "An initial value was given as '"
-                                                        ++ id prevX
+                                                        ++ id b
                                                         ++ "' versus the animation which was given as '"
-                                                        ++ id x
-                                                        ++ "'."
+                                                        ++ id a.current
+                                                        ++ "'.")
                                             in
-                                                acc
-                        )
-                        []
-                        first.target
+                                                Just warn
+                            ) matched
     in
-        mapTo 0 (\a -> step a style 0.0 0.0) anims
+        mapTo 0 (\a -> step 0.0 0.0 style a ) anims
 
 
-done : Time -> StyleKeyframe -> Bool
+done : Time -> Keyframe -> Bool
 done time frame =
     let
         finished prop = 
@@ -346,19 +346,37 @@ done time frame =
                     time >= easing.duration
                  && easing.counterForcePhys == Nothing
     in
-        List.all (propIs finished) frame.target
+        List.all (\p -> propIs finished p.current) frame.properties
 
 
 
 
 
-transferVelocityProp : Maybe (Physics DynamicTarget) -> Physics DynamicTarget -> Physics DynamicTarget
-transferVelocityProp maybeOld target =
-    case maybeOld of
-        Nothing ->
-            target
+transferVelocity : Keyframe -> Keyframe -> Keyframe
+transferVelocity old new =
+    let
+        matched = zipWith (\a b -> id a.current == id b.current) old.properties new.properties
 
-        Just old ->
+        newProperties = 
+            List.map 
+                (\(a, maybeB) -> 
+                    case maybeB of 
+                        Nothing ->
+                            a
+
+                        Just b ->
+                            let
+                                newCurrent = map2 transferVelocityProp a.current b.current
+                            in
+                                { b | current = newCurrent }
+                ) matched
+    in
+        { new | properties = newProperties }
+
+
+
+transferVelocityProp : Physics -> Physics -> Physics
+transferVelocityProp old target =
             let
                 newPhys =
                     target.physical
@@ -410,152 +428,117 @@ transferVelocityProp maybeOld target =
                             }
 
 
-transferVelocity : StyleKeyframe -> StyleKeyframe -> StyleKeyframe
-transferVelocity old new =
-    let
-        style =
-            List.foldl
-                (\x acc ->
-                    -- need to know how many times x has shown up already.
-                    let
-                        xI =
-                            countOccurance x acc
-                    in
-                        case findProp old.target x xI of
-                            Nothing ->
-                                let
-                                    warn =
-                                        Debug.log "elm-html-animation"
-                                            """You're trying to animate """
-                                            ++ id x
-                                            ++ ", but haven't provided an init value for it.  It won't be animated until you do."
-                                in
-                                    acc
-
-                            Just prevX ->
-                                acc ++ [ stepProp x prevX transferVelocityProp ]
-                )
-                []
-                new.target
-    in
-        { new | target = style }
-
-
-applyStep : Time -> Time -> Maybe Float -> Physics DynamicTarget -> Physics DynamicTarget
-applyStep current dt maybeFrom physics =
-    case maybeFrom of
-        Nothing ->
-            physics
-
-        Just from ->
-            case physics.easing of
-                Nothing ->
-                    let
-                        positioned =
-                            -- Kind of a hack to establish initial values :/
-                            if current == 0.0 && dt == 0.0 then
-                                { position = from
-                                , velocity = physics.physical.velocity
-                                }
-                            else
-                                physics.physical
-
-                        newSpring =
-                            physics.spring
-
-                        targeted =
-                            { newSpring
-                                | destination = physics.target from 1.0
-                            }
-
-                        --positioned =
-                        --  { newPhysical
-                        --    | position = pos
-                        --  }
-                        finalPhysical =
-                            Spring.update dt targeted positioned
-                    in
-                        { physics
-                            | physical = finalPhysical
-                            , spring = targeted
-                        }
-
-                Just easing ->
-                    let
-                        eased =
-                            if easing.duration <= 0 then
-                                1.0
-                            else
-                                easing.ease (current / easing.duration)
-
-                        physical =
-                            physics.physical
-
-                        currentPos =
-                            physics.target from eased
-
-                        counterSpring =
-                            case easing.counterForcePhys of
-                                Nothing ->
-                                    Just easing
-
-                                Just phys ->
-                                    let
-                                        newCounterSpring =
-                                            Spring.update dt easing.counterForce phys
-                                    in
-                                        if Spring.atRest easing.counterForce newCounterSpring then
-                                            Just
-                                                <| { easing
-                                                    | counterForcePhys = Nothing
-                                                   }
-                                        else
-                                            Just
-                                                <| { easing
-                                                    | counterForcePhys = Just newCounterSpring
-                                                   }
-
-                        finalPhysical =
-                            { physical
-                                | position = currentPos
-                                , velocity = velocity physics.physical.position currentPos dt
-                            }
-                    in
-                        { physics
-                            | physical = finalPhysical
-                            , easing = counterSpring
-                        }
-
 
 velocity : Float -> Float -> Time -> Float
 velocity oldPos newPos dt =
     (newPos - oldPos) / dt
 
 
-step : StyleKeyframe -> Style -> Time -> Time -> StyleKeyframe
-step frame prev time dt =
-    let
-        style =
-            List.foldl
-                (\x acc ->
-                    -- need to know how many times x has shown up already.
-                    let
-                        xI =
-                            countOccurance x acc
-                    in
-                        case findProp prev x xI of
-                            Nothing ->
-                                acc
 
-                            Just prevX ->
-                                acc ++ [ stepProp x prevX <| applyStep time dt ]
-                )
-                []
-                frame.target
+{-| Advance a Keyframe given the existing style and the current times.
+-}
+step : Time -> Time -> Style -> Keyframe -> Keyframe
+step time dt style frame =
+     let
+        newProperties = 
+                zipWith (\a b -> id a.current == id b) frame.properties style 
+                 |> List.map 
+                        (\(a, maybeB) -> 
+                            case maybeB of 
+                                Nothing ->
+                                    a
+
+                                Just b ->
+                                    { a
+                                      | current = map3 (applyStep time dt) a.target b a.current
+                                    }
+                        )
     in
-        { frame | target = style }
+        { frame | properties = newProperties }
 
 
+applyStep : Time -> Time -> Float -> Float -> Physics -> Physics
+applyStep current dt target from physics = 
+        case physics.easing of
+            Nothing ->
+                --physics
+                let
+                    positioned =
+                        -- Kind of a hack to establish initial values :/
+                        if current == 0.0 && dt == 0.0 then
+                            { position = from
+                            , velocity = physics.physical.velocity
+                            }
+                        else
+                            physics.physical
+
+                    newSpring =
+                        physics.spring
+
+                    targeted =
+                        { newSpring
+                            | destination = target
+                            --| destination = physics.target from 1.0
+                        }
+
+                    --positioned =
+                    --  { newPhysical
+                    --    | position = pos
+                    --  }
+                    finalPhysical =
+                        Spring.update dt targeted positioned
+                in
+                    { physics
+                        | physical = finalPhysical
+                        , spring = targeted
+                    }
+
+            Just easing ->
+                let
+                    eased =
+                        if easing.duration <= 0 then
+                            1.0
+                        else
+                            easing.ease (current / easing.duration)
+
+                    physical =
+                        physics.physical
+
+                    currentPos =
+                        ((target - from) * eased) + from 
+                        --physics.target from eased
+
+                    counterSpring =
+                        case easing.counterForcePhys of
+                            Nothing ->
+                                Just easing
+
+                            Just phys ->
+                                let
+                                    newCounterSpring =
+                                        Spring.update dt easing.counterForce phys
+                                in
+                                    if Spring.atRest easing.counterForce newCounterSpring then
+                                        Just
+                                            <| { easing
+                                                | counterForcePhys = Nothing
+                                               }
+                                    else
+                                        Just
+                                            <| { easing
+                                                | counterForcePhys = Just newCounterSpring
+                                               }
+
+                    finalPhysical =
+                        { physical
+                            | position = currentPos
+                            , velocity = velocity physics.physical.position currentPos dt
+                        }
+                in
+                    { physics
+                        | physical = finalPhysical
+                        , easing = counterSpring
+                        }
 
 
 mapTo : Int -> (a -> a) -> List a -> List a
@@ -570,82 +553,44 @@ mapTo i fn xs =
         List.indexedMap update xs
 
 
-bake : StyleKeyframe -> Style -> Style
+bake : Keyframe -> Style -> Style
 bake frame style =
-    fill
-        (List.map (map toStatic)
-            frame.target
-        )
-        style
+    fill style
+        <| List.map 
+            (\prop ->
+                map (\phys -> phys.physical.position) prop.current
+            )
+            frame.properties
+        
+zipWith : (a -> b -> Bool) -> List a -> List b -> List (a, Maybe b)
+zipWith fn listA listB = 
+    fst <| List.foldl
+                (\a (stack, bStack) ->
+                    let
+                        (maybeB, remainingBs) =
+                            case List.head bStack of 
+                                Just b ->
+                                    if fn a b then
+                                        (Just b, Maybe.withDefault [] <| List.tail bStack)
+                                    else
+                                        (Nothing, bStack)
+
+                                Nothing ->
+                                    (Nothing, bStack)
+                    in 
+                        (stack ++ [(a, maybeB)], remainingBs)
+
+                )
+                ([], listB)
+                listA
 
 
-toStatic : Physics DynamicTarget -> Static
-toStatic physic =
-    physic.physical.position
 
 
 
-{-|
- propCount refers to the how many times a property shows up
- in the original list that prop is being pulled from
--}
-findProp : List (StyleProperty a) -> StyleProperty b -> Int -> Maybe (StyleProperty a)
-findProp state prop propCount =
-    let
-        findBy fn xs =
-            List.head
-                <| List.drop propCount
-                <| List.filter fn
-                <| xs
-
-        matchPropID a b =
-            id a == id b
-    in
-        findBy (matchPropID prop) state
+fill : Style -> Style -> Style
+fill existing new = 
+        zipWith (\a b -> id a == id b) existing new 
+     |> List.map (\(a, maybeB) -> Maybe.withDefault a maybeB )
 
 
-findNearProp : List (StyleProperty a) -> StyleProperty b -> Int -> Maybe (StyleProperty a)
-findNearProp state prop propCount =
-    let
-        findBy fn xs =
-            List.head
-                <| List.drop propCount
-                <| List.filter fn
-                <| xs
-
-        matchPropID a b =
-            baseName a == baseName b
-    in
-        findBy (matchPropID prop) state
-
-
-countOccurance x pool =
-    List.foldl
-        (\x2 count ->
-            if id x == id x2 then
-                count + 1
-            else
-                count
-        )
-        0
-        pool
-
-
-fill : List (StyleProperty Static) -> List (StyleProperty Static) -> List (StyleProperty Static)
-fill new existing =
-    List.foldl
-        (\x acc ->
-            -- need to know the id of x, meaning how many times it's shown up already.
-            let
-                xI =
-                    countOccurance x acc
-            in
-                case findProp new x xI of
-                    Nothing ->
-                        acc ++ [ x ]
-
-                    Just newX ->
-                        acc ++ [ newX ]
-        )
-        []
-        existing

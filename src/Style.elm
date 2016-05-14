@@ -1,4 +1,4 @@
-module Style exposing (Animation, Action, html, svg, init, update, render, renderAttr, animate, queue, stagger, on, animateTo, props, delay, duration, easing, spring, andThen, set, tick, to, add, minus, toStyle, stay, noWobble, gentle, wobbly, stiff, toColor, toRGB, toRGBA, toHSL, toHSLA, fromColor, rgb, rgba, hsl, hsla)
+module Style exposing (Animation, Action, html, svg, init, update, render, renderAttr, animate, queue, stagger, on, animateTo, delay, duration, easing, spring, andThen, set, tick, to, noWobble, gentle, wobbly, stiff, fromColor, rgb, rgba, hsl, hsla)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -14,7 +14,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs animate, queue, stagger
 
 # Creating animations
-@docs props, delay, spring, duration, easing, andThen, set
+@docs delay, spring, duration, easing, andThen
 
 # Animating Properties
 
@@ -23,15 +23,12 @@ These functions specify the value for a StyleProperty.
 After taking an argument, these functions have `Float -> Float -> Float` as their signature.
 This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
 
-@docs to, stay, add, minus, toStyle
+@docs to, set
 
 @docs animateTo
 
 # Spring Presets
 @docs noWobble, gentle, wobbly, stiff
-
-# Animating Colors
-@docs toColor, toRGB, toRGBA, toHSL, toHSLA
 
 # Render a Animation into CSS
 @docs render, renderAttr
@@ -78,7 +75,7 @@ svg svgProps =
     List.map Style.Properties.Svg svgProps
 
 type alias KeyframeWithOptions =
-    { frame : Core.StyleKeyframe
+    { frame : Core.Keyframe
     , duration : Maybe Time
     , easing : Maybe (Float -> Float)
     , spring : Maybe Spring.Model
@@ -89,12 +86,12 @@ type alias KeyframeWithOptions =
 -}
 type alias PreAction =
     { frames : List KeyframeWithOptions
-    , action : List Core.StyleKeyframe -> Core.Action
+    , action : List Core.Keyframe -> Core.Action
     }
 
 
 type alias Dynamic =
-    Core.Physics Core.DynamicTarget
+    Core.Physics
 
 
 {-| Actions to be run on an animation.
@@ -118,17 +115,16 @@ empty =
     }
 
 
-emptyKeyframe : Core.StyleKeyframe
+emptyKeyframe : Core.Keyframe
 emptyKeyframe =
-    { target = []
+    { properties = []
     , delay = 0.0
     }
 
 
-emptyPhysics : a -> Core.Physics a
-emptyPhysics target =
-    { target = target
-    , physical =
+emptyPhysics : Core.Physics
+emptyPhysics =
+    { physical =
         { position = 0
         , velocity = 0
         }
@@ -251,16 +247,25 @@ stiff =
     }
 
 
-{-| Update an animation.  This will probably only show up once in your code.
-See any of the examples at [https://github.com/mdgriffith/elm-html-animation](https://github.com/mdgriffith/elm-html-animation)
+update : String
+update = "not implemented"
+
+{-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
+However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare a custom version of `on`.
+
+     UI.animate
+         |> UI.duration (0.4*second)
+         |> UI.props
+             [ Left (UI.to 0) Px
+             , Opacity (UI.to 1)
+             ]
+         |> UI.on model.style
+
 -}
-update : Action -> Animation -> Animation
-update action (A model) =
-    let
-        newModel =
-            Core.update (resolve action 1 0) model
-    in
-        A newModel
+on : Animation -> Action -> Animation
+on (A model) action =
+     A <| Core.update (resolve action 1 0) model
+
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -286,7 +291,7 @@ animate =
 -}
 tick : Float -> Animation -> Animation
 tick time model =
-    update (Internal (Core.Tick time)) model
+    on model (Internal (Core.Tick time))
 
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
@@ -334,21 +339,6 @@ stagger =
     Staggered
 
 
-{-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
-However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare a custom version of `on`.
-
-     UI.animate
-         |> UI.duration (0.4*second)
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
-             ]
-         |> UI.on model.style
-
--}
-on : Animation -> Action -> Animation
-on model action =
-    update action model
 
 
 {-| Resolve the stagger if there is one, and apply springs if present.
@@ -369,7 +359,8 @@ resolve stag t i =
             ia
 
 
-applyKeyframeOptions : KeyframeWithOptions -> Core.StyleKeyframe
+
+applyKeyframeOptions : KeyframeWithOptions -> Core.Keyframe
 applyKeyframeOptions options =
     let
         frame =
@@ -422,35 +413,21 @@ applyKeyframeOptions options =
                             , easing = withDuration
                         }
             in
-                Style.Properties.map addOptions prop
+                { prop 
+                    | current = Style.Properties.map addOptions prop.current
+
+                } 
+                
+
+        newProperties = 
+            List.map applyOpt frame.properties
     in
-        { frame | target = List.map applyOpt frame.target }
+        { frame | properties = newProperties }
 
 
-{-| Specify the properties that should be animated
 
-     UI.animate
-         |> UI.duration (0.4*second)
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
-             ]
-         |> UI.on model.style
 
--}
-props : List (StyleProperty Dynamic) -> Action -> Action
-props style action =
-    updateOrCreate action
-        (\a ->
-            let
-                frame =
-                    a.frame
-
-                updatedFrame =
-                    { frame | target = style }
-            in
-                { a | frame = updatedFrame }
-        )
+--to : Core.Style -> Action -> Action
 
 
 {-| Apply a style immediately.  This takes a list of static style properties, meaning the no `UI.to` functions, only concrete numbers and values.
@@ -468,30 +445,20 @@ props style action =
          |> UI.on model.style
 
 -}
-set : List (StyleProperty Static) -> Action -> Action
-set staticProps action =
-    let
-        dynamic =
-            List.map (Style.Properties.map (\x -> to x))
-                staticProps
+set : Core.Style -> Action -> Action
+set staticProps action = 
+    let 
+        actionWithProps = to staticProps action
     in
-        updateOrCreate action
-            (\a ->
-                let
-                    frame =
-                        a.frame
-
-                    updatedFrame =
-                        { frame
-                            | target = dynamic
-                        }
-                in
-                    { a
-                        | frame = updatedFrame
-                        , duration = Just 0
-                        , easing = Just (\x -> x)
-                    }
+        updateOrCreate actionWithProps
+            (\kfWithOpts ->
+                { kfWithOpts
+                    | duration = Just 0
+                    , easing = Just (\x -> x)
+                }
             )
+
+  
 
 
 {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
@@ -583,7 +550,7 @@ andThen stag =
                 <| { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
 
 
-{-| Update the last Core.StyleKeyframe in the queue.  If the queue is empty, create a new Core.StyleKeyframe and update that.
+{-| Update the last Core.Keyframe in the queue.  If the queue is empty, create a new Core.Keyframe and update that.
 -}
 updateOrCreate : Action -> (KeyframeWithOptions -> KeyframeWithOptions) -> Action
 updateOrCreate action fn =
@@ -611,15 +578,15 @@ updateOrCreate action fn =
 animateTo : Core.Style -> Animation -> Animation
 animateTo style model =
         animate
-         |> toStyle style
+         |> to style
          |> on model
 
 
 {-| Animate to a statically specified style.
 
 -}
-toStyle : Core.Style -> Action -> Action
-toStyle sty action =
+to : Core.Style -> Action -> Action
+to sty action =
     let
         deduped =
             List.foldr
@@ -629,6 +596,7 @@ toStyle sty action =
                             (\y ->
                                 Style.Properties.id x
                                     == Style.Properties.id y
+                                    && Style.Properties.id x /= "transform"
                             )
                             acc
                     then
@@ -639,145 +607,27 @@ toStyle sty action =
                 []
                 sty
 
-        dynamicStyle = 
-          List.map (Style.Properties.map (\x -> to x)) deduped
+        dynamicProperties =
+            List.map 
+                (\prop -> 
+                    { target = prop
+                    , current = Style.Properties.map (\_ -> emptyPhysics) prop
+                    }
+                ) 
+                deduped
 
     in
      updateOrCreate action
-        (\a ->
+        (\kfWithOptions ->
             let
                 frame =
-                    a.frame
+                    kfWithOptions.frame
 
                 updatedFrame =
-                    { frame | target = dynamicStyle }
+                    { frame | properties = dynamicProperties }
             in
-                { a | frame = updatedFrame }
+                { kfWithOptions | frame = updatedFrame }
         )
-
-
-{-| Animate a StyleProperty to a value.
--}
-to : Float -> Dynamic
-to target =
-    emptyPhysics
-        <| (\from current -> ((target - from) * current) + from)
-
-
-{-| Animate a StyleProperty by adding to its existing value
--}
-add : Float -> Dynamic
-add mod =
-    emptyPhysics
-        <| (\from current ->
-                let
-                    target =
-                        from + mod
-                in
-                    ((target - from) * current) + from
-           )
-
-
-{-| Animate a StyleProperty by subtracting to its existing value
--}
-minus : Float -> Dynamic
-minus mod =
-    emptyPhysics
-        <| (\from current ->
-                let
-                    target =
-                        from - mod
-                in
-                    ((target - from) * current) + from
-           )
-
-
-{-| Keep an animation where it is!  This is useful for stacking transforms.
--}
-stay : Dynamic
-stay =
-    emptyPhysics
-        <| (\from current -> from)
-
-
-type alias ColorProperty =
-    Dynamic -> Dynamic -> Dynamic -> Dynamic -> StyleProperty Dynamic
-
-
-{-| Animate a color-based property, given a color from the Color elm module.
-
--}
-toColor : Color.Color -> ColorProperty -> StyleProperty Dynamic
-toColor color almostColor =
-    let
-        rgba =
-            Color.toRgb color
-    in
-        almostColor (to <| toFloat rgba.red)
-            (to <| toFloat rgba.green)
-            (to <| toFloat rgba.blue)
-            (to rgba.alpha)
-
-
-{-| Animate a color-based style property to an rgb color.  Note: this leaves the alpha channel where it is.
-
-     UI.animate
-            |> UI.props
-                [ BackgroundColor
-                      UI.toRGB 100 100 100
-                ]
-            |> UI.on model.style
-
--}
-toRGB : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
-toRGB r g b prop =
-    prop (to r) (to g) (to b) (to 1.0)
-
-
-{-| Animate a color-based style property to an rgba color.
-
-       UI.animate
-            |> UI.props
-                [ BackgroundColor
-                    UI.toRGBA 100 100 100 1.0
-                ]
-            |> UI.on model.style
-
-
--}
-toRGBA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
-toRGBA r g b a prop =
-    prop (to r) (to g) (to b) (to a)
-
-
-{-| Animate a color-based style property to an hsl color. Note: this leaves the alpha channel where it is.
-
--}
-toHSL : Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
-toHSL h s l prop =
-    let
-        rgba =
-            Color.toRgb <| Color.hsl h s l
-    in
-        prop (to <| toFloat rgba.red)
-            (to <| toFloat rgba.green)
-            (to <| toFloat rgba.blue)
-            (to rgba.alpha)
-
-
-{-| Animate a color-based style property to an hsla color.
-
--}
-toHSLA : Float -> Float -> Float -> Float -> ColorProperty -> StyleProperty Dynamic
-toHSLA h s l a prop =
-    let
-        rgba =
-            Color.toRgb <| Color.hsl h s l
-    in
-        prop (to <| toFloat rgba.red)
-            (to <| toFloat rgba.green)
-            (to <| toFloat rgba.blue)
-            (to rgba.alpha)
 
 
 {-| Specify an initial Color-based property using a Color from the elm core Color module.

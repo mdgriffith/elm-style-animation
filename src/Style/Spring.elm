@@ -1,4 +1,4 @@
-module Style.Spring exposing (Model, Physical, update, atRest, duration)
+module Style.Spring exposing (Model, Physical, update, atRest, duration) --where
 
 import Time exposing (Time, second)
 import Debug

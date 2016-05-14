@@ -1,4 +1,4 @@
-module Style.Properties exposing (StyleProperty(..), id, map, propIs, stepProp, baseName, render, renderAttr)
+module Style.Properties exposing (StyleProperty(..), id, map, map2, map3, propIs, baseName, render, renderAttr)
 -- where
 {-|
 
@@ -35,6 +35,41 @@ map fn prop =
         Svg property -> Svg <| SvgProps.map fn property
 
 
+map2 : (a -> b -> b) -> StyleProperty a -> StyleProperty b -> StyleProperty b
+map2 fn prev prop = 
+    case prev of
+        Html previous -> 
+            case prop of 
+                Html property -> Html <| HtmlProps.map2 fn previous property
+                _ -> prop
+        Svg previous -> 
+            case prop of 
+                Svg property -> Svg <| SvgProps.map2 fn previous property
+                _ -> prop
+
+
+map3 : (a -> b -> c -> c) -> StyleProperty a -> StyleProperty b -> StyleProperty c -> StyleProperty c
+map3 fn target prev prop = 
+    case target of 
+        Html t ->
+            case prev of
+                Html previous -> 
+                    case prop of 
+                        Html property -> Html <| HtmlProps.map3 fn t previous property
+                        _ -> prop
+                _ -> prop
+        Svg t ->
+            case prev of
+                Svg previous -> 
+                    case prop of 
+                        Svg property -> Svg <| SvgProps.map3 fn t previous property
+                        _ -> prop
+                _ -> prop
+
+
+
+
+
 propIs : (a -> Bool) -> StyleProperty a -> Bool
 propIs pred prop =
     case prop of 
@@ -42,17 +77,26 @@ propIs pred prop =
         Svg property -> SvgProps.propIs pred property
 
 
-stepProp : StyleProperty a -> StyleProperty b -> (Maybe b -> a -> a) -> StyleProperty a
-stepProp prop prev val =
-    case prev of 
-        Html prevProp ->
-            case prop of 
-                Html property -> Html <| HtmlProps.stepProp property prevProp val
-                _ -> prop
-        Svg prevProp ->
-            case prop of 
-                Svg property -> Svg <| SvgProps.stepProp property prevProp val
-                _ -> prop
+
+--stepTowards : StyleProperty Float -> (Float -> a -> a -> a) -> StyleProperty a -> StyleProperty a -> StyleProperty a
+--stepTowards target stepper origin current =
+
+
+
+
+
+
+--stepProp : StyleProperty a -> StyleProperty b -> (StyleProperty a -> StyleProperty b -> StyleProperty b) -> StyleProperty b
+--stepProp prev prop fn =
+--    case prev of 
+--        Html prevProp ->
+--            case prop of 
+--                Html property -> Html <| HtmlProps.stepProp prevProp property fn
+--                _ -> prop
+--        Svg prevProp ->
+--            case prop of 
+--                Svg property -> Svg <| SvgProps.stepProp prevProp property fn
+--                _ -> prop
 
 baseName : StyleProperty a -> String
 baseName prop = 
