@@ -1,4 +1,4 @@
-module Style.Core exposing (Model, Action(..), Keyframe, Interruption, Style, Physics, Static, update, bake, emptyEasing)
+module Style.Core exposing (Model, Action(..), Keyframe, Interruption, Style, Physics, Static, update, bake, emptyEasing, empty, emptyKeyframe, emptyPhysics)
 --where
 
 import Time exposing (Time, second)
@@ -71,6 +71,38 @@ type alias Easing =
     }
 
 
+empty : Model
+empty =
+    { elapsed = 0.0
+    , start = Nothing
+    , frames = []
+    , previous = []
+    , interruption = []
+    }
+
+
+emptyKeyframe : Keyframe
+emptyKeyframe =
+    { properties = []
+    , delay = 0.0
+    , retarget = Nothing
+    }
+
+
+emptyPhysics : Physics
+emptyPhysics =
+    { physical =
+        { position = 0
+        , velocity = 0
+        }
+    , spring =
+        { stiffness = 170
+        , damping = 26
+        , destination = 1
+        }
+    , easing = Nothing
+    }
+
 emptyEasing =
     { ease = defaultEasing
     , counterForce =
@@ -99,7 +131,7 @@ update action model =
         Queue newFrames ->
             case List.head model.frames of
                 Nothing ->
-                    { model | frames = mapTo 0 (initializeFrame model.previous) newFrames }
+                    { model | frames = mapTo 0 (initializeFrame model.previous model.previous) newFrames }
 
                 Just a ->
                     { model | frames = model.frames ++ newFrames }
@@ -216,7 +248,7 @@ tick model current totalElapsed dt start now =
                     | elapsed = 0.0
                     , start = Just now
                     , previous = previous
-                    , frames = mapTo 0 (initializeFrame previous) frames
+                    , frames = mapTo 0 (initializeFrame previous previous) frames
                     , interruption = interruption
                 }
         else
@@ -265,20 +297,28 @@ getTimes now model =
 interrupt : Time -> Model -> List Keyframe -> List Interruption -> Model
 interrupt now model interruption remaining =
     let
-        ( previous, newAnims ) =
+        -- retargetIfNecessary interruption 
+
+        ( previous, prevTarget, newFrames ) =
             case List.head model.frames of
                 Nothing ->
                     ( model.previous
+                    , model.previous 
                     , interruption
                     )
 
                 Just frame ->
                     ( bake frame model.previous
-                    , mapTo 0 (\a -> transferVelocity frame a) interruption
+                    , getTarget frame -- wrong.  This should be the target style of `frame`
+                    , mapTo 0 
+                        (\newFrame -> 
+                           transferVelocity frame newFrame
+                        ) 
+                        interruption
                     )
     in
         { model
-            | frames = mapTo 0 (initializeFrame previous) newAnims
+            | frames = mapTo 0 (initializeFrame previous prevTarget) newFrames
             , elapsed = 0.0
             , start = Nothing
             , previous = previous
@@ -286,8 +326,31 @@ interrupt now model interruption remaining =
         }
 
 
-initializeFrame : Style -> Keyframe -> Keyframe
-initializeFrame style frame =
+getTarget : Keyframe -> Style
+getTarget frame = 
+        List.map (\prop -> prop.target) frame.properties
+
+
+retargetIfNecessary : Keyframe -> Style -> Keyframe
+retargetIfNecessary frame lastTargetStyle =
+    case frame.retarget of 
+        Nothing -> frame
+        Just retarget ->
+            let
+                applyRetarget prop =
+                    { target = retarget prop
+                    , current = Style.Properties.map (\_ -> emptyPhysics) prop
+                    }
+            in
+                { frame | 
+                    properties = 
+                      List.map applyRetarget lastTargetStyle
+                } 
+
+
+
+initializeFrame : Style -> Style -> Keyframe -> Keyframe
+initializeFrame style prevTargetStyle frame =
     let
         matched =  zipWith (\a b -> Style.Properties.baseName a.current == Style.Properties.baseName b) frame.properties style
         warnings =
@@ -322,10 +385,8 @@ initializeFrame style frame =
                                 in
                                     Just warn
                 ) matched
-
-        --retargetIfNecessary keyframe = 
     in
-        step 0.0 0.0 style frame
+        step 0.0 0.0 style (retargetIfNecessary frame prevTargetStyle)
 
 
 done : Time -> Keyframe -> Bool
@@ -435,7 +496,7 @@ step : Time -> Time -> Style -> Keyframe -> Keyframe
 step time dt style frame =
      let
         newProperties = 
-                zipWith (\a b -> Style.Properties.id a.current == Style.Properties.id b) frame.properties style 
+            zipWith (\a b -> Style.Properties.id a.current == Style.Properties.id b) frame.properties style 
                  |> List.map 
                         (\(a, maybeB) -> 
                             case maybeB of 

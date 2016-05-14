@@ -93,41 +93,9 @@ type Action
     | Internal Core.Action
 
 
-empty : Core.Model
-empty =
-    { elapsed = 0.0
-    , start = Nothing
-    , frames = []
-    , previous = []
-    , interruption = []
-    }
-
-
-emptyKeyframe : Core.Keyframe
-emptyKeyframe =
-    { properties = []
-    , delay = 0.0
-    , retarget = Nothing
-    }
-
-
-emptyPhysics : Core.Physics
-emptyPhysics =
-    { physical =
-        { position = 0
-        , velocity = 0
-        }
-    , spring =
-        { stiffness = noWobble.stiffness
-        , damping = noWobble.damping
-        , destination = 1
-        }
-    , easing = Nothing
-    }
-
 
 emptyKeyframeWithOptions =
-    { frame = emptyKeyframe
+    { frame = Core.emptyKeyframe
     , duration = Nothing
     , easing = Nothing
     , spring = Nothing
@@ -159,6 +127,7 @@ init sty =
                 )
                 []
                 sty
+        empty = Core.empty
     in
         A { empty | previous = deduped }
 
@@ -615,7 +584,7 @@ to sty action =
             List.map 
                 (\prop -> 
                     { target = prop
-                    , current = Style.Properties.map (\_ -> emptyPhysics) prop
+                    , current = Style.Properties.map (\_ -> Core.emptyPhysics) prop
                     }
                 ) 
                 deduped
