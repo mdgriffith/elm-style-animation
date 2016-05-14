@@ -28,7 +28,7 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 # Spring Presets
 @docs noWobble, gentle, wobbly, stiff
 
-# Render a Animation into CSS
+# Render a Animation into CSS or as SVG attributes
 @docs render, renderAttr
 
 # Setting the starting style
@@ -97,7 +97,7 @@ empty : Core.Model
 empty =
     { elapsed = 0.0
     , start = Nothing
-    , anim = []
+    , frames = []
     , previous = []
     , interruption = []
     }
@@ -107,6 +107,7 @@ emptyKeyframe : Core.Keyframe
 emptyKeyframe =
     { properties = []
     , delay = 0.0
+    , retarget = Nothing
     }
 
 
@@ -251,46 +252,18 @@ stiff =
           |> Style.on model.style
 -}
 update : (Style.Properties.Property Float -> Style.Properties.Property Float) -> Action -> Action
-update styleUpdate action = action
-    -- let
+update styleUpdate action =
+         updateOrCreate action
+            (\kfWithOptions ->
+                let
+                    frame =
+                        kfWithOptions.frame
 
-    --    currentFrame = 
-    --        updateOrCreate action
-    --            (\kfWithOptions ->
-    --                let
-    --                    frame =
-    --                        kfWithOptions.frame
-
-    --                    updatedFrame =
-    --                        { frame | properties = dynamicProperties }
-    --                in
-    --                    { kfWithOptions | frame = updatedFrame }
-    --            )
-
-    --    previousFrame = action.frames
-
-    
-    --    dynamicProperties =
-    --        List.map 
-    --            (\prop -> 
-    --                { target = prop
-    --                , current = Style.Properties.map (\_ -> emptyPhysics) prop
-    --                }
-    --            ) 
-    --            deduped
-
-    --in
-    -- updateOrCreate action
-    --    (\kfWithOptions ->
-    --        let
-    --            frame =
-    --                kfWithOptions.frame
-
-    --            updatedFrame =
-    --                { frame | properties = dynamicProperties }
-    --        in
-    --            { kfWithOptions | frame = updatedFrame }
-    --    )
+                    updatedFrame =
+                        { frame | retarget = Just styleUpdate }
+                in
+                    { kfWithOptions | frame = updatedFrame }
+            )
 
 
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
@@ -729,12 +702,12 @@ hsla h s l a prop =
 -}
 render : Animation -> List ( String, String )
 render (A model) =
-    case List.head model.anim of
+    case List.head model.frames of
         Nothing ->
             Style.Properties.render model.previous
 
-        Just anim ->
-            Style.Properties.render <| Core.bake anim model.previous
+        Just frame ->
+            Style.Properties.render <| Core.bake frame model.previous
 
 
 {-| Render into svg attributes.
@@ -743,12 +716,12 @@ render (A model) =
 
 -}
 renderAttr (A model) =
-    case List.head model.anim of
+    case List.head model.frames of
         Nothing ->
             Style.Properties.renderAttr model.previous
 
-        Just anim ->
-            Style.Properties.renderAttr <| Core.bake anim model.previous
+        Just frame ->
+            Style.Properties.renderAttr <| Core.bake frame model.previous
 
 
 

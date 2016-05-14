@@ -9,7 +9,7 @@ import Style.Spring as Spring
 type alias Model =
     { start : Maybe Time
     , elapsed : Time
-    , anim : List Keyframe
+    , frames : List Keyframe
     , previous : Style
     , interruption : List Interruption
     }
@@ -17,7 +17,7 @@ type alias Model =
 
 type alias Interruption =
     { at : Time
-    , anim : List Keyframe
+    , frame : List Keyframe
     }
 
 
@@ -35,6 +35,7 @@ it has a function that takes the previous value, the current time, and provides 
 type alias Keyframe =
     { properties : List DynamicProperty
     , delay : Time
+    , retarget : Maybe (Property Static -> Property Static)
     }
 
 
@@ -95,13 +96,13 @@ defaultEasing x =
 update : Action -> Model -> Model
 update action model =
     case action of
-        Queue anims ->
-            case List.head model.anim of
+        Queue newFrames ->
+            case List.head model.frames of
                 Nothing ->
-                    { model | anim = initializeFrame model.previous anims }
+                    { model | frames = mapTo 0 (initializeFrame model.previous) newFrames }
 
                 Just a ->
-                    { model | anim = model.anim ++ anims }
+                    { model | frames = model.frames ++ newFrames }
 
         Interrupt interrupt ->
             case List.head interrupt of
@@ -118,7 +119,7 @@ update action model =
                             case last of
                                 Nothing ->
                                     [ { at = model.elapsed + first.delay
-                                      , anim =
+                                      , frame =
                                             List.map (\i -> { i | delay = 0 })
                                                 interrupt
                                             -- remove delay because we're
@@ -129,7 +130,7 @@ update action model =
                                 Just prev ->
                                     prev
                                         :: [ { at = (model.elapsed + first.delay) - prev.at
-                                             , anim =
+                                             , frame =
                                                 List.map (\i -> { i | delay = 0 })
                                                     interrupt
                                                 -- remove delay because we're
@@ -151,10 +152,10 @@ update action model =
                         if elapsed >= interruption.at then
                             interrupt now
                                 model
-                                interruption.anim
+                                interruption.frame
                                 (List.drop 1 model.interruption)
                         else
-                            case List.head model.anim of
+                            case List.head model.frames of
                                 Nothing ->
                                     -- There is an interruption but we havent reached it yet,
                                     -- keep going
@@ -164,12 +165,12 @@ update action model =
                                     tick model current elapsed dt start now
 
                     Nothing ->
-                        case List.head model.anim of
+                        case List.head model.frames of
                             Nothing ->
                                 { model
                                     | elapsed = 0.0
                                     , start = Nothing
-                                    , anim = []
+                                    , frames = []
                                 }
 
                             Just current ->
@@ -196,8 +197,8 @@ tick model current totalElapsed dt start now =
         else if done elapsed current then
             -- animation is finished, switch to new frame
             let
-                anims =
-                    List.drop 1 model.anim
+                frames =
+                    List.drop 1 model.frames
 
                 previous =
                     bake current model.previous
@@ -215,7 +216,7 @@ tick model current totalElapsed dt start now =
                     | elapsed = 0.0
                     , start = Just now
                     , previous = previous
-                    , anim = initializeFrame previous anims
+                    , frames = mapTo 0 (initializeFrame previous) frames
                     , interruption = interruption
                 }
         else
@@ -223,7 +224,7 @@ tick model current totalElapsed dt start now =
             { model
                 | elapsed = elapsed
                 , start = Just start
-                , anim = mapTo 0 (step elapsed dt model.previous) model.anim
+                , frames = mapTo 0 (step elapsed dt model.previous) model.frames
             }
 
 
@@ -265,7 +266,7 @@ interrupt : Time -> Model -> List Keyframe -> List Interruption -> Model
 interrupt now model interruption remaining =
     let
         ( previous, newAnims ) =
-            case List.head model.anim of
+            case List.head model.frames of
                 Nothing ->
                     ( model.previous
                     , interruption
@@ -277,7 +278,7 @@ interrupt now model interruption remaining =
                     )
     in
         { model
-            | anim = initializeFrame previous newAnims
+            | frames = mapTo 0 (initializeFrame previous) newAnims
             , elapsed = 0.0
             , start = Nothing
             , previous = previous
@@ -285,53 +286,46 @@ interrupt now model interruption remaining =
         }
 
 
-initializeFrame : Style -> List Keyframe -> List Keyframe
-initializeFrame style anims =
+initializeFrame : Style -> Keyframe -> Keyframe
+initializeFrame style frame =
     let
-        warn =
-            case List.head anims of
-                Nothing ->
-                    []
+        matched =  zipWith (\a b -> Style.Properties.baseName a.current == Style.Properties.baseName b) frame.properties style
+        warnings =
+            List.map 
+                (\(a, maybeB) -> 
+                    case maybeB of 
+                        Nothing ->
+                            let 
+                                warn = 
+                                    Debug.log "elm-html-animation"
+                                        ("There is no initial value for '"
+                                        ++ Style.Properties.id a.current
+                                        ++ "', though it is queued to be animated.  Define an initial value for '"
+                                        ++ Style.Properties.id a.current
+                                        ++ "'")
+                            in
+                                Just warn
+                                
+                        Just b ->
+                            if Style.Properties.id a.current == Style.Properties.id b then
+                                Nothing
+                            else
+                                let
+                                    warn =
+                                         Debug.log "elm-html-animation"
+                                            ("Wrong units provided.  "
+                                            ++ "An initial value was given as '"
+                                            ++ Style.Properties.id b
+                                            ++ "' versus the animation which was given as '"
+                                            ++ Style.Properties.id a.current
+                                            ++ "'.")
+                                in
+                                    Just warn
+                ) matched
 
-                Just frame ->
-                    let
-                        matched = 
-                            zipWith (\a b -> Style.Properties.baseName a.current == Style.Properties.baseName b) frame.properties style
-
-                    in
-                        List.map 
-                            (\(a, maybeB) -> 
-                                case maybeB of 
-                                    Nothing ->
-                                        let 
-                                            warn = 
-                                                Debug.log "elm-html-animation"
-                                                    ("There is no initial value for '"
-                                                    ++ Style.Properties.id a.current
-                                                    ++ "', though it is queued to be animated.  Define an initial value for '"
-                                                    ++ Style.Properties.id a.current
-                                                    ++ "'")
-                                        in
-                                            Just warn
-                                            
-                                    Just b ->
-                                        if Style.Properties.id a.current == Style.Properties.id b then
-                                            Nothing
-                                        else
-                                            let
-                                                warn =
-                                                     Debug.log "elm-html-animation"
-                                                        ("Wrong units provided.  "
-                                                        ++ "An initial value was given as '"
-                                                        ++ Style.Properties.id b
-                                                        ++ "' versus the animation which was given as '"
-                                                        ++ Style.Properties.id a.current
-                                                        ++ "'.")
-                                            in
-                                                Just warn
-                            ) matched
+        --retargetIfNecessary keyframe = 
     in
-        mapTo 0 (\a -> step 0.0 0.0 style a ) anims
+        step 0.0 0.0 style frame
 
 
 done : Time -> Keyframe -> Bool
