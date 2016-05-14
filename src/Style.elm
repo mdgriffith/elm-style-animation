@@ -1,4 +1,4 @@
-module Style exposing (Animation, Action, html, svg, init, update, render, renderAttr, animate, queue, stagger, on, animateTo, delay, duration, easing, spring, andThen, set, tick, to, noWobble, gentle, wobbly, stiff, fromColor, rgb, rgba, hsl, hsla)
+module Style exposing (Animation, Action, html, svg, init, update, render, renderAttr, animate, queue, stagger, on, delay, duration, easing, spring, andThen, set, tick, to, noWobble, gentle, wobbly, stiff, fromColor, rgb, rgba, hsl, hsla)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -24,8 +24,6 @@ After taking an argument, these functions have `Float -> Float -> Float` as thei
 This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
 
 @docs to, set
-
-@docs animateTo
 
 # Spring Presets
 @docs noWobble, gentle, wobbly, stiff
@@ -246,16 +244,71 @@ stiff =
     , damping = 20
     }
 
+{-| Update a style based on it's previous value
 
-update : String
-update = "not implemented"
+     Style.animate 
+          |> Style.update 
+              (\prev =
+                  case prev of 
+                    Cx cx ->
+                        Cx (cx + 1)
+
+                    Cy cy ->
+                        Cy (cy + 1)
+
+                    _ -> prev
+              )
+          |> Style.on model.style
+-}
+update : (Style.Properties.StyleProperty Float -> Style.Properties.StyleProperty Float) -> Action -> Action
+update styleUpdate action = action
+    -- let
+
+    --    currentFrame = 
+    --        updateOrCreate action
+    --            (\kfWithOptions ->
+    --                let
+    --                    frame =
+    --                        kfWithOptions.frame
+
+    --                    updatedFrame =
+    --                        { frame | properties = dynamicProperties }
+    --                in
+    --                    { kfWithOptions | frame = updatedFrame }
+    --            )
+
+    --    previousFrame = action.frames
+
+    
+    --    dynamicProperties =
+    --        List.map 
+    --            (\prop -> 
+    --                { target = prop
+    --                , current = Style.Properties.map (\_ -> emptyPhysics) prop
+    --                }
+    --            ) 
+    --            deduped
+
+    --in
+    -- updateOrCreate action
+    --    (\kfWithOptions ->
+    --        let
+    --            frame =
+    --                kfWithOptions.frame
+
+    --            updatedFrame =
+    --                { frame | properties = dynamicProperties }
+    --        in
+    --            { kfWithOptions | frame = updatedFrame }
+    --    )
+
 
 {-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
 However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare a custom version of `on`.
 
      UI.animate
          |> UI.duration (0.4*second)
-         |> UI.props
+         |> UI.to
              [ Left (UI.to 0) Px
              , Opacity (UI.to 1)
              ]
@@ -272,9 +325,9 @@ on (A model) action =
 
       UI.animate
          |> UI.duration (0.4*second)
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
+         |> UI.to
+             [ Left 0 Px
+             , Opacity 1
              ]
          |> UI.on model.style
 
@@ -426,10 +479,6 @@ applyKeyframeOptions options =
 
 
 
-
---to : Core.Style -> Action -> Action
-
-
 {-| Apply a style immediately.  This takes a list of static style properties, meaning the no `UI.to` functions, only concrete numbers and values.
 
 
@@ -572,14 +621,6 @@ updateOrCreate action fn =
                             cur :: rem ->
                                 List.reverse ((fn cur) :: rem)
                    }
-
-
-
-animateTo : Core.Style -> Animation -> Animation
-animateTo style model =
-        animate
-         |> to style
-         |> on model
 
 
 {-| Animate to a statically specified style.
