@@ -1,8 +1,9 @@
-module Style.Core exposing (Model, Action(..), Keyframe, Interruption, Style, Physics, Static, update, bake, emptyEasing, empty, emptyKeyframe, emptyPhysics)
+module Style.Core exposing (Model, Action(..), Keyframe, Interruption, update, bake, empty, emptyKeyframe)
 --where
 
 import Time exposing (Time, second)
 import Style.Properties exposing (Property)
+import Style.PropertyHelpers exposing (..)
 import Style.Spring as Spring
 
 
@@ -35,40 +36,18 @@ it has a function that takes the previous value, the current time, and provides 
 type alias Keyframe =
     { properties : List DynamicProperty
     , delay : Time
-    , retarget : Maybe (Property Static -> Property Static)
+    , retarget : Maybe (Static -> Static)
     }
 
 
 type alias DynamicProperty = 
-        Targeted (Property Physics) (Property Static)
+        Targeted Dynamic Static
 
 type alias Targeted current target
     = { current : current
       , target : target
       }
 
-{-| Represent a CSS style as a list of style properties with concrete values.
--}
-type alias Style =
-    List (Property Static)
-
-type alias Static =
-    Float
-
-
-type alias Physics =
-    { physical : Spring.Physical
-    , spring : Spring.Model
-    , easing : Maybe Easing
-    }
-
-
-type alias Easing =
-    { ease : Float -> Float
-    , counterForce : Spring.Model
-    , counterForcePhys : Maybe Spring.Physical
-    , duration : Time
-    }
 
 
 empty : Model
@@ -87,42 +66,6 @@ emptyKeyframe =
     , delay = 0.0
     , retarget = Nothing
     }
-
-
-emptyPhysics : Physics
-emptyPhysics =
-    { physical =
-        { position = 0
-        , velocity = 0
-        }
-    , spring =
-        { stiffness = 170
-        , damping = 26
-        , destination = 1
-        }
-    , easing = Nothing
-    }
-
-emptyEasing =
-    { ease = defaultEasing
-    , counterForce =
-        { stiffness = 170
-        , damping = 26
-        , destination = 1
-        }
-    , counterForcePhys = Nothing
-    , duration = defaultDuration
-    }
-
-
-defaultDuration : Float
-defaultDuration =
-    0.35 * second
-
-
-defaultEasing : Float -> Float
-defaultEasing x =
-    (1 - cos (pi * x)) / 2
 
 
 update : Action -> Model -> Model
@@ -309,7 +252,7 @@ interrupt now model interruption remaining =
 
                 Just frame ->
                     ( bake frame model.previous
-                    , getTarget frame -- wrong.  This should be the target style of `frame`
+                    , getTarget frame
                     , mapTo 0 
                         (\newFrame -> 
                            transferVelocity frame newFrame
@@ -331,6 +274,10 @@ getTarget frame =
         List.map (\prop -> prop.target) frame.properties
 
 
+--makeDynamic : 
+--makeDynamic prop = Style.Properties.map (\_ -> emptyPhysics) (\_ -> emptyPhysics)
+
+
 retargetIfNecessary : Keyframe -> Style -> Keyframe
 retargetIfNecessary frame lastTargetStyle =
     case frame.retarget of 
@@ -339,7 +286,7 @@ retargetIfNecessary frame lastTargetStyle =
             let
                 applyRetarget prop =
                     { target = retarget prop
-                    , current = Style.Properties.map (\_ -> emptyPhysics) prop
+                    , current = toDynamic prop
                     }
             in
                 { frame | 
@@ -352,7 +299,7 @@ retargetIfNecessary frame lastTargetStyle =
 initializeFrame : Style -> Style -> Keyframe -> Keyframe
 initializeFrame style prevTargetStyle frame =
     let
-        matched =  zipWith (\a b -> Style.Properties.baseName a.current == Style.Properties.baseName b) frame.properties style
+        matched =  zipWith (\a b -> Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b) frame.properties style
         warnings =
             List.map 
                 (\(a, maybeB) -> 
@@ -362,15 +309,15 @@ initializeFrame style prevTargetStyle frame =
                                 warn = 
                                     Debug.log "elm-html-animation"
                                         ("There is no initial value for '"
-                                        ++ Style.Properties.id a.current
+                                        ++ Style.PropertyHelpers.id a.current
                                         ++ "', though it is queued to be animated.  Define an initial value for '"
-                                        ++ Style.Properties.id a.current
+                                        ++ Style.PropertyHelpers.id a.current
                                         ++ "'")
                             in
                                 Just warn
                                 
                         Just b ->
-                            if Style.Properties.id a.current == Style.Properties.id b then
+                            if Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b then
                                 Nothing
                             else
                                 let
@@ -378,9 +325,9 @@ initializeFrame style prevTargetStyle frame =
                                          Debug.log "elm-html-animation"
                                             ("Wrong units provided.  "
                                             ++ "An initial value was given as '"
-                                            ++ Style.Properties.id b
+                                            ++ Style.PropertyHelpers.id b
                                             ++ "' versus the animation which was given as '"
-                                            ++ Style.Properties.id a.current
+                                            ++ Style.PropertyHelpers.id a.current
                                             ++ "'.")
                                 in
                                     Just warn
@@ -401,7 +348,7 @@ done time frame =
                     time >= easing.duration
                  && easing.counterForcePhys == Nothing
     in
-        List.all (\p -> Style.Properties.is finished p.current) frame.properties
+        List.all (\p -> Style.PropertyHelpers.is finished p.current) frame.properties
 
 
 
@@ -410,7 +357,7 @@ done time frame =
 transferVelocity : Keyframe -> Keyframe -> Keyframe
 transferVelocity old new =
     let
-        matched = zipWith (\a b -> Style.Properties.id a.current == Style.Properties.id b.current) old.properties new.properties
+        matched = zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b.current) old.properties new.properties
 
         newProperties = 
             List.map 
@@ -421,7 +368,7 @@ transferVelocity old new =
 
                         Just b ->
                             let
-                                newCurrent = Style.Properties.map2 transferVelocityProp a.current b.current
+                                newCurrent = Style.PropertyHelpers.updateFrom transferVelocityProp a.current b.current
                             in
                                 { b | current = newCurrent }
                 ) matched
@@ -496,7 +443,7 @@ step : Time -> Time -> Style -> Keyframe -> Keyframe
 step time dt style frame =
      let
         newProperties = 
-            zipWith (\a b -> Style.Properties.id a.current == Style.Properties.id b) frame.properties style 
+            zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b) frame.properties style 
                  |> List.map 
                         (\(a, maybeB) -> 
                             case maybeB of 
@@ -505,7 +452,7 @@ step time dt style frame =
 
                                 Just b ->
                                     { a
-                                      | current = Style.Properties.map3 (applyStep time dt) a.target b a.current
+                                      | current = Style.PropertyHelpers.updateOver (applyStep time dt) a.target b a.current
                                     }
                         )
     in
@@ -613,7 +560,7 @@ bake frame style =
     fill style
         <| List.map 
             (\prop ->
-                Style.Properties.map (\phys -> phys.physical.position) prop.current
+                toStatic prop.current
             )
             frame.properties
         
@@ -645,7 +592,7 @@ zipWith fn listA listB =
 
 fill : Style -> Style -> Style
 fill existing new = 
-        zipWith (\a b -> Style.Properties.id a == Style.Properties.id b) existing new 
+        zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b) existing new 
      |> List.map (\(a, maybeB) -> Maybe.withDefault a maybeB )
 
 

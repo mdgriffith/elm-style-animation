@@ -1,4 +1,4 @@
-module Style exposing (Animation, Action, init, update, render, renderAttr, animate, queue, stagger, on, delay, duration, easing, spring, andThen, set, tick, to, noWobble, gentle, wobbly, stiff, fromColor, rgb, rgba, hsl, hsla)
+module Style exposing (Animation, Action, init, update, render, renderAttr, animate, queue, stagger, on, delay, duration, easing, spring, andThen, set, tick, to) --where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -25,17 +25,12 @@ This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, 
 
 @docs to, set
 
-# Spring Presets
-@docs noWobble, gentle, wobbly, stiff
 
 # Render a Animation into CSS or as SVG attributes
 @docs render, renderAttr
 
 # Setting the starting style
 @docs init
-
-# Initial Color Formats
-@docs fromColor, rgb, rgba, hsl, hsla
 
 # Update a Style
 @docs update
@@ -49,9 +44,11 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List
 import Color
-import Style.Properties
+--import Style.Properties
+import Style.PropertyHelpers exposing (Style, emptyEasing, Static)
 import Style.Spring as Spring
-import Style.Core as Core exposing (Static)
+import Style.Spring.Presets
+import Style.Core as Core 
 
 
 {-| An Animation of CSS properties.
@@ -59,7 +56,7 @@ import Style.Core as Core exposing (Static)
 type Animation
     = A Core.Model
 
-type alias Property a = Style.Properties.Property a
+--type alias Property a = Style.Properties.Property a
 
 
 type alias KeyframeWithOptions =
@@ -78,8 +75,8 @@ type alias PreAction =
     }
 
 
-type alias Dynamic =
-    Core.Physics
+--type alias Dynamic =
+    --Core.Physics
 
 
 {-| Actions to be run on an animation.
@@ -107,7 +104,7 @@ emptyKeyframeWithOptions =
 __Note__ All properties that you animate must be present in the init or else that property won't be animated.
 
 -}
-init : Core.Style -> Animation
+init : Style -> Animation
 init sty =
     let
         deduped =
@@ -116,8 +113,8 @@ init sty =
                     if
                         List.any
                             (\y ->
-                                Style.Properties.id x
-                                    == Style.Properties.id y
+                                Style.PropertyHelpers.id x
+                                    == Style.PropertyHelpers.id y
                             )
                             acc
                     then
@@ -132,10 +129,7 @@ init sty =
         A { empty | previous = deduped }
 
 
-type alias SpringProps =
-    { stiffness : Float
-    , damping : Float
-    }
+
 
 
 {-| Animate based on spring physics.
@@ -156,7 +150,7 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
              ]
          |> UI.on model.style
 -}
-spring : SpringProps -> Action -> Action
+spring : Style.Spring.Presets.SpringProps -> Action -> Action
 spring spring action =
     let
         newSpring =
@@ -169,40 +163,6 @@ spring spring action =
         updateOrCreate action (\a -> { a | spring = newSpring })
 
 
-{-| A spring preset.  Probably should be your initial goto for using springs.
--}
-noWobble : SpringProps
-noWobble =
-    { stiffness = 170
-    , damping = 26
-    }
-
-
-{-| A spring preset.
--}
-gentle : SpringProps
-gentle =
-    { stiffness = 120
-    , damping = 14
-    }
-
-
-{-| A spring preset.
--}
-wobbly : SpringProps
-wobbly =
-    { stiffness = 180
-    , damping = 12
-    }
-
-
-{-| A spring preset.
--}
-stiff : SpringProps
-stiff =
-    { stiffness = 210
-    , damping = 20
-    }
 
 {-| Update a style based on it's previous value
 
@@ -220,7 +180,7 @@ stiff =
               )
           |> Style.on model.style
 -}
-update : (Style.Properties.Property Float -> Style.Properties.Property Float) -> Action -> Action
+update : (Static -> Static) -> Action -> Action
 update styleUpdate action =
          updateOrCreate action
             (\kfWithOptions ->
@@ -370,13 +330,10 @@ applyKeyframeOptions options =
                                             , damping = partialSpring.damping
                                         }
 
-                        newEasing =
-                            Core.emptyEasing
-
                         withEase =
                             Maybe.map
                                 (\ease ->
-                                    { newEasing | ease = ease }
+                                    { emptyEasing | ease = ease }
                                 )
                                 options.easing
 
@@ -388,7 +345,7 @@ applyKeyframeOptions options =
                                 Just dur ->
                                     case withEase of
                                         Nothing ->
-                                            Just { newEasing | duration = dur }
+                                            Just { emptyEasing | duration = dur }
 
                                         Just ease ->
                                             Just { ease | duration = dur }
@@ -399,7 +356,7 @@ applyKeyframeOptions options =
                         }
             in
                 { prop 
-                    | current = Style.Properties.map addOptions prop.current
+                    | current = Style.PropertyHelpers.update addOptions prop.current
 
                 } 
                 
@@ -426,7 +383,7 @@ applyKeyframeOptions options =
          |> UI.on model.style
 
 -}
-set : Core.Style -> Action -> Action
+set : Style -> Action -> Action
 set staticProps action = 
     let 
         actionWithProps = to staticProps action
@@ -558,7 +515,7 @@ updateOrCreate action fn =
 {-| Animate to a statically specified style.
 
 -}
-to : Core.Style -> Action -> Action
+to : Style -> Action -> Action
 to sty action =
     let
         deduped =
@@ -567,9 +524,9 @@ to sty action =
                     if
                         List.any
                             (\y ->
-                                Style.Properties.id x
-                                    == Style.Properties.id y
-                                    && Style.Properties.id x /= "transform"
+                                Style.PropertyHelpers.id x
+                                    == Style.PropertyHelpers.id y
+                                    && Style.PropertyHelpers.id x /= "transform"
                             )
                             acc
                     then
@@ -584,7 +541,7 @@ to sty action =
             List.map 
                 (\prop -> 
                     { target = prop
-                    , current = Style.Properties.map (\_ -> Core.emptyPhysics) prop
+                    , current = Style.PropertyHelpers.toDynamic prop
                     }
                 ) 
                 deduped
@@ -603,67 +560,6 @@ to sty action =
         )
 
 
-{-| Specify an initial Color-based property using a Color from the elm core Color module.
-
--}
-fromColor : Color.Color -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
-fromColor color almostColor =
-    let
-        rgba =
-            Color.toRgb color
-    in
-        almostColor (toFloat rgba.red)
-            (toFloat rgba.green)
-            (toFloat rgba.blue)
-            (rgba.alpha)
-
-
-{-| Specify an initial Color-based property using rgb
-
--}
-rgb : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
-rgb r g b prop =
-    prop r g b 1.0
-
-
-{-| Specify an initial Color-based property using rgba
-
--}
-rgba : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
-rgba r g b a prop =
-    prop r g b a
-
-
-{-| Specify an initial Color-based property using hsl
-
--}
-hsl : Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
-hsl h s l prop =
-    let
-        rgba =
-            Color.toRgb <| Color.hsl h s l
-    in
-        prop (toFloat rgba.red)
-            (toFloat rgba.blue)
-            (toFloat rgba.green)
-            rgba.alpha
-
-
-{-| Specify an initial Color-based property using hsla
-
--}
-hsla : Float -> Float -> Float -> Float -> (Static -> Static -> Static -> Static -> Property Static) -> Property Static
-hsla h s l a prop =
-    let
-        rgba =
-            Color.toRgb <| Color.hsla h s l a
-    in
-        prop (toFloat rgba.red)
-            (toFloat rgba.blue)
-            (toFloat rgba.green)
-            rgba.alpha
-
-
 {-| Render into concrete css that can be directly applied to 'style' in elm-html
 
     div [ style UI.render widget.style) ] [ ]
@@ -673,10 +569,10 @@ render : Animation -> List ( String, String )
 render (A model) =
     case List.head model.frames of
         Nothing ->
-            Style.Properties.render model.previous
+            Style.PropertyHelpers.render model.previous
 
         Just frame ->
-            Style.Properties.render <| Core.bake frame model.previous
+            Style.PropertyHelpers.render <| Core.bake frame model.previous
 
 
 {-| Render into svg attributes.
@@ -687,10 +583,10 @@ render (A model) =
 renderAttr (A model) =
     case List.head model.frames of
         Nothing ->
-            Style.Properties.renderAttr model.previous
+            Style.PropertyHelpers.renderAttr model.previous
 
         Just frame ->
-            Style.Properties.renderAttr <| Core.bake frame model.previous
+            Style.PropertyHelpers.renderAttr <| Core.bake frame model.previous
 
 
 
