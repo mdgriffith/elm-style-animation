@@ -3,18 +3,18 @@ import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Animation as UI
-import Html.Animation.Properties exposing (..)
+import Style
+import Style.Properties exposing (..)
 import AnimationFrame
 
 
 type alias Model = 
-            { style : UI.Animation 
+            { style : Style.Animation 
             }
 
-type Action = Show 
-            | Hide
-            | Animate Float
+type Msg = Show 
+         | Hide
+         | Animate Float
 
 
 styles = 
@@ -30,15 +30,15 @@ styles =
 
 
 
-update : Action -> Model -> ( Model, Cmd Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
   case action of
     Show ->
       ( { model
             | style =  
-                UI.animateTo 
-                    styles.open
-                    model.style
+                Style.animate
+                  |> Style.to styles.open
+                  |> Style.on model.style
       }
       , Cmd.none
       )
@@ -46,9 +46,9 @@ update action model =
     Hide ->
         ( { model
               | style =  
-                  UI.animateTo
-                     styles.closed
-                     model.style 
+                  Style.animate
+                    |> Style.to styles.closed
+                    |> Style.on model.style
           }
         , Cmd.none
         )
@@ -56,12 +56,12 @@ update action model =
  
     Animate time ->
       ( { model 
-            | style = UI.tick time model.style 
+            | style = Style.tick time model.style 
         }
       , Cmd.none)
 
 
-view :  Model -> Html Action
+view :  Model -> Html Msg
 view model =
     div [ onMouseEnter Show
         , onMouseLeave Hide
@@ -84,7 +84,7 @@ view model =
                       , ("background-color", "rgb(58,40,69)")
                       , ("color", "white")
                       , ("border", "2px solid rgb(58,40,69)")  
-                    ] ++ (UI.render model.style)) 
+                    ] ++ (Style.render model.style)) 
               ]
               [ h1 [] [ text "Hidden Menu"]
               , ul [] 
@@ -94,14 +94,14 @@ view model =
               ]
         ]
 
-subscriptions : Model -> Sub Action
+subscriptions : Model -> Sub Msg
 subscriptions model =
   AnimationFrame.times Animate
 
 
 
-init : ( Model, Cmd Action )
-init = ( { style = UI.init styles.closed }
+init : ( Model, Cmd Msg )
+init = ( { style = Style.init styles.closed }
        , Cmd.none )
 
 
