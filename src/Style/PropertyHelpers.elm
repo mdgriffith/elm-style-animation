@@ -1257,14 +1257,18 @@ matchPoints points matchTo =
             case matchTo of 
                 Points pts2 ->
                     let
-                        diff = List.length pts1 - List.length pts2
+                        diff = List.length pts2 - List.length pts1
+                       
                         maybeLast = List.head <| List.drop (List.length pts1 - 1) pts1
                     in
                         if diff > 0 then
                             case maybeLast of 
                                 Nothing -> points
                                 Just last ->
-                                    Points <| pts1 ++ (List.repeat diff last)
+                                    let
+                                         _ = Debug.log "add points" (toString diff)
+                                    in
+                                        Points <| pts1 ++ (List.repeat diff last)
                         else
                             points
 
@@ -2636,8 +2640,8 @@ map3 fn colorFn target prev prop =
                 Points props2 ->
                     case prop of
                         Points props3 ->
-                            Points 
-                                <| List.map3 
+                            Points <|
+                                List.map3 
                                     (\(x1, y1) (x2,y2) (x3,y3) ->
                                         (fn x1 x2 x3, fn y1 y2 y3)
                                     ) props1 props2 props3

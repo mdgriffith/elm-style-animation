@@ -74,7 +74,19 @@ update action model =
         Queue newFrames ->
             case List.head model.frames of
                 Nothing ->
-                    { model | frames = mapTo 0 (initializeFrame model.previous model.previous) newFrames }
+                    let 
+                        initialized = mapTo 0 (initializeFrame model.previous model.previous) newFrames 
+
+                        amended = 
+                            case List.head initialized of 
+                                Nothing -> model.previous
+                                Just frame ->
+                                    amend model.previous frame
+                    in
+                        { model 
+                            | frames = initialized
+                            , previous = amended
+                        }
 
                 Just a ->
                     { model | frames = model.frames ++ newFrames }
@@ -186,12 +198,21 @@ tick model current totalElapsed dt start now =
                             { inter | at = inter.at - totalElapsed }
                         )
                         model.interruption
+
+
+                initialized = mapTo 0 (initializeFrame previous previous) frames
+
+                amended = 
+                    case List.head initialized of 
+                        Nothing -> previous
+                        Just frame ->
+                            amend previous frame
             in
                 { model
                     | elapsed = 0.0
                     , start = Just now
-                    , previous = previous
-                    , frames = mapTo 0 (initializeFrame previous previous) frames
+                    , previous = amended
+                    , frames = initialized
                     , interruption = interruption
                 }
         else
@@ -240,8 +261,6 @@ getTimes now model =
 interrupt : Time -> Model -> List Keyframe -> List Interruption -> Model
 interrupt now model interruption remaining =
     let
-        -- retargetIfNecessary interruption 
-
         ( previous, prevTarget, newFrames ) =
             case List.head model.frames of
                 Nothing ->
@@ -259,12 +278,21 @@ interrupt now model interruption remaining =
                         ) 
                         interruption
                     )
+
+        initialized = mapTo 0 (initializeFrame previous prevTarget) newFrames
+
+        amended = 
+            case List.head initialized of 
+                Nothing -> previous
+                Just frame ->
+                    amend previous frame
+
     in
         { model
-            | frames = mapTo 0 (initializeFrame previous prevTarget) newFrames
+            | frames = initialized
             , elapsed = 0.0
             , start = Nothing
-            , previous = previous
+            , previous = amended
             , interruption = remaining
         }
 
@@ -275,6 +303,22 @@ getTarget frame =
 
 
 
+{-| amend the style to compensate for the number of points in the Points property
+-}
+amend : Style -> Keyframe -> Style
+amend style frame = 
+    let
+        paired =  zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b.target) style frame.properties
+        _ = Debug.log "amend" "amend"
+    in 
+        List.map 
+            (\(styleProps, maybeFrame) -> 
+                case maybeFrame of
+                    Nothing -> styleProps
+                    Just frame ->
+                        Style.PropertyHelpers.matchPoints styleProps frame.target
+            )
+        paired 
 
 
 initializeFrame : Style -> Style -> Keyframe -> Keyframe
@@ -314,6 +358,7 @@ initializeFrame style prevTargetStyle frame =
                                     Just warn
                 ) matched
         retargeted = retargetIfNecessary frame prevTargetStyle
+        _ = Debug.log "initialize" "initialize"
     in
         step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
 
@@ -347,9 +392,13 @@ matchPoints frame lastTargetStyle =
                         case maybeLastTarget of
                             Nothing -> frameProps
                             Just lastTarget ->
-                                { frameProps 
-                                    | target = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
-                                }
+                                let
+                                    matched = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
+                                in
+                                    { frameProps 
+                                        | target = matched
+                                        , current = toDynamic matched
+                                    }
                     )
                 paired 
 
