@@ -121,6 +121,8 @@ renderAttr styles =
                 Points a -> Just <| Svg.points (String.concat <| List.intersperse ", " <| List.map toString a)
                 Width a _ -> Just <| Svg.width (toString a)
                 Height a _ -> Just <| Svg.height (toString a)
+                Fill color ->Just <| Svg.fill (renderColor color)
+                Stroke color -> Just <| Svg.stroke (renderColor color)
                 _ -> Nothing
     in
         List.filterMap toAttr styles
@@ -300,6 +302,8 @@ name styleProp =
         Ry _ -> "ry"
         D _ -> "d"
         Points _ -> "points" 
+        Fill _ -> "fill" 
+        Stroke _ -> "stroke" 
 
 
 
@@ -534,6 +538,8 @@ value prop =
             Ry a -> toString a
             D a -> toString a
             Points pts -> renderList pts
+            Fill color -> renderColor color
+            Stroke color -> renderColor color
 
 
 
@@ -555,32 +561,6 @@ renderColor color =
             ++ ","
             ++ toString rgba.alpha
             ++ ")"
-
-
---renderColor' : Float -> Float -> Float -> Float -> String
---renderColor' x y z a =
---    let
---        renderList xs =
---            "("
---                ++ (String.concat
---                        <| List.intersperse ","
---                        <| List.map toString xs
---                   )
---                ++ ")"
-
---        renderIntList xs =
---            renderList <| List.map round xs
---    in
---        "rgba("
---            ++ toString (round x)
---            ++ ","
---            ++ toString (round y)
---            ++ ","
---            ++ toString (round z)
---            ++ ","
---            ++ toString a
---            ++ ")"
-
 
 iePrefix : String
 iePrefix =
@@ -964,8 +944,10 @@ id prop =
         Rx _ -> "rx"
         Ry _ -> "ry"
         D _ -> "d"
-        Points _ -> "points" 
 
+        Points _ -> "points" 
+        Fill _ -> "fill"
+        Stroke _ -> "stroke"
 
 lenUnit : Length -> String
 lenUnit unit =
@@ -1262,6 +1244,9 @@ map fn colorFn prop =
         Ry a -> Ry (fn a)
         D a -> D (fn a)
         Points a -> Points (List.map fn a)
+        Fill color -> Fill <| colorFn color 
+        Stroke color -> Stroke <| colorFn color 
+
 
 
 is : (Physics -> Bool) -> Property Physics DynamicColor -> Bool
@@ -1438,6 +1423,8 @@ is pred prop =
         Ry a -> pred a
         D a -> pred a
         Points a -> List.all pred a
+        Fill color -> isColor pred color
+        Stroke color -> isColor pred color
 
 
 
@@ -1948,6 +1935,20 @@ map2 fn colorFn prev prop =
             case prop of 
                 Points b -> Points <| List.map2 fn a b
                 _ -> prop
+
+        Fill color ->
+            case prop of
+                Fill color2 ->
+                    Fill (colorFn color color2)
+                _ ->
+                    prop
+
+        Stroke color ->
+            case prop of
+                Stroke color2 ->
+                    Stroke (colorFn color color2)
+                _ ->
+                    prop
 
 
 
@@ -2612,6 +2613,26 @@ map3 fn colorFn target prev prop =
                     case prop of
                         Points props3 ->
                             Points <| List.map3 fn props1 props2 props3
+                        _ -> prop
+
+                _ -> prop
+
+        Fill color ->
+            case prev of
+                Fill color2 ->
+                    case prop of
+                        Fill color3 ->
+                            Fill <| colorFn color color2 color3
+                        _ -> prop
+
+                _ -> prop
+
+        Stroke color ->
+            case prev of
+                Stroke color2 ->
+                    case prop of
+                        Stroke color3 ->
+                            Stroke <| colorFn color color2 color3
                         _ -> prop
 
                 _ -> prop

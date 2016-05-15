@@ -75,7 +75,8 @@ type Property a color
     | Ry a
     | D a
     | Points (List a)
-
+    | Fill color
+    | Stroke color
 
 {-| Units representing length.
 -}
