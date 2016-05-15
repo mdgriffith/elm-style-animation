@@ -1,4 +1,4 @@
-module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..))
+module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), alignStartingPoint)
 
 --where
 
@@ -118,6 +118,37 @@ type DisplayMode
     | Flex
     | InlineFlex
     | ListItem
+
+{-|
+-}
+alignStartingPoint : List (Float, Float) -> List (Float, Float)
+alignStartingPoint points = 
+    let
+        sums = List.map (\(x,y) -> x + y) points
+        maybeMin = List.minimum sums
+
+        indexOfLowestPoint = 
+            case maybeMin of 
+                Nothing ->
+                    Nothing
+                Just min ->
+                    List.head  
+                        <| List.filterMap identity 
+                        <| List.indexedMap (\i val -> if val == min then Just i else Nothing) sums
+                
+
+    in
+        case indexOfLowestPoint of 
+            Nothing -> points
+            Just i ->
+                (List.drop i points) ++ (List.take i points)
+
+
+
+     
+
+
+
 
 
 
