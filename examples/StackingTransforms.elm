@@ -1,4 +1,6 @@
-module Main exposing (..) --where
+module Main exposing (..)
+
+--where
 
 import Html.App as Html
 import Html exposing (..)
@@ -16,16 +18,12 @@ type alias Model =
     }
 
 
-
--- UPDATE
-
-
-type Action
+type Msg
     = Transform
     | Animate Time
 
 
-update : Action -> Model -> ( Model, Cmd Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         Transform ->
@@ -43,15 +41,18 @@ update action model =
                             ]
                         |> Style.andThen
                         |> Style.duration (0.7 * second)
-                        |> Style.update 
+                        |> Style.update
                             (\i prop ->
-                                case prop of 
-                                  Rotate angle unit ->
-                                    if i == 2 then -- change only the 2nd rotate in the stack
-                                      Rotate 360 unit
-                                    else
-                                      prop
-                                  _ -> prop
+                                case prop of
+                                    Rotate angle unit ->
+                                        -- change only the 2nd rotate in the stack
+                                        if i == 2 then
+                                            Rotate 360 unit
+                                        else
+                                            prop
+
+                                    _ ->
+                                        prop
                             )
                         |> Style.andThen
                         |> Style.duration (0.7 * second)
@@ -79,7 +80,7 @@ update action model =
             )
 
 
-view : Model -> Html Action
+view : Model -> Html Msg
 view model =
     let
         boxStyle =
@@ -118,7 +119,7 @@ view model =
             ]
 
 
-init : ( Model, Cmd Action )
+init : ( Model, Cmd Msg )
 init =
     ( { style =
             Style.init
@@ -132,7 +133,7 @@ init =
     )
 
 
-subscriptions : Model -> Sub Action
+subscriptions : Model -> Sub Msg
 subscriptions model =
     AnimationFrame.times Animate
 
