@@ -36,7 +36,7 @@ it has a function that takes the previous value, the current time, and provides 
 type alias Keyframe =
     { properties : List DynamicProperty
     , delay : Time
-    , retarget : Maybe (Static -> Static)
+    , retarget : Maybe (Int -> Static -> Static)
     }
 
 
@@ -369,15 +369,40 @@ retargetIfNecessary frame lastTargetStyle =
         Nothing -> frame
         Just retarget ->
             let
-                applyRetarget prop =
-                    { target = retarget prop
+                applyRetarget i prop =
+                    { target = retarget 1 prop
                     , current = toDynamic prop
                     }
             in
                 { frame | 
                     properties = 
-                      List.map applyRetarget lastTargetStyle
+                      mapWithCount applyRetarget lastTargetStyle
                 } 
+
+
+getPropCount x list = 
+    List.foldl (\y acc -> 
+                    if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then 
+                        acc+1 
+                    else acc
+                ) 1 list
+
+
+mapWithCount fn list = 
+    let
+        mapped = 
+             List.foldl 
+                (\x acc ->
+                    let
+                        count = getPropCount x acc.past 
+                        _ = Debug.log "count" (toString count)
+                    in
+                        { current = acc.current ++ [fn count x]
+                        , past = acc.past ++ [x]
+                        }
+                ) {current = [], past = []} list
+    in mapped.current
+
 
 
 matchPoints : Keyframe -> Style -> Keyframe

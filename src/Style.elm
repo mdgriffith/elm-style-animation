@@ -175,7 +175,7 @@ spring spring action =
               )
           |> Style.on model.style
 -}
-update : (Static -> Static) -> PreAction -> PreAction
+update : (Int -> Static -> Static) -> PreAction -> PreAction
 update styleUpdate action =
          updateOrCreate action
             (\kfWithOptions ->
