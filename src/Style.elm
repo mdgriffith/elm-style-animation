@@ -1,4 +1,4 @@
-module Style exposing (Animation, Action, init, update, render, renderAttr, animate, queue, stagger, on, delay, duration, easing, spring, andThen, set, tick, to) --where
+module Style exposing (Animation, init, update, render, renderAttr, animate, queue, on, delay, duration, easing, spring, andThen, set, tick, to) --where
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -8,7 +8,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 
 
 # Base Definitions
-@docs Animation, Action
+@docs Animation
 
 # Starting an animation
 @docs animate, queue, stagger
@@ -44,7 +44,6 @@ import Time exposing (Time, second)
 import String exposing (concat)
 import List
 import Color
---import Style.Properties
 import Style.PropertyHelpers exposing (Style, emptyEasing, Static)
 import Style.Spring as Spring
 import Style.Spring.Presets
@@ -55,9 +54,6 @@ import Style.Core as Core
 -}
 type Animation
     = A Core.Model
-
---type alias Property a = Style.Properties.Property a
-
 
 type alias KeyframeWithOptions =
     { frame : Core.Keyframe
@@ -74,20 +70,19 @@ type alias PreAction =
     , action : List Core.Keyframe -> Core.Action
     }
 
-
---type alias Dynamic =
-    --Core.Physics
+--type alias Action = Core.Action
 
 
-{-| Actions to be run on an animation.
-You won't be constructing this type directly, though it may show up in your type signatures.
 
-To start animations you'll be using the `animate`, `queue`, and `stagger` functions
--}
-type Action
-    = Staggered (Float -> Float -> Action)
-    | Unstaggered PreAction
-    | Internal Core.Action
+--| Actions to be run on an animation.
+--You won't be constructing this type directly, though it may show up in your type signatures.
+
+--To start animations you'll be using the `animate` and `queue`
+
+--type Action
+--    = Staggered (Float -> Float -> Action)
+--    | Unstaggered PreAction
+--    | Internal Core.Action
 
 
 
@@ -138,19 +133,19 @@ You'll need to provide both a stiffness and a dampness to this function.
 
 __Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
 
-     UI.animate
-         -- |> UI.spring UI.noWobble -- set using a UI preset
-         |> UI.spring
+     Style.animate
+         -- |> Style.spring Style.noWobble -- set using a UI preset
+         |> Style.spring
                 { stiffness = 400
                 , damping = 28
                 }
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
+         |> Style.to
+             [ Left (Style.to 0) Px
+             , Opacity (Style.to 1)
              ]
-         |> UI.on model.style
+         |> Style.on model.style
 -}
-spring : Style.Spring.Presets.SpringProps -> Action -> Action
+spring : Style.Spring.Presets.SpringProps -> PreAction -> PreAction
 spring spring action =
     let
         newSpring =
@@ -180,7 +175,7 @@ spring spring action =
               )
           |> Style.on model.style
 -}
-update : (Static -> Static) -> Action -> Action
+update : (Static -> Static) -> PreAction -> PreAction
 update styleUpdate action =
          updateOrCreate action
             (\kfWithOptions ->
@@ -195,114 +190,68 @@ update styleUpdate action =
             )
 
 
-{-| Apply an update to a Animation model.  This is used at the end of constructing an animation.
-However, you'll have an overall cleaner syntax if you use `forwardTo` to prepare a custom version of `on`.
+{-| Apply an update to a Animation model. 
 
-     UI.animate
-         |> UI.duration (0.4*second)
-         |> UI.to
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
+     Style.animate
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left 0 Px
+             , Opacity 1
              ]
-         |> UI.on model.style
+         |> Style.on model.style
 
 -}
-on : Animation -> Action -> Animation
-on (A model) action =
-     A <| Core.update (resolve action 1 0) model
+on : Animation -> PreAction -> Animation
+on (A model) preaction =
+    let
+        action = 
+            preaction.action
+                <| List.map applyKeyframeOptions preaction.frames
+    in
+        A <| Core.update action model
 
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
 
-      UI.animate
-         |> UI.duration (0.4*second)
-         |> UI.to
+      Style.animate
+         |> Style.duration (0.4*second)
+         |> Style.to
              [ Left 0 Px
              , Opacity 1
              ]
-         |> UI.on model.style
+         |> Style.on model.style
 
 -}
-animate : Action
+animate : PreAction
 animate =
-    Unstaggered
-        <| { frames = []
-           , action = Core.Interrupt
-           }
+    { frames = []
+    , action = Core.Interrupt
+    }
+
+{-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
+
+      Style.queue
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left (Style.to 0) Px
+             , Opacity (Style.to 1)
+             ]
+         |> Style.on model.style
+
+-}
+queue : PreAction
+queue =
+    { frames = []
+    , action = Core.Queue
+    }
 
 
 {-| Step the animation
 -}
 tick : Float -> Animation -> Animation
-tick time model =
-    on model (Internal (Core.Tick time))
-
-
-{-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
-
-      UI.queue
-         |> UI.duration (0.4*second)
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
-             ]
-         |> UI.on model.style
-
--}
-queue : Action
-queue =
-    Unstaggered
-        <| { frames = []
-           , action = Core.Queue
-           }
-
-
-{-| Can be used to stagger animations on a list of widgets.
-
-     UI.stagger
-        (\i ->
-           UI.animate
-             -- The delay is staggered based on list index
-             |> UI.delay (i * 0.05 * second)
-             |> UI.duration (0.3 * second)
-             |> UI.props
-                 [ Left (UI.to 200) Px
-                 ]
-          |> UI.andThen
-             |> UI.delay (2.0 * second)
-             |> UI.duration (0.3 * second)
-             |> UI.props
-                 [ Left (UI.to -50) Px
-                 ]
-        )
-        |> forwardToAllWidgets model.widgets
-
--}
-stagger : (Float -> Float -> Action) -> Action
-stagger =
-    Staggered
-
-
-
-
-{-| Resolve the stagger if there is one, and apply springs if present.
-
--}
-resolve : Action -> Int -> Int -> Core.Action
-resolve stag t i =
-    case stag of
-        Unstaggered preaction ->
-            preaction.action
-                <| List.map applyKeyframeOptions
-                    preaction.frames
-
-        Staggered s ->
-            resolve (s (toFloat t) (toFloat i)) t i
-
-        Internal ia ->
-            ia
-
+tick time (A model) =
+    A <| Core.update (Core.Tick time) model
 
 
 applyKeyframeOptions : KeyframeWithOptions -> Core.Keyframe
@@ -368,22 +317,22 @@ applyKeyframeOptions options =
 
 
 
-{-| Apply a style immediately.  This takes a list of static style properties, meaning the no `UI.to` functions, only concrete numbers and values.
+{-| Apply a style immediately.  This takes a list of static style properties, meaning the no `Style.to` functions, only concrete numbers and values.
 
 
-    UI.animate
-         |> UI.duration (0.4*second)
-         |> UI.props
-             [ Opacity (UI.to 1)
+    Style.animate
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Opacity (Style.to 1)
              ]
-      |> UI.andThen
-         |> UI.set
+      |> Style.andThen
+         |> Style.set
              [ Display None
              ]
-         |> UI.on model.style
+         |> Style.on model.style
 
 -}
-set : Style -> Action -> Action
+set : Style -> PreAction -> PreAction
 set staticProps action = 
     let 
         actionWithProps = to staticProps action
@@ -403,16 +352,16 @@ set staticProps action =
 
 If an easing is specified but no duration, the default duration is 350ms.
 
-     UI.animate
-         |> UI.easing (\x -> x)  -- linear easing
-         |> UI.duration (0.4*second)
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
+     Style.animate
+         |> Style.easing (\x -> x)  -- linear easing
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left 0 Px
+             , Opacity 1
              ]
-         |> UI.on model.style
+         |> Style.on model.style
 -}
-duration : Time -> Action -> Action
+duration : Time -> PreAction -> PreAction
 duration dur action =
     updateOrCreate action (\a -> { a | duration = Just dur })
 
@@ -420,16 +369,16 @@ duration dur action =
 {-| Specify a delay.
 If not specified, the default is 0.
 
-     UI.animate
-         |> UI.duration (0.4*second)
-         |> UI.delay (0.5*second)
-         |> UI.props
-             [ Left (UI.to 0) Px
-             , Opacity (UI.to 1)
+     Style.animate
+         |> Style.duration (0.4*second)
+         |> Style.delay (0.5*second)
+         |> Style.to
+             [ Left 0 Px
+             , Opacity 1
              ]
-         |> UI.on model.style
+         |> Style.on model.style
 -}
-delay : Time -> Action -> Action
+delay : Time -> PreAction -> PreAction
 delay delay action =
     updateOrCreate action
         (\a ->
@@ -447,7 +396,7 @@ delay delay action =
 {-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal in-out.
 
 -}
-easing : (Float -> Float) -> Action -> Action
+easing : (Float -> Float) -> PreAction -> PreAction
 easing ease action =
     updateOrCreate action (\a -> { a | easing = Just ease })
 
@@ -456,52 +405,36 @@ easing ease action =
 
 For example, to cycle through colors, we'd use the following:
 
-      UI.animate
-              |> UI.props
-                  [ BackgroundColor
-                        UI.toRGBA 100 100 100 1.0
-                  ]
-          |> UI.andThen -- create a new keyframe
-              |> UI.duration (1*second)
-              |> UI.props
-                  [ BackgroundColor
-                        UI.toRGBA 178 201 14 1.0
-                  ]
-          |> UI.andThen
-              |> UI.props
-                  [ BackgroundColor
-                        UI.toRGBA 58 40 69 1.0
-                  ]
-          |> UI.on model.style
+      Style.animate
+          |> Style.to
+              [ BackgroundColor
+                    Style.toRGBA 100 100 100 1.0
+              ]
+          |> Style.andThen -- create a new keyframe
+          |> Style.duration (1*second)
+          |> Style.to
+              [ BackgroundColor
+                    Style.toRGBA 178 201 14 1.0
+              ]
+          |> Style.andThen
+          |> Style.to
+              [ BackgroundColor
+                    Style.toRGBA 58 40 69 1.0
+              ]
+          |> Style.on model.style
 -}
-andThen : Action -> Action
-andThen stag =
-    case stag of
-        Internal ia ->
-            Internal ia
-
-        Staggered s ->
-            Staggered s
-
-        Unstaggered preaction ->
-            Unstaggered
-                <| { preaction | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] }
+andThen : PreAction -> PreAction
+andThen preaction =
+        { preaction 
+            | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] 
+        }
 
 
 {-| Update the last Core.Keyframe in the queue.  If the queue is empty, create a new Core.Keyframe and update that.
 -}
-updateOrCreate : Action -> (KeyframeWithOptions -> KeyframeWithOptions) -> Action
-updateOrCreate action fn =
-    case action of
-        Internal ia ->
-            Internal ia
-
-        Staggered s ->
-            Staggered s
-
-        Unstaggered preaction ->
-            Unstaggered
-                <| { preaction
+updateOrCreate : PreAction -> (KeyframeWithOptions -> KeyframeWithOptions) -> PreAction
+updateOrCreate preaction fn =
+               { preaction
                     | frames =
                         case List.reverse preaction.frames of
                             [] ->
@@ -509,13 +442,13 @@ updateOrCreate action fn =
 
                             cur :: rem ->
                                 List.reverse ((fn cur) :: rem)
-                   }
+               }
 
 
 {-| Animate to a statically specified style.
 
 -}
-to : Style -> Action -> Action
+to : Style -> PreAction -> PreAction
 to sty action =
     let
         deduped =
@@ -562,7 +495,7 @@ to sty action =
 
 {-| Render into concrete css that can be directly applied to 'style' in elm-html
 
-    div [ style UI.render widget.style) ] [ ]
+    div [ style Style.render widget.style) ] [ ]
 
 -}
 render : Animation -> List ( String, String )
