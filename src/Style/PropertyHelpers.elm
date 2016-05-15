@@ -1,4 +1,4 @@
-module Style.PropertyHelpers exposing (Static, Dynamic, Physics, Style,  baseName, is, id, toStatic, toDynamic, update, updateFrom, updateOver, render, renderAttr, emptyEasing) --where
+module Style.PropertyHelpers exposing (Static, Dynamic, Physics, Style,  baseName, is, id, toStatic, toDynamic, update, updateFrom, updateOver, render, renderAttr, emptyEasing, matchPoints) --where
 
 import Style.Properties exposing (..)
 import Style.Spring as Spring
@@ -118,7 +118,7 @@ renderAttr styles =
                 Rx a -> Just <| Svg.rx (toString a)
                 Ry a -> Just <| Svg.ry (toString a)
                 D a -> Just <| Svg.d (toString a)
-                Points a -> Just <| Svg.points (String.concat <| List.intersperse ", " <| List.map toString a)
+                Points a -> Just <| Svg.points <| String.concat <| List.intersperse " " <| List.map (\pair -> toString (fst pair) ++ "," ++ toString (snd pair) ) a
                 Width a _ -> Just <| Svg.width (toString a)
                 Height a _ -> Just <| Svg.height (toString a)
                 Fill color ->Just <| Svg.fill (renderColor color)
@@ -944,7 +944,6 @@ id prop =
         Rx _ -> "rx"
         Ry _ -> "ry"
         D _ -> "d"
-
         Points _ -> "points" 
         Fill _ -> "fill"
         Stroke _ -> "stroke"
@@ -1243,9 +1242,34 @@ map fn colorFn prop =
         Rx a -> Rx (fn a)
         Ry a -> Ry (fn a)
         D a -> D (fn a)
-        Points a -> Points (List.map fn a)
+        Points a -> Points <| List.map (\(x, y) -> (fn x, fn y)) a
+
+
         Fill color -> Fill <| colorFn color 
         Stroke color -> Stroke <| colorFn color 
+
+
+
+matchPoints : Property a colorA -> Property b colorB -> Property a colorA 
+matchPoints points matchTo =
+    case points of
+        Points pts1 ->
+            case matchTo of 
+                Points pts2 ->
+                    let
+                        diff = List.length pts1 - List.length pts2
+                        maybeLast = List.head <| List.drop (List.length pts1 - 1) pts1
+                    in
+                        if diff > 0 then
+                            case maybeLast of 
+                                Nothing -> points
+                                Just last ->
+                                    Points <| pts1 ++ (List.repeat diff last)
+                        else
+                            points
+
+                _ -> points
+        _ -> points
 
 
 
@@ -1422,7 +1446,7 @@ is pred prop =
         Rx a -> pred a
         Ry a -> pred a
         D a -> pred a
-        Points a -> List.all pred a
+        Points a -> List.all (\(x, y) -> pred x && pred y) a
         Fill color -> isColor pred color
         Stroke color -> isColor pred color
 
@@ -1933,7 +1957,7 @@ map2 fn colorFn prev prop =
                 _ -> prop
         Points a -> 
             case prop of 
-                Points b -> Points <| List.map2 fn a b
+                Points b -> Points <| List.map2 (\(x1, y1) (x2, y2) -> (fn x1 x2, fn y1 y2)) a b
                 _ -> prop
 
         Fill color ->
@@ -2612,7 +2636,11 @@ map3 fn colorFn target prev prop =
                 Points props2 ->
                     case prop of
                         Points props3 ->
-                            Points <| List.map3 fn props1 props2 props3
+                            Points 
+                                <| List.map3 
+                                    (\(x1, y1) (x2,y2) (x3,y3) ->
+                                        (fn x1 x2 x3, fn y1 y2 y3)
+                                    ) props1 props2 props3
                         _ -> prop
 
                 _ -> prop

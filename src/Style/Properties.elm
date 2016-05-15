@@ -74,7 +74,7 @@ type Property a color
     | Rx a
     | Ry a
     | D a
-    | Points (List a)
+    | Points (List (a,a))
     | Fill color
     | Stroke color
 

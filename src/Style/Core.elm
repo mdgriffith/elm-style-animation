@@ -274,8 +274,48 @@ getTarget frame =
         List.map (\prop -> prop.target) frame.properties
 
 
---makeDynamic : 
---makeDynamic prop = Style.Properties.map (\_ -> emptyPhysics) (\_ -> emptyPhysics)
+
+
+
+initializeFrame : Style -> Style -> Keyframe -> Keyframe
+initializeFrame style prevTargetStyle frame =
+    let
+        matched =  zipWith (\a b -> Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b) frame.properties style
+        warnings =
+            List.map 
+                (\(a, maybeB) -> 
+                    case maybeB of 
+                        Nothing ->
+                            let 
+                                warn = 
+                                    Debug.log "elm-style-animation"
+                                        ("There is no initial value for '"
+                                        ++ Style.PropertyHelpers.id a.current
+                                        ++ "', though it is queued to be animated.  Define an initial value for '"
+                                        ++ Style.PropertyHelpers.id a.current
+                                        ++ "'")
+                            in
+                                Just warn
+                                
+                        Just b ->
+                            if Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b then
+                                Nothing
+                            else
+                                let
+                                    warn =
+                                         Debug.log "elm-style-animation"
+                                            ("Wrong units provided.  "
+                                            ++ "An initial value was given as '"
+                                            ++ Style.PropertyHelpers.id b
+                                            ++ "' versus the animation which was given as '"
+                                            ++ Style.PropertyHelpers.id a.current
+                                            ++ "'.")
+                                in
+                                    Just warn
+                ) matched
+        retargeted = retargetIfNecessary frame prevTargetStyle
+    in
+        step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
 
 
 retargetIfNecessary : Keyframe -> Style -> Keyframe
@@ -295,45 +335,28 @@ retargetIfNecessary frame lastTargetStyle =
                 } 
 
 
-
-initializeFrame : Style -> Style -> Keyframe -> Keyframe
-initializeFrame style prevTargetStyle frame =
+matchPoints : Keyframe -> Style -> Keyframe
+matchPoints frame lastTargetStyle =
     let
-        matched =  zipWith (\a b -> Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b) frame.properties style
-        warnings =
-            List.map 
-                (\(a, maybeB) -> 
-                    case maybeB of 
-                        Nothing ->
-                            let 
-                                warn = 
-                                    Debug.log "elm-html-animation"
-                                        ("There is no initial value for '"
-                                        ++ Style.PropertyHelpers.id a.current
-                                        ++ "', though it is queued to be animated.  Define an initial value for '"
-                                        ++ Style.PropertyHelpers.id a.current
-                                        ++ "'")
-                            in
-                                Just warn
-                                
-                        Just b ->
-                            if Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b then
-                                Nothing
-                            else
-                                let
-                                    warn =
-                                         Debug.log "elm-html-animation"
-                                            ("Wrong units provided.  "
-                                            ++ "An initial value was given as '"
-                                            ++ Style.PropertyHelpers.id b
-                                            ++ "' versus the animation which was given as '"
-                                            ++ Style.PropertyHelpers.id a.current
-                                            ++ "'.")
-                                in
-                                    Just warn
-                ) matched
-    in
-        step 0.0 0.0 style (retargetIfNecessary frame prevTargetStyle)
+        paired =  zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
+    in 
+        { frame |
+            properties =
+                List.map 
+                    (\(frameProps, maybeLastTarget) -> 
+                        case maybeLastTarget of
+                            Nothing -> frameProps
+                            Just lastTarget ->
+                                { frameProps 
+                                    | target = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
+                                }
+                    )
+                paired 
+
+        }
+
+
+
 
 
 done : Time -> Keyframe -> Bool
