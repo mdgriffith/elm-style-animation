@@ -1258,17 +1258,13 @@ matchPoints points matchTo =
                 Points pts2 ->
                     let
                         diff = List.length pts2 - List.length pts1
-                       
                         maybeLast = List.head <| List.drop (List.length pts1 - 1) pts1
                     in
                         if diff > 0 then
                             case maybeLast of 
                                 Nothing -> points
                                 Just last ->
-                                    let
-                                         _ = Debug.log "add points" (toString diff)
-                                    in
-                                        Points <| pts1 ++ (List.repeat diff last)
+                                    Points <| pts1 ++ (List.repeat diff last)
                         else
                             points
 

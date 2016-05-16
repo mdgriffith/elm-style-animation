@@ -75,13 +75,13 @@ update action model =
             case List.head model.frames of
                 Nothing ->
                     let 
-                        initialized = mapTo 0 (initializeFrame model.previous model.previous) newFrames 
-
                         amended = 
-                            case List.head initialized of 
+                            case List.head newFrames of 
                                 Nothing -> model.previous
                                 Just frame ->
                                     amend model.previous frame
+
+                        initialized = mapTo 0 (initializeFrame amended amended) newFrames 
                     in
                         { model 
                             | frames = initialized
@@ -200,13 +200,14 @@ tick model current totalElapsed dt start now =
                         model.interruption
 
 
-                initialized = mapTo 0 (initializeFrame previous previous) frames
-
                 amended = 
-                    case List.head initialized of 
+                    case List.head frames of 
                         Nothing -> previous
                         Just frame ->
                             amend previous frame
+
+                initialized = mapTo 0 (initializeFrame amended amended) frames
+                
             in
                 { model
                     | elapsed = 0.0
@@ -279,13 +280,19 @@ interrupt now model interruption remaining =
                         interruption
                     )
 
-        initialized = mapTo 0 (initializeFrame previous prevTarget) newFrames
-
         amended = 
-            case List.head initialized of 
+            case List.head newFrames of 
                 Nothing -> previous
                 Just frame ->
                     amend previous frame
+
+        amendedTarget = 
+            case List.head newFrames of 
+                Nothing -> prevTarget
+                Just frame ->
+                    amend prevTarget frame
+
+        initialized = mapTo 0 (initializeFrame amended amendedTarget) newFrames
 
     in
         { model
@@ -309,7 +316,6 @@ amend : Style -> Keyframe -> Style
 amend style frame = 
     let
         paired =  zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b.target) style frame.properties
-        _ = Debug.log "amend" "amend"
     in 
         List.map 
             (\(styleProps, maybeFrame) -> 
@@ -358,7 +364,6 @@ initializeFrame style prevTargetStyle frame =
                                     Just warn
                 ) matched
         retargeted = retargetIfNecessary frame prevTargetStyle
-        _ = Debug.log "initialize" "initialize"
     in
         step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
 
