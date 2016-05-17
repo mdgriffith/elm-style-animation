@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Time exposing (second)
 import Html.App
-import Html exposing (div, Html)
+import Html exposing (h1, div, Html)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
 import Svg exposing (..)
@@ -104,9 +104,10 @@ view : Model -> Html Action
 view model =
     div
         [ onClick Morph
-        , Attr.style [ ( "margin", "200px auto" ), ( "width", "1000px" ), ( "height", "1000px" ) ]
+        , Attr.style [ ( "margin", "200px auto" ), ( "width", "1000px" ), ( "height", "1000px" ), ("cursor", "pointer") ]
         ]
-        [ svg
+        [ h1 [] [ text "Click to morph!"]
+        , svg
             [ version "1.1"
             , x "0"
             , y "0"

@@ -14,7 +14,8 @@ A library to simplify creating html and svg animations in elm. My focus was to c
       * Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
   5. Stacking transformations - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
   6. Animating SVG
-      * Morphing Shapes - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Logo.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Logo.elm)
+      * Morphing Shapes - Elm Logo [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Logo.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Logo.elm)
+      * Morphing Batman Logos - [inspiration](http://tavmjong.free.fr/blog/?p=741) / [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Logo.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Logo.elm) 
 
   7. Realistic scenario (flower menu) (separate repo) - [demo](https://mdgriffith.github.io/elm-html-animation/examples/FlowerMenu/) / [view code](https://github.com/mdgriffith/elm-html-animation-flower-menu/blob/master/FlowerMenu.elm)
 
@@ -44,7 +45,7 @@ elm-package install mdgriffith/elm-style-animation
 
 ## The Basics
 
-I recommend checking out [the Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/) if you haven't already.  These examples will be much easier if you're already familiar with Elm in general and the standard `model`, `update`, `view` pattern. 
+I recommend checking out [the Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/) if you haven't already.  These examples will be much easier if you're already familiar with Elm in general and the standard `model`, `update`, `view` pattern.
 
 So, with all that in mind, here's a basic overview of what you'll need to do to use this library.
 
@@ -69,10 +70,10 @@ import Style.Properties exposing (..)
 type alias Model = { style : Style.Animation }
 
 init : Model
-init = { style = 
-            Style.init 
+init = { style =
+            Style.init
                 [ Left -350.0 Px
-                , Opacity 0.0 
+                , Opacity 0.0
                 , Color (rgba 50 50 50 1.0)
                 ]
         }
@@ -112,7 +113,7 @@ view model =
 type Msg = Show -- This message triggers the animation
          | Animate Time -- This action forwards all updates to the elm-style-animation core.
 
--- In our update function, we can use the helper function trigger animations 
+-- In our update function, we can use the helper function trigger animations
 -- and to pass updates to an animation
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
@@ -120,9 +121,9 @@ update action model =
 
     Show ->
       let
-          style = 
-              Style.animate 
-                 |> Style.to [ Opacity 1] 
+          style =
+              Style.animate
+                 |> Style.to [ Opacity 1]
                  |> Style.on model.style
       in
         ( { model | style = style}
@@ -138,8 +139,8 @@ update action model =
         )
 ```
 
- 
-  * Now that we're set up, we can begin animating. 
+
+  * Now that we're set up, we can begin animating.
 
 
 # Example 1: Showing a Menu on Hover
@@ -154,12 +155,12 @@ So, our first step is to add two values to our Action type, `Show` and `Hide`, a
 ```elm
 -- ... we add this to the case statement in our update function.
 
-    Style.animate 
+    Style.animate
     -- |> Style.delay (0.5*second)
-       |> Style.to 
+       |> Style.to
            [ Left 0 Px
            , Opacity 1
-           ] 
+           ]
        |> Style.on model.style
 
 
@@ -172,17 +173,17 @@ Instead of using a duration and an easing function, this library defaults to ani
 
 ```elm
 -- ... we add this to the case statement in our update function.
-    Style.animate 
+    Style.animate
     -- |> Style.spring Style.Spring.Preset.wobbly -- you can use a UI preset
     -- or specify manually.
-       |> Style.spring 
+       |> Style.spring
             { stiffness = 400
             , damping = 28
             }
-       |> Style.to 
+       |> Style.to
            [ Left 0 Px
            , Opacity 1
-           ] 
+           ]
        |> Style.on model.style
 
 ```
@@ -191,20 +192,20 @@ Instead of using a duration and an easing function, this library defaults to ani
 > Alternatively, we also have the option of defining a _duration_, and an _easing function_.  I've generally found that springs are a more natural way for animating user interfaces, but there are some cases where easing and duration could be preferable.  Here's how it's done.
 
  ```elm
-       Style.animate 
+       Style.animate
            |> Style.easing (\x -> x)  -- linear easing
            |> Style.duration (0.5*second)
-           |> Style.to 
+           |> Style.to
                [ Left 0 Px
                , Opacity 1
-               ] 
+               ]
            |> Style.on model.style
   ```
-> 
+>
 > __Note__ The duration you provide will not do anything unless you also provide an easing function.  This is because spring based animations set the duration dynamically.
 > Make sure to check out the [elm community easing library](http://package.elm-lang.org/packages/elm-community/easing-functions/latest) if you're looking for easing functions.
 
-Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted. 
+Now that we have this animation, it has a few properties that may not be immediately apparent.  If a `Hide` action is called halfway through execution of the `Show` animation, the animation will be smoothly interrupted.
 
 There may be a situation where we don't want our animation to be interrupted and instead we want an animation to queue up after a currently running animation.  To do this, we would use `Style.queue` instead of `Style.animate`
 
@@ -223,15 +224,15 @@ We use `Style.andThen` to create a new keyframe.  This new keyframe will have it
 import Color exposing (rgba)
 
 -- in our update function, we'd change our animation to:
-      Style.animate 
-        |> Style.to 
-            [ BackgroundColor (rgba 100 100 100 1.0) ] 
+      Style.animate
+        |> Style.to
+            [ BackgroundColor (rgba 100 100 100 1.0) ]
         |> Style.andThen -- create a new keyframe
-        |> Style.to 
-            [ BackgroundColor (rgba 178 201 14 1.0) ] 
-        |> Style.andThen 
-        |> Style.to 
-            [ BackgroundColor (rgba 58 40 69 1.0) ] 
+        |> Style.to
+            [ BackgroundColor (rgba 178 201 14 1.0) ]
+        |> Style.andThen
+        |> Style.to
+            [ BackgroundColor (rgba 58 40 69 1.0) ]
         |> on model.menuStyle
 
 ```
@@ -254,22 +255,22 @@ type alias Model = { widgets : List Style.Animation }
 
 -- Later, in our update statement...
       -- where j is the index of the widget we want to animate.
-      let 
-        widgets = 
-            List.indexedMap 
+      let
+        widgets =
+            List.indexedMap
               (\i widget ->
                   -- only update a specific widget in a list.
                   if i == j then
                      Style.animate
                         |> Style.duration (5*second)
-                        |> Style.to 
+                        |> Style.to
                             [ Opacity 0  
-                            ] 
+                            ]
                         |> Style.on widget
                   else
                     widget
               ) model.widgets
-           
+
 
       in
         ( { model | widgets = widgets }
@@ -298,13 +299,13 @@ Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/3
 
 ```elm
     List.indexedMap
-        (\i widget -> 
+        (\i widget ->
            Style.animate
              |> Style.delay (i * 0.05 * second) -- stagger this animation.
              |> Style.duration (0.3 * second)
-             |> Style.to 
+             |> Style.to
                  [ Left 200 Px
-                 ] 
+                 ]
              |> Style.on widget
         ) model.widgets
 
@@ -328,15 +329,15 @@ When using these transformations in normal css, you're able to stack them.  So, 
 
 In this case, the transforms are performed in order. Rotate by 20deg, translateY (which is now angled 20deg) by 100px, and then rotate again -20deg.
 
-This can be very useful, especially if we can animate each transform element individually. 
+This can be very useful, especially if we can animate each transform element individually.
 
 Here's how we're able to do this in Html.Animation.
 
-First, we define our initial style.  This will define the order that the transforms will appear. 
+First, we define our initial style.  This will define the order that the transforms will appear.
 
 ```elm
-initialWidgetStyle = 
-        Style.init 
+initialWidgetStyle =
+        Style.init
             [ Rotate 0 Deg
             , TranslateY 0 Px
             , Rotate 0 Deg
@@ -354,21 +355,21 @@ Now let's animate these properties.  Let's say we want do the following animatio
   5. Then once that's finished, reset everything to 0.
 
 ```elm
-  Style.animate 
+  Style.animate
       |> Style.duration (0.5*second)
-      |> Style.to 
+      |> Style.to
           [ Rotate 20 Deg
-          ] 
+          ]
       |> Style.andThen
       |> Style.duration (0.7*second)
-      |> Style.props 
+      |> Style.props
           [ TranslateY -200 Px
-          ] 
+          ]
       |> Style.andThen
       |> Style.duration (0.7*second)
       |> Style.update
           (\index prop ->
-              case prop of 
+              case prop of
                   Rotate angle unit ->
                      -- make this update apply to the second rotate only.
                      if index == 2 then
@@ -376,23 +377,19 @@ Now let's animate these properties.  Let's say we want do the following animatio
                     else
                         Rotate angle unit
                   _ -> prop
-          ) 
-          
+          )
+
       |> Style.andThen
       |> Style.duration (0.7*second)
-      |> Style.to 
-          [ Rotate 380 Deg 
-          ] 
+      |> Style.to
+          [ Rotate 380 Deg
+          ]
       |> Style.andThen
       |> Style.delay (1*second)
       |> Style.to
           [ Rotate 0 Deg
           , TranslateY 0 Px
           , Rotate 0 Deg
-          ] 
+          ]
 
 ```
-
-
-
-

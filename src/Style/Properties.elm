@@ -7,7 +7,7 @@ All animatable properties.
 
 @docs Length, Angle, DisplayMode
 
-@docs PathCommands
+@docs PathCommand
 
 @docs alignStartingPoint
 
@@ -133,7 +133,7 @@ type DisplayMode
 
 {-| Describe a path.  To be used in conjunction with the D property for styling svg.
 
-`To` versions of the commands are absolute, while normal versions are relative.
+`To` versions of the commands are absolute, while others are relative.
 
 -}
 type PathCommand a
