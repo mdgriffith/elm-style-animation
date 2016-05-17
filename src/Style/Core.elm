@@ -40,7 +40,7 @@ type alias Keyframe =
     }
 
 
-type alias DynamicProperty = 
+type alias DynamicProperty =
         Targeted Dynamic Static
 
 type alias Targeted current target
@@ -74,16 +74,16 @@ update action model =
         Queue newFrames ->
             case List.head model.frames of
                 Nothing ->
-                    let 
-                        amended = 
-                            case List.head newFrames of 
+                    let
+                        amended =
+                            case List.head newFrames of
                                 Nothing -> model.previous
                                 Just frame ->
                                     amend model.previous frame
 
-                        initialized = mapTo 0 (initializeFrame amended amended) newFrames 
+                        initialized = mapTo 0 (initializeFrame amended amended) newFrames
                     in
-                        { model 
+                        { model
                             | frames = initialized
                             , previous = amended
                         }
@@ -199,15 +199,12 @@ tick model current totalElapsed dt start now =
                         )
                         model.interruption
 
-
-                amended = 
-                    case List.head frames of 
+                amended =
+                    case List.head frames of
                         Nothing -> previous
                         Just frame ->
                             amend previous frame
-
                 initialized = mapTo 0 (initializeFrame amended amended) frames
-                
             in
                 { model
                     | elapsed = 0.0
@@ -266,28 +263,28 @@ interrupt now model interruption remaining =
             case List.head model.frames of
                 Nothing ->
                     ( model.previous
-                    , model.previous 
+                    , model.previous
                     , interruption
                     )
 
                 Just frame ->
                     ( bake frame model.previous
                     , getTarget frame
-                    , mapTo 0 
-                        (\newFrame -> 
+                    , mapTo 0
+                        (\newFrame ->
                            transferVelocity frame newFrame
-                        ) 
+                        )
                         interruption
                     )
 
-        amended = 
-            case List.head newFrames of 
+        amended =
+            case List.head newFrames of
                 Nothing -> previous
                 Just frame ->
                     amend previous frame
 
-        amendedTarget = 
-            case List.head newFrames of 
+        amendedTarget =
+            case List.head newFrames of
                 Nothing -> prevTarget
                 Just frame ->
                     amend prevTarget frame
@@ -305,7 +302,7 @@ interrupt now model interruption remaining =
 
 
 getTarget : Keyframe -> Style
-getTarget frame = 
+getTarget frame =
         List.map (\prop -> prop.target) frame.properties
 
 
@@ -313,31 +310,31 @@ getTarget frame =
 {-| amend the style to compensate for the number of points in the Points property
 -}
 amend : Style -> Keyframe -> Style
-amend style frame = 
+amend style frame =
     let
         paired =  zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b.target) style frame.properties
-    in 
-        List.map 
-            (\(styleProps, maybeFrame) -> 
+    in
+        List.map
+            (\(styleProps, maybeFrame) ->
                 case maybeFrame of
                     Nothing -> styleProps
                     Just frame ->
                         Style.PropertyHelpers.matchPoints styleProps frame.target
             )
-        paired 
+        paired
 
 
 initializeFrame : Style -> Style -> Keyframe -> Keyframe
 initializeFrame style prevTargetStyle frame =
     let
-        matched =  zipWith (\a b -> Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b) frame.properties style
+        matched =  zipWith (\a b -> (Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b)) frame.properties style
         warnings =
-            List.map 
-                (\(a, maybeB) -> 
-                    case maybeB of 
+            List.map
+                (\(a, maybeB) ->
+                    case maybeB of
                         Nothing ->
-                            let 
-                                warn = 
+                            let
+                                warn =
                                     Debug.log "elm-style-animation"
                                         ("There is no initial value for '"
                                         ++ Style.PropertyHelpers.id a.current
@@ -346,7 +343,7 @@ initializeFrame style prevTargetStyle frame =
                                         ++ "'")
                             in
                                 Just warn
-                                
+
                         Just b ->
                             if Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b then
                                 Nothing
@@ -370,7 +367,7 @@ initializeFrame style prevTargetStyle frame =
 
 retargetIfNecessary : Keyframe -> Style -> Keyframe
 retargetIfNecessary frame lastTargetStyle =
-    case frame.retarget of 
+    case frame.retarget of
         Nothing -> frame
         Just retarget ->
             let
@@ -379,28 +376,27 @@ retargetIfNecessary frame lastTargetStyle =
                     , current = toDynamic prop
                     }
             in
-                { frame | 
-                    properties = 
+                { frame |
+                    properties =
                       mapWithCount applyRetarget lastTargetStyle
-                } 
+                }
 
 
-getPropCount x list = 
-    List.foldl (\y acc -> 
-                    if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then 
-                        acc+1 
+getPropCount x list =
+    List.foldl (\y acc ->
+                    if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then
+                        acc+1
                     else acc
                 ) 1 list
 
 
-mapWithCount fn list = 
+mapWithCount fn list =
     let
-        mapped = 
-             List.foldl 
+        mapped =
+             List.foldl
                 (\x acc ->
                     let
-                        count = getPropCount x acc.past 
-                        _ = Debug.log "count" (toString count)
+                        count = getPropCount x acc.past
                     in
                         { current = acc.current ++ [fn count x]
                         , past = acc.past ++ [x]
@@ -414,23 +410,23 @@ matchPoints : Keyframe -> Style -> Keyframe
 matchPoints frame lastTargetStyle =
     let
         paired =  zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
-    in 
+    in
         { frame |
             properties =
-                List.map 
-                    (\(frameProps, maybeLastTarget) -> 
+                List.map
+                    (\(frameProps, maybeLastTarget) ->
                         case maybeLastTarget of
                             Nothing -> frameProps
                             Just lastTarget ->
                                 let
                                     matched = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
                                 in
-                                    { frameProps 
+                                    { frameProps
                                         | target = matched
                                         , current = toDynamic matched
                                     }
                     )
-                paired 
+                paired
 
         }
 
@@ -441,7 +437,7 @@ matchPoints frame lastTargetStyle =
 done : Time -> Keyframe -> Bool
 done time frame =
     let
-        finished prop = 
+        finished prop =
             case prop.easing of
                 Nothing ->
                     Spring.atRest prop.spring prop.physical
@@ -461,10 +457,10 @@ transferVelocity old new =
     let
         matched = zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b.current) old.properties new.properties
 
-        newProperties = 
-            List.map 
-                (\(a, maybeB) -> 
-                    case maybeB of 
+        newProperties =
+            List.map
+                (\(a, maybeB) ->
+                    case maybeB of
                         Nothing ->
                             a
 
@@ -544,11 +540,11 @@ velocity oldPos newPos dt =
 step : Time -> Time -> Style -> Keyframe -> Keyframe
 step time dt style frame =
      let
-        newProperties = 
-            zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b) frame.properties style 
-                 |> List.map 
-                        (\(a, maybeB) -> 
-                            case maybeB of 
+        newProperties =
+            zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b) frame.properties style
+                 |> List.map
+                        (\(a, maybeB) ->
+                            case maybeB of
                                 Nothing ->
                                     a
 
@@ -562,7 +558,7 @@ step time dt style frame =
 
 
 applyStep : Time -> Time -> Float -> Float -> Physics -> Physics
-applyStep current dt target from physics = 
+applyStep current dt target from physics =
         case physics.easing of
             Nothing ->
                 --physics
@@ -609,7 +605,7 @@ applyStep current dt target from physics =
                         physics.physical
 
                     currentPos =
-                        ((target - from) * eased) + from 
+                        ((target - from) * eased) + from
                         --physics.target from eased
 
                     counterSpring =
@@ -660,29 +656,22 @@ mapTo i fn xs =
 bake : Keyframe -> Style -> Style
 bake frame style =
     fill style
-        <| List.map 
+        <| List.map
             (\prop ->
                 toStatic prop.current
             )
             frame.properties
-        
+
 zipWith : (a -> b -> Bool) -> List a -> List b -> List (a, Maybe b)
-zipWith fn listA listB = 
+zipWith fn listA listB =
     fst <| List.foldl
                 (\a (stack, bStack) ->
                     let
-                        (maybeB, remainingBs) =
-                            case List.head bStack of 
-                                Just b ->
-                                    if fn a b then
-                                        (Just b, Maybe.withDefault [] <| List.tail bStack)
-                                    else
-                                        (Nothing, bStack)
-
-                                Nothing ->
-                                    (Nothing, bStack)
-                    in 
-                        (stack ++ [(a, maybeB)], remainingBs)
+                        (matching, unmatching) = List.partition (\b -> fn a b) bStack
+                        maybeB = List.head matching
+                        remaining = Maybe.withDefault [] <| List.tail matching
+                    in
+                        (stack ++ [(a, maybeB)], unmatching ++ remaining)
 
                 )
                 ([], listB)
@@ -693,8 +682,6 @@ zipWith fn listA listB =
 
 
 fill : Style -> Style -> Style
-fill existing new = 
-        zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b) existing new 
+fill existing new =
+        zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b) existing new
      |> List.map (\(a, maybeB) -> Maybe.withDefault a maybeB )
-
-

@@ -118,7 +118,7 @@ renderAttr styles =
                 Rx a -> Just <| Svg.rx (toString a)
                 Ry a -> Just <| Svg.ry (toString a)
                 D commands -> Just <| Svg.d <| renderPath commands
-                Points a -> Just <| Svg.points <| String.concat <| List.intersperse " " <| List.map (\pair -> toString (fst pair) ++ "," ++ toString (snd pair) ) a
+                Points points -> Just <| Svg.points <| renderPoints points
                 Width a _ -> Just <| Svg.width (toString a)
                 Height a _ -> Just <| Svg.height (toString a)
                 Fill color ->Just <| Svg.fill (renderColor color)
@@ -127,6 +127,8 @@ renderAttr styles =
     in
         List.filterMap toAttr styles
 
+
+renderPoints points = String.concat <| List.intersperse " " <| List.map (\pair -> toString (fst pair) ++ "," ++ toString (snd pair) ) points
 
 renderPath : List (PathCommand Float) -> String
 renderPath commands =
@@ -141,22 +143,14 @@ renderPath commands =
               HorizontalTo a -> "H " ++ toString a
               Vertical a ->  "v " ++ toString a
               VerticalTo a ->  "V " ++ toString a
-              Curve x1 y1 x2 y2 x3 y3 -> "c " ++ toString x1 ++ ","  ++ toString y1
-                                       ++ " " ++ toString x2 ++ ","  ++ toString y2
-                                       ++ " " ++ toString x3 ++ ","  ++ toString y3
-              CurveTo x1 y1 x2 y2 x3 y3 -> "C " ++ toString x1 ++ ","  ++ toString y1
-                                       ++ " " ++ toString x2 ++ ","  ++ toString y2
-                                       ++ " " ++ toString x3 ++ ","  ++ toString y3
-              Quadratic x1 y1 x2 y2 -> "q " ++ toString x1 ++ ","  ++ toString y1
-                                     ++ " " ++ toString x2 ++ ","  ++ toString y2
-              QuadraticTo x1 y1 x2 y2 -> "Q " ++ toString x1 ++ ","  ++ toString y1
-                                       ++ " " ++ toString x2 ++ ","  ++ toString y2
-              SmoothQuadratic x y -> "t " ++ toString x ++ ","  ++ toString y
-              SmoothQuadraticTo x y -> "T " ++ toString x ++ ","  ++ toString y
-              Smooth x1 y1 x2 y2 -> "s " ++ toString x1 ++ ","  ++ toString y1
-                                  ++ " " ++ toString x2 ++ ","  ++ toString y2
-              SmoothTo x1 y1 x2 y2 -> "S " ++ toString x1 ++ ","  ++ toString y1
-                                    ++ " " ++ toString x2 ++ ","  ++ toString y2
+              Curve points -> "c " ++ renderPoints points
+              CurveTo points -> "C " ++ renderPoints points
+              Quadratic points -> "q " ++ renderPoints points
+              QuadraticTo points -> "Q " ++ renderPoints points
+              SmoothQuadratic points -> "t " ++ renderPoints points
+              SmoothQuadraticTo points -> "T " ++ renderPoints points
+              Smooth points -> "s " ++ renderPoints points
+              SmoothTo points -> "S " ++ renderPoints points
               Arc rx ry x y -> "a " ++ toString rx ++ ","  ++ toString ry
                                     ++ "0 0 0"
                                     ++ toString x ++ ","  ++ toString y
@@ -812,8 +806,18 @@ baseName prop =
 
         Perspective _ ->
             "perspective"
-
-        x -> id x
+            
+        X _ -> "x"
+        Y _ -> "y"
+        Cx _ -> "cx"
+        Cy _ -> "cy"
+        R _ -> "r"
+        Rx _ -> "rx"
+        Ry _ -> "ry"
+        D _ -> "d"
+        Points _ -> "points"
+        Fill _ -> "fill"
+        Stroke _ -> "stroke"
 
 
 id : Property a b -> String
@@ -1291,6 +1295,8 @@ map fn colorFn prop =
         Fill color -> Fill <| colorFn color
         Stroke color -> Stroke <| colorFn color
 
+mapPoints fn points = List.map (\(x,y) -> (fn x, fn y)) points
+
 mapCmd : (a -> b) -> PathCommand a -> PathCommand b
 mapCmd fn cmd =
       case cmd of
@@ -1302,14 +1308,14 @@ mapCmd fn cmd =
           HorizontalTo a -> HorizontalTo (fn a)
           Vertical a ->  Vertical (fn a)
           VerticalTo a ->  VerticalTo (fn a)
-          Curve x1 y1 x2 y2 x3 y3 -> Curve (fn x1) (fn y1) (fn x2) (fn y2) (fn x3) (fn y3)
-          CurveTo x1 y1 x2 y2 x3 y3 -> CurveTo (fn x1) (fn y1) (fn x2) (fn y2) (fn x3) (fn y3)
-          Quadratic x1 y1 x2 y2 -> Quadratic (fn x1) (fn y1) (fn x2) (fn y2)
-          QuadraticTo x1 y1 x2 y2 -> QuadraticTo (fn x1) (fn y1) (fn x2) (fn y2)
-          SmoothQuadratic x y -> SmoothQuadratic (fn x) (fn y)
-          SmoothQuadraticTo x y -> SmoothQuadraticTo (fn x) (fn y)
-          Smooth x1 y1 x2 y2 -> Smooth (fn x1) (fn y1) (fn x2) (fn y2)
-          SmoothTo x1 y1 x2 y2 -> SmoothTo (fn x1) (fn y1) (fn x2) (fn y2)
+          Curve points -> Curve (mapPoints fn points)
+          CurveTo points -> CurveTo (mapPoints fn points)
+          Quadratic points -> Quadratic (mapPoints fn points)
+          QuadraticTo points -> QuadraticTo (mapPoints fn points)
+          SmoothQuadratic points -> SmoothQuadratic (mapPoints fn points)
+          SmoothQuadraticTo points -> SmoothQuadraticTo (mapPoints fn points)
+          Smooth points -> Smooth (mapPoints fn points)
+          SmoothTo points -> SmoothTo (mapPoints fn points)
           Arc rx ry x y -> Arc (fn rx) (fn ry) (fn x) (fn y)
           ArcTo rx ry x y -> ArcTo (fn rx) (fn ry) (fn x) (fn y)
           LargeArc rx ry x y -> LargeArc (fn rx) (fn ry) (fn x) (fn y)
@@ -1529,19 +1535,22 @@ isCmd pred cmd =
         HorizontalTo a -> pred a
         Vertical a -> pred a
         VerticalTo a -> pred a
-        Curve x1 y1 x2 y2 x3 y3 -> pred x1 && pred y1 && pred x2 && pred y2 && pred x3 && pred y3
-        CurveTo x1 y1 x2 y2 x3 y3 -> pred x1 && pred y1 && pred x2 && pred y2 && pred x3 && pred y3
-        Quadratic x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
-        QuadraticTo x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
-        SmoothQuadratic x y -> pred x && pred y
-        SmoothQuadraticTo x y -> pred x && pred y
-        Smooth x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
-        SmoothTo x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
+        Curve points -> isPoints pred points
+        CurveTo points -> isPoints pred points
+        Quadratic points -> isPoints pred points
+        QuadraticTo points -> isPoints pred points
+        SmoothQuadratic points ->isPoints pred points
+        SmoothQuadraticTo points ->isPoints pred points
+        Smooth points -> isPoints pred points
+        SmoothTo points -> isPoints pred points
         Arc rx ry x y -> pred rx && pred ry && pred x && pred y
         ArcTo rx ry x y -> pred rx && pred ry && pred x && pred y
         LargeArc rx ry x y -> pred rx && pred ry && pred x && pred y
         LargeArcTo rx ry x y -> pred rx && pred ry && pred x && pred y
         Close -> True
+
+isPoints pred points =
+        List.all (\(x,y) -> pred x && pred y) points
 
 isColor pred color =
     case color of
@@ -2067,6 +2076,8 @@ map2 fn colorFn prev prop =
                     prop
 
 
+map2Points fn points points2 = List.map2 (\(x,y) (x1,y1) -> (fn x x1, fn y y1)) points points2
+map3Points fn points points2 points3 = List.map3 (\(x,y) (x1,y1) (x2,y2) -> (fn x x1 x2, fn y y1 y2)) points points2 points3
 
 map2Cmd : (a -> b -> b) -> PathCommand a -> PathCommand b -> PathCommand b
 map2Cmd fn cmd cmd2 =
@@ -2103,37 +2114,37 @@ map2Cmd fn cmd cmd2 =
             case cmd2 of
                 VerticalTo a2 -> VerticalTo (fn a a2)
                 _ -> cmd2
-          Curve x1 y1 x2 y2 x3 y3 ->
+          Curve points ->
             case cmd2 of
-                Curve x1' y1' x2' y2' x3' y3' -> Curve (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2') (fn x3 x3') (fn y3 y3')
+                Curve points2 -> Curve (map2Points fn points points2)
                 _ -> cmd2
-          CurveTo x1 y1 x2 y2 x3 y3 ->
+          CurveTo points ->
             case cmd2 of
-                Curve x1' y1' x2' y2' x3' y3' -> CurveTo (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2') (fn x3 x3') (fn y3 y3')
+                Curve points2 -> CurveTo (map2Points fn points points2)
                 _ -> cmd2
-          Quadratic x1 y1 x2 y2 ->
+          Quadratic points ->
             case cmd2 of
-                Quadratic x1' y1' x2' y2' -> Quadratic (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                Quadratic points2 -> Quadratic (map2Points fn points points2)
                 _ -> cmd2
-          QuadraticTo x1 y1 x2 y2 ->
+          QuadraticTo points ->
             case cmd2 of
-                QuadraticTo x1' y1' x2' y2' -> QuadraticTo (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                QuadraticTo points2 -> QuadraticTo (map2Points fn points points2)
                 _ -> cmd2
-          SmoothQuadratic x y ->
+          SmoothQuadratic points ->
             case cmd2 of
-                SmoothQuadratic x2 y2 -> SmoothQuadratic (fn x x2) (fn y y2)
+                SmoothQuadratic points2 -> SmoothQuadratic (map2Points fn points points2)
                 _ -> cmd2
-          SmoothQuadraticTo x y ->
+          SmoothQuadraticTo points ->
             case cmd2 of
-              SmoothQuadraticTo x2 y2 -> SmoothQuadraticTo (fn x x2) (fn y y2)
+              SmoothQuadraticTo points2 -> SmoothQuadraticTo (map2Points fn points points2)
               _ -> cmd2
-          Smooth x1 y1 x2 y2 ->
+          Smooth points ->
             case cmd2 of
-                Smooth x1' y1' x2' y2' -> Smooth (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                Smooth points2 -> Smooth (map2Points fn points points2)
                 _ -> cmd2
-          SmoothTo x1 y1 x2 y2 ->
+          SmoothTo points ->
             case cmd2 of
-                SmoothTo x1' y1' x2' y2' -> SmoothTo (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                SmoothTo points2 -> SmoothTo (map2Points fn points points2)
                 _ -> cmd2
           Arc rx ry x y ->
             case cmd2 of
@@ -2918,75 +2929,75 @@ map3Cmd fn cmd cmd2 cmd3 =
                           _ -> cmd3
                   _ -> cmd3
 
-          Curve a1 b1 c1 d1 e1 f1 ->
+          Curve points1 ->
               case cmd2 of
-                  Curve a2 b2 c2 d2 e2 f2 ->
+                  Curve points2 ->
                       case cmd3 of
-                          Curve a3 b3 c3 d3 e3 f3 ->
-                              Curve (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3) (fn e1 e2 e3) (fn f1 f2 f3)
+                          Curve points3 ->
+                              Curve (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          CurveTo a1 b1 c1 d1 e1 f1 ->
+          CurveTo points1 ->
               case cmd2 of
-                  CurveTo a2 b2 c2 d2 e2 f2 ->
+                  CurveTo points2 ->
                       case cmd3 of
-                          CurveTo a3 b3 c3 d3 e3 f3 ->
-                              CurveTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3) (fn e1 e2 e3) (fn f1 f2 f3)
+                          CurveTo points3 ->
+                              CurveTo (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          Quadratic a1 b1 c1 d1 ->
+          Quadratic points1 ->
               case cmd2 of
-                  Quadratic a2 b2 c2 d2 ->
+                  Quadratic points2 ->
                       case cmd3 of
-                          Quadratic a3 b3 c3 d3 ->
-                              Quadratic (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          Quadratic points3 ->
+                              Quadratic (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          QuadraticTo a1 b1 c1 d1 ->
+          QuadraticTo points1 ->
               case cmd2 of
-                  QuadraticTo a2 b2 c2 d2 ->
+                  QuadraticTo points2 ->
                       case cmd3 of
-                          QuadraticTo a3 b3 c3 d3 ->
-                              QuadraticTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          QuadraticTo points3 ->
+                              QuadraticTo (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          SmoothQuadratic a1 b1 ->
+          SmoothQuadratic points1 ->
               case cmd2 of
-                  SmoothQuadratic a2 b2 ->
+                  SmoothQuadratic points2 ->
                       case cmd3 of
-                          SmoothQuadratic a3 b3 ->
-                              SmoothQuadratic (fn a1 a2 a3) (fn b1 b2 b3)
+                          SmoothQuadratic points3 ->
+                              SmoothQuadratic (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          SmoothQuadraticTo a1 b1 ->
+          SmoothQuadraticTo points1 ->
               case cmd2 of
-                  SmoothQuadraticTo a2 b2 ->
+                  SmoothQuadraticTo points2 ->
                       case cmd3 of
-                          SmoothQuadraticTo a3 b3 ->
-                              SmoothQuadraticTo (fn a1 a2 a3) (fn b1 b2 b3)
+                          SmoothQuadraticTo points3 ->
+                              SmoothQuadraticTo (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          Smooth a1 b1 c1 d1 ->
+          Smooth points1 ->
               case cmd2 of
-                  Smooth a2 b2 c2 d2 ->
+                  Smooth points2 ->
                       case cmd3 of
-                          Smooth a3 b3 c3 d3 ->
-                              Smooth (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          Smooth points3 ->
+                              Smooth (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 
-          SmoothTo a1 b1 c1 d1 ->
+          SmoothTo points1 ->
               case cmd2 of
-                  SmoothTo a2 b2 c2 d2 ->
+                  SmoothTo points2 ->
                       case cmd3 of
-                          SmoothTo a3 b3 c3 d3 ->
-                              SmoothTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          SmoothTo points3 ->
+                              SmoothTo (map3Points fn points1 points2 points3)
                           _ -> cmd3
                   _ -> cmd3
 

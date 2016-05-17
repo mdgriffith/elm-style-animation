@@ -145,14 +145,14 @@ type PathCommand a
     | HorizontalTo a
     | Vertical a
     | VerticalTo a
-    | Curve a a a a a a
-    | CurveTo a a a a a a
-    | Quadratic a a a a
-    | QuadraticTo a a a a
-    | SmoothQuadratic a a
-    | SmoothQuadraticTo a a
-    | Smooth a a a a
-    | SmoothTo a a a a
+    | Curve (List (a,a))
+    | CurveTo (List (a,a))
+    | Quadratic (List (a,a))
+    | QuadraticTo (List (a,a))
+    | SmoothQuadratic (List (a,a))
+    | SmoothQuadraticTo (List (a,a))
+    | Smooth (List (a,a))
+    | SmoothTo (List (a,a))
     | Arc a a a a
     | ArcTo a a a a
     | LargeArc a a a a
