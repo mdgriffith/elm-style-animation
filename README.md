@@ -3,6 +3,8 @@
 
 A library to simplify creating html and svg animations in elm. My focus was to create something I could use as a UI designer to prototype animations quickly, accurately, and without sneaky errors.  
 
+__Note__ - elm-style-aniamtion is for Elm 0.17 only at the moment.  If you previously had code using elm-html-animation, some syntax has changed.  If enough people ask me, I'll write up a guide to switching from elm-html-animation to elm-style-animation.
+
   1. Showing a menu on hover - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SideMenu.elm)
   2. Chaining Keyframes - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Chaining.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Chaining.elm)
   3. Updating based on Current Style.
