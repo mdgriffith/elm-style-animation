@@ -1,13 +1,13 @@
-module Main exposing (..) 
+module Main exposing (..)
 
-import Time exposing (second)
 import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import AnimationFrame
+import Time exposing (second)
 import Style
 import Style.Properties exposing (..)
-import AnimationFrame
 
 
 type alias Model =

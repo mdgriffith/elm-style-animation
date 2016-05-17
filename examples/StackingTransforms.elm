@@ -1,7 +1,5 @@
 module Main exposing (..)
 
---where
-
 import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)

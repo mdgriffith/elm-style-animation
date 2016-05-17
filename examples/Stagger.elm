@@ -1,7 +1,5 @@
 module Main exposing (..)
 
---where
-
 import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -85,8 +83,8 @@ update action model =
                 | widgets =
                     List.map
                         (\widget ->
-                            { widget 
-                                | style = Style.tick time widget.style 
+                            { widget
+                                | style = Style.tick time widget.style
                             }
                         )
                         model.widgets

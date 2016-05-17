@@ -1,13 +1,21 @@
-module Style.Spring.Presets exposing (SpringProps, noWobble, gentle, wobbly, stiff) --where
+module Style.Spring.Presets exposing (SpringProps, noWobble, gentle, wobbly, stiff)
 
 
+{-|
+
+@docs SpringProps, noWobble, gentle, wobbly, stiff
+
+-}
+
+{-| A type for spring properties, stiffness and damping.
+-}
 type alias SpringProps =
     { stiffness : Float
     , damping : Float
     }
 
 
-{-| A spring preset.  Probably should be your initial goto for using springs.
+{-| A spring preset.
 -}
 noWobble : SpringProps
 noWobble =

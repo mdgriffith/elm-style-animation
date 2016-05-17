@@ -1,8 +1,8 @@
-module Style exposing (Animation, init, update, render, renderAttr, animate, queue, on, delay, duration, easing, spring, andThen, set, tick, to) --where
+module Style exposing (Animation, init, update, render, renderAttr, animate, queue, on, delay, duration, easing, spring, andThen, set, tick, to)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
-The easiest way to get started with this library is to check out the examples that are included with the [source code](https://github.com/mdgriffith/elm-html-animation).
+The easiest way to get started with this library is to check out the examples that are included with the [source code](https://github.com/mdgriffith/elm-style-animation).
 
 Once you have the basic structure of how to use this library, you can refer to this documentation to fill any gaps.
 
@@ -11,29 +11,19 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation
 
 # Starting an animation
-@docs animate, queue, stagger
+@docs animate, queue
 
 # Creating animations
 @docs delay, spring, duration, easing, andThen
 
 # Animating Properties
-
-These functions specify the value for a Property.
-
-After taking an argument, these functions have `Float -> Float -> Float` as their signature.
-This can be understood as `ExistingStyleValue -> CurrentTime -> NewStyleValue`, where CurrentTime is between 0 and 1.
-
-@docs to, set
-
+@docs to, set, update
 
 # Render a Animation into CSS or as SVG attributes
 @docs render, renderAttr
 
-# Setting the starting style
+# Set the starting style
 @docs init
-
-# Update a Style
-@docs update
 
 # Managing Commands
 @docs on, tick
@@ -47,7 +37,8 @@ import Color
 import Style.PropertyHelpers exposing (Style, emptyEasing, Static)
 import Style.Spring as Spring
 import Style.Spring.Presets
-import Style.Core as Core 
+import Style.Core as Core
+import Svg exposing (Attribute)
 
 
 {-| An Animation of CSS properties.
@@ -159,12 +150,12 @@ spring spring action =
 
 
 
-{-| Update a style based on it's previous value
+{-| Update a style based on it's previous value.
 
-     Style.animate 
-          |> Style.update 
-              (\prev =
-                  case prev of 
+     Style.animate
+          |> Style.update
+              (\index prev =
+                  case prev of
                     Cx cx ->
                         Cx (cx + 1)
 
@@ -174,6 +165,11 @@ spring spring action =
                     _ -> prev
               )
           |> Style.on model.style
+
+`index` is the number of times that property has occurred in the stack.
+This can be useful when stacking transforms and you only want to update the 2nd `Rotate` in the stack.
+Refer to the [stacking transforms example](https://github.com/mdgriffith/elm-style-animation) for more information.
+
 -}
 update : (Int -> Static -> Static) -> PreAction -> PreAction
 update styleUpdate action =
@@ -190,7 +186,7 @@ update styleUpdate action =
             )
 
 
-{-| Apply an update to a Animation model. 
+{-| Apply an update to a Animation model.
 
      Style.animate
          |> Style.duration (0.4*second)
@@ -204,7 +200,7 @@ update styleUpdate action =
 on : Animation -> PreAction -> Animation
 on (A model) preaction =
     let
-        action = 
+        action =
             preaction.action
                 <| List.map applyKeyframeOptions preaction.frames
     in
@@ -304,13 +300,13 @@ applyKeyframeOptions options =
                             , easing = withDuration
                         }
             in
-                { prop 
+                { prop
                     | current = Style.PropertyHelpers.update addOptions prop.current
 
-                } 
-                
+                }
 
-        newProperties = 
+
+        newProperties =
             List.map applyOpt frame.properties
     in
         { frame | properties = newProperties }
@@ -333,8 +329,8 @@ applyKeyframeOptions options =
 
 -}
 set : Style -> PreAction -> PreAction
-set staticProps action = 
-    let 
+set staticProps action =
+    let
         actionWithProps = to staticProps action
     in
         updateOrCreate actionWithProps
@@ -345,7 +341,7 @@ set staticProps action =
                 }
             )
 
-  
+
 
 
 {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
@@ -425,8 +421,8 @@ For example, to cycle through colors, we'd use the following:
 -}
 andThen : PreAction -> PreAction
 andThen preaction =
-        { preaction 
-            | frames = preaction.frames ++ [ emptyKeyframeWithOptions ] 
+        { preaction
+            | frames = preaction.frames ++ [ emptyKeyframeWithOptions ]
         }
 
 
@@ -471,12 +467,12 @@ to sty action =
                 sty
 
         dynamicProperties =
-            List.map 
-                (\prop -> 
+            List.map
+                (\prop ->
                     { target = prop
                     , current = Style.PropertyHelpers.toDynamic prop
                     }
-                ) 
+                )
                 deduped
 
     in
@@ -510,9 +506,10 @@ render (A model) =
 
 {-| Render into svg attributes.
 
-    div (Style.renderAttr widget.style) [ ]
+    polygon (Style.renderAttr widget.style) [ ]
 
 -}
+renderAttr : Animation -> List (Attribute msg)
 renderAttr (A model) =
     case List.head model.frames of
         Nothing ->
@@ -520,6 +517,3 @@ renderAttr (A model) =
 
         Just frame ->
             Style.PropertyHelpers.renderAttr <| Core.bake frame model.previous
-
-
-

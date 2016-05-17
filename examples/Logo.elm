@@ -1,115 +1,208 @@
+module Main exposing (..)
+
 import Time exposing (second)
 import Html.App
 import Html exposing (div, Html)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
-
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-
 import AnimationFrame
-
 import Style
-import Style.Svg.Properties as Svg
-import Style.Html.Properties exposing (..)
+import Style.Properties exposing (..)
+import Color exposing (purple, green, rgb)
 
 
-type alias Model = 
-            { style : Style.Animation 
-            }
-
-type Action = Show 
-            | Hide
-            | Animate Float
+type alias Model =
+    { styles : List Style.Animation
+    , index : Int
+    }
 
 
-styles = 
-  { left =
-       Style.svg
-        [ Svg.Cx 100
-        , Svg.Cy 100
+type Action
+    = EverybodySwitch
+    | Animate Float
+
+
+styles =
+    { left =
+        [ Cx 100
+        , Cy 100
+        , R 100
+        , Fill purple
         ]
-  , right =
-       Style.svg
-        [ Svg.Cx 200
-        , Svg.Cy 200
+    , right =
+        [ Cx 200
+        , Cy 200
+        , R 150
+        , Fill green
         ]
-  }
+    , start =
+        [ Points
+            <| alignStartingPoint
+                [ ( 8.867, 0 )
+                , ( 79.241, 70.375 )
+                , ( 232.213, 70.375 )
+                , ( 161.838, 0 )
+                ]
+        , Fill <| rgb 127 209 59
+        ]
+    , next =
+        [ Points
+            <| alignStartingPoint
+                [ ( 161.649, 152.782 )
+                , ( 231.514, 82.916 )
+                , ( 91.783, 82.916 )
+                ]
+        , Fill <| rgb 240 173 0
+        ]
+    }
 
+
+palette =
+    { orange = rgb 240 173 0
+    , green = rgb 127 209 59
+    , lavender = rgb 90 99 120
+    , blue = rgb 96 181 204
+    }
+
+
+polygons =
+    [ [ Points
+            <| alignStartingPoint
+                [ ( 161.649, 152.782 )
+                , ( 231.514, 82.916 )
+                , ( 91.783, 82.916 )
+                ]
+      , Fill palette.orange
+      ]
+    , [ Points
+            <| alignStartingPoint
+                [ ( 8.867, 0 )
+                , ( 79.241, 70.375 )
+                , ( 232.213, 70.375 )
+                , ( 161.838, 0 )
+                ]
+      , Fill palette.green
+      ]
+    , [ Points
+            <| alignStartingPoint
+                [ ( 323.298, 143.724 )
+                , ( 323.298, 0 )
+                , ( 179.573, 0 )
+                ]
+      , Fill palette.blue
+      ]
+    , [ Points
+            <| alignStartingPoint
+                [ ( 152.781, 161.649 )
+                , ( 0, 8.868 )
+                , ( 0, 314.432 )
+                ]
+      , Fill palette.lavender
+      ]
+    , [ Points
+            <| alignStartingPoint
+                [ ( 255.522, 246.655 )
+                , ( 323.298, 314.432 )
+                , ( 323.298, 178.879 )
+                ]
+      , Fill palette.orange
+      ]
+    , [ Points
+            <| alignStartingPoint
+                [ ( 161.649, 170.517 )
+                , ( 8.869, 323.298 )
+                , ( 314.43, 323.298 )
+                ]
+      , Fill palette.blue
+      ]
+    ]
 
 
 update : Action -> Model -> ( Model, Cmd Action )
 update action model =
-  case action of
-    Show ->
-      ( { model
-            | style =  
-                Style.animateTo 
-                    styles.left
-                    model.style
-      }
-      , Cmd.none
-      )
+    case action of
+        EverybodySwitch ->
+            let
+                wrappedIndex =
+                    if List.length model.styles < model.index then
+                        model.index - List.length model.styles
+                    else
+                        model.index
 
-    Hide ->
-        ( { model
-              | style =  
-                  Style.animateTo
-                     styles.right
-                     model.style 
-          }
-        , Cmd.none
-        )
+                newStyles =
+                    (List.drop wrappedIndex polygons) ++ (List.take wrappedIndex polygons)
+            in
+                ( { model
+                    | index = wrappedIndex + 1
+                    , styles =
+                        List.map3
+                            (\i style newStyle ->
+                                Style.animate
+                                    |> Style.delay (toFloat i * 0.05 * second)
+                                    |> Style.to newStyle
+                                    |> Style.on style
+                            )
+                            [0..List.length model.styles]
+                            model.styles
+                            newStyles
+                  }
+                , Cmd.none
+                )
 
- 
-    Animate time ->
-      ( { model 
-            | style = Style.tick time model.style 
-        }
-      , Cmd.none)
+        Animate time ->
+            ( { model
+                | styles = List.map (\s -> Style.tick time s) model.styles
+              }
+            , Cmd.none
+            )
 
 
-view :  Model -> Html Action
+view : Model -> Html Action
 view model =
-    div [ onMouseEnter Show
-        , onMouseLeave Hide
-        , Attr.style [("margin", "200px auto"), ("width", "500px"), ("height", "500px")]
+    div
+        [ onClick EverybodySwitch
+        , Attr.style [ ( "margin", "200px auto" ), ( "width", "500px" ), ( "height", "500px" ) ]
         ]
         [ svg
-            [ version "1.1", x "0", y "0", viewBox "0 0 323.141 322.95"
+            [ version "1.1"
+            , x "0"
+            , y "0"
+            , viewBox "0 0 323.141 322.95"
             ]
-            [ polygon [ fill "#F0AD00", points "161.649,152.782 231.514,82.916 91.783,82.916" ] []
-            , polygon [ fill "#7FD13B", points "8.867,0 79.241,70.375 232.213,70.375 161.838,0" ] []
-            , rect
-                [ fill "#7FD13B", x "192.99", y "107.392", width "107.676", height "108.167"
-                , transform "matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
-                ]
-                []
-            , polygon [ fill "#60B5CC", points "323.298,143.724 323.298,0 179.573,0" ] []
-            , polygon [ fill "#5A6378", points "152.781,161.649 0,8.868 0,314.432" ] []
-            , polygon [ fill "#F0AD00", points "255.522,246.655 323.298,314.432 323.298,178.879" ] []
-            , polygon [ fill "#60B5CC", points "161.649,170.517 8.869,323.298 314.43,323.298" ] []
-            , circle ([ r "75" ] ++ Style.renderAttr model.style) []
-            ]
+            <| (rect
+                    [ fill "#7FD13B"
+                    , x "192.99"
+                    , y "107.392"
+                    , width "107.676"
+                    , height "108.167"
+                    , transform "matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
+                    ]
+                    []
+               )
+            :: (List.map (\poly -> polygon (Style.renderAttr poly) []) model.styles)
         ]
+
 
 subscriptions : Model -> Sub Action
 subscriptions model =
-  AnimationFrame.times Animate
-
+    AnimationFrame.times Animate
 
 
 init : ( Model, Cmd Action )
-init = ( { style = Style.init styles.left }
-       , Cmd.none )
-
+init =
+    ( { styles = List.map Style.init polygons
+      , index = 1
+      }
+    , Cmd.none
+    )
 
 
 main =
-  Html.App.program
-    { init = init
-    , view = view
-    , update = update
-    , subscriptions = subscriptions
-    }
-
+    Html.App.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }

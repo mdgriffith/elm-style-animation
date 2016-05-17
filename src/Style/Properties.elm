@@ -1,9 +1,18 @@
 module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), alignStartingPoint)
 
---where
+
+{-|
+All animatable properties.  
+
+@docs Property
+
+@docs Length, Angle, DisplayMode
+
+@docs alignStartingPoint
+
+-}
 
 import String exposing (concat)
-
 import Color as ElmColor
 
 
@@ -122,33 +131,23 @@ type DisplayMode
 {-|
 -}
 alignStartingPoint : List (Float, Float) -> List (Float, Float)
-alignStartingPoint points = 
+alignStartingPoint points =
     let
         sums = List.map (\(x,y) -> x + y) points
         maybeMin = List.minimum sums
 
-        indexOfLowestPoint = 
-            case maybeMin of 
+        indexOfLowestPoint =
+            case maybeMin of
                 Nothing ->
                     Nothing
                 Just min ->
-                    List.head  
-                        <| List.filterMap identity 
+                    List.head
+                        <| List.filterMap identity
                         <| List.indexedMap (\i val -> if val == min then Just i else Nothing) sums
-                
+
 
     in
-        case indexOfLowestPoint of 
+        case indexOfLowestPoint of
             Nothing -> points
             Just i ->
                 (List.drop i points) ++ (List.take i points)
-
-
-
-     
-
-
-
-
-
-

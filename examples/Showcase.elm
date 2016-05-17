@@ -1,6 +1,6 @@
-module Main exposing (..) --where
+module Main exposing (..) 
 
-import Time exposing (Time, second)
+import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -8,13 +8,9 @@ import Html.Lazy
 import Style
 import Style.Properties exposing (..)
 import Style.Spring.Presets
-import Html.App as Html
 import AnimationFrame
 import Color exposing (rgb, rgba)
-
-
---import Easing exposing (easeInBounce, easeInSine, easeOutSine)
-
+import Time exposing (Time, second)
 
 type alias Model =
     { widgets : List Widget }
