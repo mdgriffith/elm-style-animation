@@ -1,4 +1,4 @@
-module Style.PropertyHelpers exposing (Static, Dynamic, Physics, Style,  baseName, is, id, toStatic, toDynamic, update, updateFrom, updateOver, render, renderAttr, emptyEasing, matchPoints) --where
+module Style.PropertyHelpers exposing (Static, Dynamic, Physics, Style,  baseName, name, is, id, toStatic, toDynamic, update, updateFrom, updateOver, render, renderAttr, emptyEasing, matchPoints) --where
 
 import Style.Properties exposing (..)
 import Style.Spring as Spring
@@ -806,7 +806,7 @@ baseName prop =
 
         Perspective _ ->
             "perspective"
-            
+
         X _ -> "x"
         Y _ -> "y"
         Cx _ -> "cx"
