@@ -1,12 +1,13 @@
-module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), alignStartingPoint)
-
+module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), PathCommand (..), alignStartingPoint)
 
 {-|
-All animatable properties.  
+All animatable properties.
 
 @docs Property
 
 @docs Length, Angle, DisplayMode
+
+@docs PathCommands
 
 @docs alignStartingPoint
 
@@ -82,7 +83,7 @@ type Property a color
     | R a
     | Rx a
     | Ry a
-    | D a
+    | D (List (PathCommand a))
     | Points (List (a,a))
     | Fill color
     | Stroke color
@@ -128,7 +129,40 @@ type DisplayMode
     | InlineFlex
     | ListItem
 
-{-|
+
+
+{-| Describe a path.  To be used in conjunction with the D property for styling svg.
+
+`To` versions of the commands are absolute, while normal versions are relative.
+
+-}
+type PathCommand a
+    = Move a a
+    | MoveTo a a
+    | Line a a
+    | LineTo a a
+    | Horizontal a
+    | HorizontalTo a
+    | Vertical a
+    | VerticalTo a
+    | Curve a a a a a a
+    | CurveTo a a a a a a
+    | Quadratic a a a a
+    | QuadraticTo a a a a
+    | SmoothQuadratic a a
+    | SmoothQuadraticTo a a
+    | Smooth a a a a
+    | SmoothTo a a a a
+    | Arc a a a a
+    | ArcTo a a a a
+    | LargeArc a a a a
+    | LargeArcTo a a a a
+    | Close
+
+
+{-| Given two lists of coordinates, rotate the list so that the lowest coordinate is first.
+
+This is useful to align polygon coordinates so that they can morph smoothely into each other.
 -}
 alignStartingPoint : List (Float, Float) -> List (Float, Float)
 alignStartingPoint points =

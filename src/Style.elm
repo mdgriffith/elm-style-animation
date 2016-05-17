@@ -53,6 +53,13 @@ type alias KeyframeWithOptions =
     , spring : Maybe Spring.Model
     }
 
+emptyKeyframeWithOptions =
+    { frame = Core.emptyKeyframe
+    , duration = Nothing
+    , easing = Nothing
+    , spring = Nothing
+    }
+
 
 {-| A Temporary type that is used in constructing actions.
 -}
@@ -61,28 +68,6 @@ type alias PreAction =
     , action : List Core.Keyframe -> Core.Action
     }
 
---type alias Action = Core.Action
-
-
-
---| Actions to be run on an animation.
---You won't be constructing this type directly, though it may show up in your type signatures.
-
---To start animations you'll be using the `animate` and `queue`
-
---type Action
---    = Staggered (Float -> Float -> Action)
---    | Unstaggered PreAction
---    | Internal Core.Action
-
-
-
-emptyKeyframeWithOptions =
-    { frame = Core.emptyKeyframe
-    , duration = Nothing
-    , easing = Nothing
-    , spring = Nothing
-    }
 
 
 {-| Create an initial style for your init model.
@@ -125,7 +110,7 @@ You'll need to provide both a stiffness and a dampness to this function.
 __Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
 
      Style.animate
-         -- |> Style.spring Style.noWobble -- set using a UI preset
+      -- |> Style.spring Style.noWobble -- set using a UI preset
          |> Style.spring
                 { stiffness = 400
                 , damping = 28

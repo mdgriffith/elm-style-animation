@@ -4,8 +4,9 @@ import Style.Properties exposing (..)
 import Style.Spring as Spring
 import Color as ElmColor
 import Time exposing (Time, second)
-import String 
+import String
 import Svg.Attributes as Svg
+import Svg exposing (Attribute)
 
 {-| Represent a CSS style as a list of style properties with concrete values.
 -}
@@ -19,7 +20,6 @@ type alias Physics =
     , easing : Maybe Easing
     }
 
-
 type alias Easing =
     { ease : Float -> Float
     , counterForce : Spring.Model
@@ -27,6 +27,11 @@ type alias Easing =
     , duration : Time
     }
 
+type DynamicColor =
+        RGBA Physics Physics Physics Physics
+
+type alias Dynamic = Property Physics DynamicColor
+type alias Static = Property Float ElmColor.Color
 
 emptyPhysics : Physics
 emptyPhysics =
@@ -64,21 +69,16 @@ defaultEasing x =
     (1 - cos (pi * x)) / 2
 
 
-type DynamicColor =
-        RGBA Physics Physics Physics Physics
+
 
 emptyDynamicColor : DynamicColor
 emptyDynamicColor = RGBA emptyPhysics emptyPhysics emptyPhysics emptyPhysics
-
-type alias Dynamic = Property Physics DynamicColor
-type alias Static = Property Float ElmColor.Color 
-
 
 
 {-| Render style properties into their css values.
 
 -}
---render : List (Property Float) -> List ( String, String )
+render : List (Property Float ElmColor.Color) -> List ( String, String )
 render styleProps =
     let
         rendered =
@@ -105,11 +105,11 @@ render styleProps =
     in
         List.concatMap prefix (props ++ combinedTransforms)
 
-
+renderAttr : List (Property Float ElmColor.Color) -> List (Attribute msg)
 renderAttr styles =
     let
         toAttr prop =
-            case prop of 
+            case prop of
                 X a -> Just <| Svg.x (toString a)
                 Y a -> Just <| Svg.y (toString a)
                 Cx a -> Just <| Svg.cx (toString a)
@@ -117,7 +117,7 @@ renderAttr styles =
                 R a -> Just <| Svg.r (toString a)
                 Rx a -> Just <| Svg.rx (toString a)
                 Ry a -> Just <| Svg.ry (toString a)
-                D a -> Just <| Svg.d (toString a)
+                D commands -> Just <| Svg.d <| renderPath commands
                 Points a -> Just <| Svg.points <| String.concat <| List.intersperse " " <| List.map (\pair -> toString (fst pair) ++ "," ++ toString (snd pair) ) a
                 Width a _ -> Just <| Svg.width (toString a)
                 Height a _ -> Just <| Svg.height (toString a)
@@ -126,6 +126,56 @@ renderAttr styles =
                 _ -> Nothing
     in
         List.filterMap toAttr styles
+
+
+renderPath : List (PathCommand Float) -> String
+renderPath commands =
+    let
+      renderCommand cmd =
+          case cmd of
+              Move x y -> "m " ++ toString x ++ ","  ++ toString y
+              MoveTo x y -> "M " ++ toString x ++ ","  ++ toString y
+              Line x y -> "l " ++ toString x ++ ","  ++ toString y
+              LineTo x y -> "L " ++ toString x ++ ","  ++ toString y
+              Horizontal a -> "h " ++ toString a
+              HorizontalTo a -> "H " ++ toString a
+              Vertical a ->  "v " ++ toString a
+              VerticalTo a ->  "V " ++ toString a
+              Curve x1 y1 x2 y2 x3 y3 -> "c " ++ toString x1 ++ ","  ++ toString y1
+                                       ++ " " ++ toString x2 ++ ","  ++ toString y2
+                                       ++ " " ++ toString x3 ++ ","  ++ toString y3
+              CurveTo x1 y1 x2 y2 x3 y3 -> "C " ++ toString x1 ++ ","  ++ toString y1
+                                       ++ " " ++ toString x2 ++ ","  ++ toString y2
+                                       ++ " " ++ toString x3 ++ ","  ++ toString y3
+              Quadratic x1 y1 x2 y2 -> "q " ++ toString x1 ++ ","  ++ toString y1
+                                     ++ " " ++ toString x2 ++ ","  ++ toString y2
+              QuadraticTo x1 y1 x2 y2 -> "Q " ++ toString x1 ++ ","  ++ toString y1
+                                       ++ " " ++ toString x2 ++ ","  ++ toString y2
+              SmoothQuadratic x y -> "t " ++ toString x ++ ","  ++ toString y
+              SmoothQuadraticTo x y -> "T " ++ toString x ++ ","  ++ toString y
+              Smooth x1 y1 x2 y2 -> "s " ++ toString x1 ++ ","  ++ toString y1
+                                  ++ " " ++ toString x2 ++ ","  ++ toString y2
+              SmoothTo x1 y1 x2 y2 -> "S " ++ toString x1 ++ ","  ++ toString y1
+                                    ++ " " ++ toString x2 ++ ","  ++ toString y2
+              Arc rx ry x y -> "a " ++ toString rx ++ ","  ++ toString ry
+                                    ++ "0 0 0"
+                                    ++ toString x ++ ","  ++ toString y
+              ArcTo rx ry x y -> "A " ++ toString rx ++ ","  ++ toString ry
+                                      ++ "0 0 0"
+                                      ++ toString x ++ ","  ++ toString y
+              LargeArc rx ry x y -> "a " ++ toString rx ++ ","  ++ toString ry
+                                         ++ "0 1 0"
+                                         ++ toString x ++ ","  ++ toString y
+              LargeArcTo rx ry x y -> "A " ++ toString rx ++ ","  ++ toString ry
+                                         ++ "0 1 0"
+                                         ++ toString x ++ ","  ++ toString y
+              Close -> "z"
+    in
+      String.concat <| List.intersperse " " <| List.map renderCommand commands
+
+
+
+
 
 
 name : Property a b -> String
@@ -301,9 +351,9 @@ name styleProp =
         Rx _ -> "rx"
         Ry _ -> "ry"
         D _ -> "d"
-        Points _ -> "points" 
-        Fill _ -> "fill" 
-        Stroke _ -> "stroke" 
+        Points _ -> "points"
+        Fill _ -> "fill"
+        Stroke _ -> "stroke"
 
 
 
@@ -536,16 +586,10 @@ value prop =
             R a -> toString a
             Rx a -> toString a
             Ry a -> toString a
-            D a -> toString a
+            D cmds -> renderPath cmds
             Points pts -> renderList pts
             Fill color -> renderColor color
             Stroke color -> renderColor color
-
-
-
-
-
-
 
 renderColor : ElmColor.Color -> String
 renderColor color =
@@ -944,7 +988,7 @@ id prop =
         Rx _ -> "rx"
         Ry _ -> "ry"
         D _ -> "d"
-        Points _ -> "points" 
+        Points _ -> "points"
         Fill _ -> "fill"
         Stroke _ -> "stroke"
 
@@ -1049,20 +1093,20 @@ toStatic prop = map (\phys -> phys.physical.position) toStaticColor prop
 
 toStaticColor : DynamicColor -> ElmColor.Color
 toStaticColor dynamic =
-        case dynamic of 
+        case dynamic of
             RGBA r g b a ->
                 ElmColor.rgba (round r.physical.position) (round g.physical.position) (round b.physical.position) (a.physical.position)
 
 
 toDynamic prop = map (\_ -> emptyPhysics) (\_ -> emptyDynamicColor) prop
 --type alias Dynamic = Property Physics DynamicColor
---type alias Static = Property Float Color 
+--type alias Static = Property Float Color
 
 update : (Physics -> Physics) -> Dynamic -> Dynamic
-update fn prop = 
-                map fn 
-                    (\dynamicColor -> 
-                        case dynamicColor of 
+update fn prop =
+                map fn
+                    (\dynamicColor ->
+                        case dynamicColor of
                             RGBA r g b a ->
                                 RGBA (fn r) (fn g) (fn b) (fn a)
                     )
@@ -1241,27 +1285,51 @@ map fn colorFn prop =
         R a -> R (fn a)
         Rx a -> Rx (fn a)
         Ry a -> Ry (fn a)
-        D a -> D (fn a)
+        D cmds -> D (List.map (mapCmd fn) cmds)
         Points a -> Points <| List.map (\(x, y) -> (fn x, fn y)) a
 
+        Fill color -> Fill <| colorFn color
+        Stroke color -> Stroke <| colorFn color
 
-        Fill color -> Fill <| colorFn color 
-        Stroke color -> Stroke <| colorFn color 
+mapCmd : (a -> b) -> PathCommand a -> PathCommand b
+mapCmd fn cmd =
+      case cmd of
+          Move x y -> Move (fn x) (fn y)
+          MoveTo x y -> MoveTo (fn x) (fn y)
+          Line x y -> Line (fn x) (fn y)
+          LineTo x y -> LineTo (fn x) (fn y)
+          Horizontal a -> Horizontal (fn a)
+          HorizontalTo a -> HorizontalTo (fn a)
+          Vertical a ->  Vertical (fn a)
+          VerticalTo a ->  VerticalTo (fn a)
+          Curve x1 y1 x2 y2 x3 y3 -> Curve (fn x1) (fn y1) (fn x2) (fn y2) (fn x3) (fn y3)
+          CurveTo x1 y1 x2 y2 x3 y3 -> CurveTo (fn x1) (fn y1) (fn x2) (fn y2) (fn x3) (fn y3)
+          Quadratic x1 y1 x2 y2 -> Quadratic (fn x1) (fn y1) (fn x2) (fn y2)
+          QuadraticTo x1 y1 x2 y2 -> QuadraticTo (fn x1) (fn y1) (fn x2) (fn y2)
+          SmoothQuadratic x y -> SmoothQuadratic (fn x) (fn y)
+          SmoothQuadraticTo x y -> SmoothQuadraticTo (fn x) (fn y)
+          Smooth x1 y1 x2 y2 -> Smooth (fn x1) (fn y1) (fn x2) (fn y2)
+          SmoothTo x1 y1 x2 y2 -> SmoothTo (fn x1) (fn y1) (fn x2) (fn y2)
+          Arc rx ry x y -> Arc (fn rx) (fn ry) (fn x) (fn y)
+          ArcTo rx ry x y -> ArcTo (fn rx) (fn ry) (fn x) (fn y)
+          LargeArc rx ry x y -> LargeArc (fn rx) (fn ry) (fn x) (fn y)
+          LargeArcTo rx ry x y -> LargeArcTo (fn rx) (fn ry) (fn x) (fn y)
+          Close -> Close
 
 
 
-matchPoints : Property a colorA -> Property b colorB -> Property a colorA 
+matchPoints : Property a colorA -> Property b colorB -> Property a colorA
 matchPoints points matchTo =
     case points of
         Points pts1 ->
-            case matchTo of 
+            case matchTo of
                 Points pts2 ->
                     let
                         diff = List.length pts2 - List.length pts1
                         maybeLast = List.head <| List.drop (List.length pts1 - 1) pts1
                     in
                         if diff > 0 then
-                            case maybeLast of 
+                            case maybeLast of
                                 Nothing -> points
                                 Just last ->
                                     Points <| pts1 ++ (List.repeat diff last)
@@ -1445,12 +1513,35 @@ is pred prop =
         R a -> pred a
         Rx a -> pred a
         Ry a -> pred a
-        D a -> pred a
+        D a -> List.all (isCmd pred) a
         Points a -> List.all (\(x, y) -> pred x && pred y) a
         Fill color -> isColor pred color
         Stroke color -> isColor pred color
 
 
+isCmd pred cmd =
+    case cmd of
+        Move x y -> pred x && pred y
+        MoveTo x y -> pred x && pred y
+        Line x y -> pred x && pred y
+        LineTo x y -> pred x && pred y
+        Horizontal a -> pred a
+        HorizontalTo a -> pred a
+        Vertical a -> pred a
+        VerticalTo a -> pred a
+        Curve x1 y1 x2 y2 x3 y3 -> pred x1 && pred y1 && pred x2 && pred y2 && pred x3 && pred y3
+        CurveTo x1 y1 x2 y2 x3 y3 -> pred x1 && pred y1 && pred x2 && pred y2 && pred x3 && pred y3
+        Quadratic x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
+        QuadraticTo x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
+        SmoothQuadratic x y -> pred x && pred y
+        SmoothQuadraticTo x y -> pred x && pred y
+        Smooth x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
+        SmoothTo x1 y1 x2 y2 -> pred x1 && pred y1 && pred x2 && pred y2
+        Arc rx ry x y -> pred rx && pred ry && pred x && pred y
+        ArcTo rx ry x y -> pred rx && pred ry && pred x && pred y
+        LargeArc rx ry x y -> pred rx && pred ry && pred x && pred y
+        LargeArcTo rx ry x y -> pred rx && pred ry && pred x && pred y
+        Close -> True
 
 isColor pred color =
     case color of
@@ -1461,17 +1552,18 @@ isColor pred color =
 
 updateFrom : (Physics -> Physics -> Physics) -> Dynamic -> Dynamic -> Dynamic
 updateFrom fn prev prop =
-            map2 
+            map2
                 fn
-                (\prevDColor currentDColor -> 
-                    case prevDColor of 
+                (\prevDColor currentDColor ->
+                    case prevDColor of
                         RGBA r1 g1 b1 a1 ->
-                            case currentDColor of 
+                            case currentDColor of
                                 RGBA r2 g2 b2 a2 ->
                                     RGBA (fn r1 r2) (fn g1 g2) (fn b1 b2) (fn a1 a2)
                 )
                 prev
                 prop
+
 
 
 map2 : (a -> b -> b) -> (colorA -> colorB -> colorB) -> Property a colorA -> Property b colorB -> Property b colorB
@@ -1889,7 +1981,7 @@ map2 fn colorFn prev prop =
         Matrix a1 b1 c1 x1 y1 z1 ->
             case prop of
                 Matrix a2 b2 c2 x2 y2 z2 ->
-                    Matrix 
+                    Matrix
                         (fn a1 a2)
                         (fn b1 b2)
                         (fn c1 c2)
@@ -1923,40 +2015,40 @@ map2 fn colorFn prev prop =
                 _ ->
                     prop
 
-        X a -> 
-            case prop of 
+        X a ->
+            case prop of
                 X b -> X (fn a b)
                 _ -> prop
-        Y a -> 
-            case prop of 
+        Y a ->
+            case prop of
                 Y b -> Y (fn a b)
                 _ -> prop
-        Cx a -> 
-            case prop of 
+        Cx a ->
+            case prop of
                 Cx b -> Cx (fn a b)
                 _ -> prop
-        Cy a -> 
-            case prop of 
+        Cy a ->
+            case prop of
                 Cy b -> Cy (fn a b)
                 _ -> prop
-        R a -> 
-            case prop of 
+        R a ->
+            case prop of
                 R b -> R (fn a b)
                 _ -> prop
-        Rx a -> 
-            case prop of 
+        Rx a ->
+            case prop of
                 Rx b -> Rx (fn a b)
                 _ -> prop
-        Ry a -> 
-            case prop of 
+        Ry a ->
+            case prop of
                 Ry b -> Ry (fn a b)
                 _ -> prop
-        D a -> 
-            case prop of 
-                D b -> D (fn a b)
+        D a ->
+            case prop of
+                D b -> D (List.map2 (map2Cmd fn) a b)
                 _ -> prop
-        Points a -> 
-            case prop of 
+        Points a ->
+            case prop of
                 Points b -> Points <| List.map2 (\(x1, y1) (x2, y2) -> (fn x1 x2, fn y1 y2)) a b
                 _ -> prop
 
@@ -1976,21 +2068,105 @@ map2 fn colorFn prev prop =
 
 
 
---Float -> Float -> Physics -> Physics
+map2Cmd : (a -> b -> b) -> PathCommand a -> PathCommand b -> PathCommand b
+map2Cmd fn cmd cmd2 =
+      case cmd of
+          Move x y ->
+            case cmd2 of
+                Move x2 y2 -> Move (fn x x2) (fn y y2)
+                _ -> cmd2
+          MoveTo x y ->
+            case cmd2 of
+                MoveTo x2 y2 -> MoveTo (fn x x2) (fn y y2)
+                _ -> cmd2
+          Line x y ->
+            case cmd2 of
+                Line x2 y2 -> Line (fn x x2) (fn y y2)
+                _ -> cmd2
+          LineTo x y ->
+            case cmd2 of
+                LineTo x2 y2 -> LineTo (fn x x2) (fn y y2)
+                _ -> cmd2
+          Horizontal a ->
+            case cmd2 of
+                Horizontal a2 -> Horizontal (fn a a2)
+                _ -> cmd2
+          HorizontalTo a ->
+            case cmd2 of
+                HorizontalTo a2 -> HorizontalTo (fn a a2)
+                _ -> cmd2
+          Vertical a ->
+            case cmd2 of
+                Vertical a2 -> Vertical (fn a a2)
+                _ -> cmd2
+          VerticalTo a ->
+            case cmd2 of
+                VerticalTo a2 -> VerticalTo (fn a a2)
+                _ -> cmd2
+          Curve x1 y1 x2 y2 x3 y3 ->
+            case cmd2 of
+                Curve x1' y1' x2' y2' x3' y3' -> Curve (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2') (fn x3 x3') (fn y3 y3')
+                _ -> cmd2
+          CurveTo x1 y1 x2 y2 x3 y3 ->
+            case cmd2 of
+                Curve x1' y1' x2' y2' x3' y3' -> CurveTo (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2') (fn x3 x3') (fn y3 y3')
+                _ -> cmd2
+          Quadratic x1 y1 x2 y2 ->
+            case cmd2 of
+                Quadratic x1' y1' x2' y2' -> Quadratic (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                _ -> cmd2
+          QuadraticTo x1 y1 x2 y2 ->
+            case cmd2 of
+                QuadraticTo x1' y1' x2' y2' -> QuadraticTo (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                _ -> cmd2
+          SmoothQuadratic x y ->
+            case cmd2 of
+                SmoothQuadratic x2 y2 -> SmoothQuadratic (fn x x2) (fn y y2)
+                _ -> cmd2
+          SmoothQuadraticTo x y ->
+            case cmd2 of
+              SmoothQuadraticTo x2 y2 -> SmoothQuadraticTo (fn x x2) (fn y y2)
+              _ -> cmd2
+          Smooth x1 y1 x2 y2 ->
+            case cmd2 of
+                Smooth x1' y1' x2' y2' -> Smooth (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                _ -> cmd2
+          SmoothTo x1 y1 x2 y2 ->
+            case cmd2 of
+                SmoothTo x1' y1' x2' y2' -> SmoothTo (fn x1 x1') (fn y1 y1') (fn x2 x2') (fn y2 y2')
+                _ -> cmd2
+          Arc rx ry x y ->
+            case cmd2 of
+                Arc rx' ry' x' y' -> Arc (fn rx rx') (fn ry ry') (fn x x') (fn y y')
+                _ -> cmd2
+          ArcTo rx ry x y ->
+            case cmd2 of
+                ArcTo rx' ry' x' y' -> ArcTo (fn rx rx') (fn ry ry') (fn x x') (fn y y')
+                _ -> cmd2
+          LargeArc rx ry x y ->
+            case cmd2 of
+                LargeArc rx' ry' x' y' -> LargeArc (fn rx rx') (fn ry ry') (fn x x') (fn y y')
+                _ -> cmd2
+          LargeArcTo rx ry x y ->
+            case cmd2 of
+              LargeArcTo rx' ry' x' y' -> LargeArcTo (fn rx rx') (fn ry ry') (fn x x') (fn y y')
+              _ -> cmd2
+          Close -> Close
+
 
 
 updateOver : (Float -> Float -> Physics -> Physics) -> Static -> Static -> Dynamic -> Dynamic
 updateOver fn target prev prop =
-            map3 
+            map3
                 fn
-                (\targetColor prevColor currentDColor -> 
+                (\targetColor prevColor currentDColor ->
                     let
                         t = ElmColor.toRgb targetColor
                         p = ElmColor.toRgb prevColor
-                    in 
-                        case currentDColor of 
+                    in
+                        case currentDColor of
                             RGBA r1 g1 b1 a1 ->
-                                RGBA 
+                                RGBA
                                     (fn (toFloat t.red) (toFloat p.red) r1)
                                     (fn (toFloat t.green) (toFloat p.green) g1)
                                     (fn (toFloat t.blue) (toFloat p.blue) b1)
@@ -2004,7 +2180,7 @@ updateOver fn target prev prop =
 
 {-|
 
-This could be achieved more succinctly by doing 
+This could be achieved more succinctly by doing
 
     case (target, prev, prop) of
       (Opacity a, Opacity b, Opacity c) ->
@@ -2626,7 +2802,7 @@ map3 fn colorFn target prev prop =
                 D a2 ->
                     case prop of
                         D a3 ->
-                            D (fn a1 a2 a3)
+                            D <| List.map3 (map3Cmd fn) a1 a2 a3
                         _ -> prop
 
                 _ -> prop
@@ -2637,7 +2813,7 @@ map3 fn colorFn target prev prop =
                     case prop of
                         Points props3 ->
                             Points <|
-                                List.map3 
+                                List.map3
                                     (\(x1, y1) (x2,y2) (x3,y3) ->
                                         (fn x1 x2 x3, fn y1 y2 y3)
                                     ) props1 props2 props3
@@ -2664,3 +2840,197 @@ map3 fn colorFn target prev prop =
                         _ -> prop
 
                 _ -> prop
+
+
+
+map3Cmd : (a -> b -> c -> c) -> PathCommand a -> PathCommand b -> PathCommand c -> PathCommand c
+map3Cmd fn cmd cmd2 cmd3 =
+      case cmd of
+          Move a1 b1 ->
+              case cmd2 of
+                  Move a2 b2 ->
+                      case cmd3 of
+                          Move a3 b3 ->
+                              Move (fn a1 a2 a3) (fn b1 b2 b3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          MoveTo a1 b1 ->
+              case cmd2 of
+                  MoveTo a2 b2 ->
+                      case cmd3 of
+                          MoveTo a3 b3 ->
+                              MoveTo (fn a1 a2 a3) (fn b1 b2 b3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Line a1 b1 ->
+              case cmd2 of
+                  Line a2 b2 ->
+                      case cmd3 of
+                          Line a3 b3 ->
+                              Line (fn a1 a2 a3) (fn b1 b2 b3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          LineTo a1 b1 ->
+              case cmd2 of
+                  LineTo a2 b2 ->
+                      case cmd3 of
+                          LineTo a3 b3 ->
+                              LineTo (fn a1 a2 a3) (fn b1 b2 b3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Horizontal a1 ->
+              case cmd2 of
+                  Horizontal a2 ->
+                      case cmd3 of
+                          Horizontal a3 ->
+                              Horizontal (fn a1 a2 a3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          HorizontalTo a1 ->
+              case cmd2 of
+                  HorizontalTo a2 ->
+                      case cmd3 of
+                          HorizontalTo a3 ->
+                              HorizontalTo (fn a1 a2 a3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Vertical a1 ->
+              case cmd2 of
+                  Vertical a2 ->
+                      case cmd3 of
+                          Vertical a3 ->
+                              Vertical (fn a1 a2 a3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          VerticalTo a1 ->
+              case cmd2 of
+                  VerticalTo a2 ->
+                      case cmd3 of
+                          VerticalTo a3 ->
+                              VerticalTo (fn a1 a2 a3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Curve a1 b1 c1 d1 e1 f1 ->
+              case cmd2 of
+                  Curve a2 b2 c2 d2 e2 f2 ->
+                      case cmd3 of
+                          Curve a3 b3 c3 d3 e3 f3 ->
+                              Curve (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3) (fn e1 e2 e3) (fn f1 f2 f3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          CurveTo a1 b1 c1 d1 e1 f1 ->
+              case cmd2 of
+                  CurveTo a2 b2 c2 d2 e2 f2 ->
+                      case cmd3 of
+                          CurveTo a3 b3 c3 d3 e3 f3 ->
+                              CurveTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3) (fn e1 e2 e3) (fn f1 f2 f3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Quadratic a1 b1 c1 d1 ->
+              case cmd2 of
+                  Quadratic a2 b2 c2 d2 ->
+                      case cmd3 of
+                          Quadratic a3 b3 c3 d3 ->
+                              Quadratic (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          QuadraticTo a1 b1 c1 d1 ->
+              case cmd2 of
+                  QuadraticTo a2 b2 c2 d2 ->
+                      case cmd3 of
+                          QuadraticTo a3 b3 c3 d3 ->
+                              QuadraticTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          SmoothQuadratic a1 b1 ->
+              case cmd2 of
+                  SmoothQuadratic a2 b2 ->
+                      case cmd3 of
+                          SmoothQuadratic a3 b3 ->
+                              SmoothQuadratic (fn a1 a2 a3) (fn b1 b2 b3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          SmoothQuadraticTo a1 b1 ->
+              case cmd2 of
+                  SmoothQuadraticTo a2 b2 ->
+                      case cmd3 of
+                          SmoothQuadraticTo a3 b3 ->
+                              SmoothQuadraticTo (fn a1 a2 a3) (fn b1 b2 b3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Smooth a1 b1 c1 d1 ->
+              case cmd2 of
+                  Smooth a2 b2 c2 d2 ->
+                      case cmd3 of
+                          Smooth a3 b3 c3 d3 ->
+                              Smooth (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          SmoothTo a1 b1 c1 d1 ->
+              case cmd2 of
+                  SmoothTo a2 b2 c2 d2 ->
+                      case cmd3 of
+                          SmoothTo a3 b3 c3 d3 ->
+                              SmoothTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Arc a1 b1 c1 d1 ->
+              case cmd2 of
+                  Arc a2 b2 c2 d2 ->
+                      case cmd3 of
+                          Arc a3 b3 c3 d3 ->
+                              Arc (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          ArcTo a1 b1 c1 d1 ->
+              case cmd2 of
+                  ArcTo a2 b2 c2 d2 ->
+                      case cmd3 of
+                          ArcTo a3 b3 c3 d3 ->
+                              ArcTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          LargeArc a1 b1 c1 d1 ->
+              case cmd2 of
+                  LargeArc a2 b2 c2 d2 ->
+                      case cmd3 of
+                          LargeArc a3 b3 c3 d3 ->
+                              LargeArc (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          LargeArcTo a1 b1 c1 d1 ->
+              case cmd2 of
+                  LargeArcTo a2 b2 c2 d2 ->
+                      case cmd3 of
+                          LargeArcTo a3 b3 c3 d3 ->
+                              LargeArcTo (fn a1 a2 a3) (fn b1 b2 b3) (fn c1 c2 c3) (fn d1 d2 d3)
+                          _ -> cmd3
+                  _ -> cmd3
+
+          Close  ->
+              case cmd2 of
+                  Close  ->
+                      case cmd3 of
+                          Close  ->
+                              Close
+                          _ -> cmd3
+                  _ -> cmd3
