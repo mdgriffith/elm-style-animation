@@ -1,23 +1,18 @@
 
 # elm-style-animation
 
-A library to simplify creating html and svg animations in elm. My focus was to create something I could use as a UI designer to prototype animations quickly, accurately, and without sneaky errors.  This library handles smooth animation interrutions.
+A library to simplify creating html and svg animations in elm. My focus was to create something I could use as a UI designer to prototype animations quickly, accurately, and without sneaky errors.  
 
-
-
-
-
-  1. Showing a menu on hover - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/SideMenu.elm)
-  2. Chaining Keyframes - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Chaining.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Chaining.elm)
+  1. Showing a menu on hover - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SideMenu.elm)
+  2. Chaining Keyframes - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Chaining.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Chaining.elm)
   3. Updating based on Current Style.
-  4. Animating a List of Elements - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
-      * Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
-  5. Stacking transformations - [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
+  4. Animating a List of Elements - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Showcase.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
+      * Staggering animations - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Stagger.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Stagger.elm)
+  5. Stacking transformations for complex animations - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/StackingTransforms.elm)
   6. Animating SVG
-      * Morphing Shapes - Elm Logo [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Logo.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Logo.elm)
-      * Morphing Batman Logos - [inspiration](http://tavmjong.free.fr/blog/?p=741) / [demo](https://mdgriffith.github.io/elm-html-animation/4.0.0/examples/Logo.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Logo.elm) 
-
-  7. Realistic scenario (flower menu) (separate repo) - [demo](https://mdgriffith.github.io/elm-html-animation/examples/FlowerMenu/) / [view code](https://github.com/mdgriffith/elm-html-animation-flower-menu/blob/master/FlowerMenu.elm)
+      * Morphing Shapes - Elm Logo [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Logo.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
+      * Morphing Batman Logos - [inspiration](http://tavmjong.free.fr/blog/?p=741) / [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Batman.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Batman.elm)
+  7. Realistic scenario (flower menu) (separate repo) - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/FlowerMenu/) / [view code](https://github.com/mdgriffith/elm-html-animation-flower-menu/blob/master/FlowerMenu.elm)
 
 
 ## Installation
@@ -92,8 +87,6 @@ main =
         , subscriptions = subscriptions
         }
 
-
-
 ```
 
 
@@ -111,7 +104,7 @@ view model =
 
 ```elm
 type Msg = Show -- This message triggers the animation
-         | Animate Time -- This action forwards all updates to the elm-style-animation core.
+         | Animate Time -- This message forwards all updates to the elm-style-animation core.
 
 -- In our update function, we can use the helper function trigger animations
 -- and to pass updates to an animation
@@ -131,6 +124,7 @@ update action model =
         )
 
      -- for each animation frame, update the style.
+     -- If we have multiple styles to manage, they will need to be updated in this action.
      Animate time ->
         ( { model
               | style = Style.tick time model.style
@@ -145,7 +139,7 @@ update action model =
 
 # Example 1: Showing a Menu on Hover
 
-[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/SideMenu.elm)
+[demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SideMenu.elm)
 
 Our first example is a menu that is shown when the mouse enters a certain area, and hides when the mouse leaves.
 
@@ -212,7 +206,7 @@ There may be a situation where we don't want our animation to be interrupted and
 
 # Example 2: Chaining Keyframes
 
-[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Chaining.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Chaining.elm)
+[demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Chaining.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Chaining.elm)
 
 What we've been doing is creating a single keyframe animation, but we also have the option of adding more keyframes.  
 
@@ -242,8 +236,7 @@ import Color exposing (rgba)
 
 # Example 3: Animating Lists of Elements
 
-[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Showcase.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Showcase.elm)
-
+[demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Showcase.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
 
 We can animate a list of styles by updating the styles either with `List.map` or `List.indexedMap`.
 
@@ -295,7 +288,7 @@ type alias Model = { widgets : List Style.Animation }
 
 By using `List.map` and `List.indexedMap` we have a natural way to do things like staggering a series of animations.  We can just calculate the delay of an animation based on it's index in a list.
 
-Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/Stagger.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/Stagger.elm)
+Staggering animations - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Stagger.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Stagger.elm)
 
 ```elm
     List.indexedMap
@@ -315,7 +308,7 @@ Staggering animations - [demo](https://mdgriffith.github.io/elm-html-animation/3
 
 # Example 4: Stacking Transformations
 
-[demo](https://mdgriffith.github.io/elm-html-animation/3.0.0/examples/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-html-animation/blob/master/examples/StackingTransforms.elm)
+[demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/StackingTransforms.elm)
 
 CSS has support for `transforms` such as `translate`, `rotate`, and `scale`.  We also have access to some more complicated transformations such as `rotate3d` and `transform3d`.
 
@@ -393,3 +386,101 @@ Now let's animate these properties.  Let's say we want do the following animatio
           ]
 
 ```
+
+## Animating SVG
+
+Animating svg has to be handled slightly differently than animating html because the majority of the interesting properties that we'd want to animate are actually attributes that can't be controlled by CSS.
+
+However there's an easy solution.  Just use `Style.renderAttr` instead of `Style.render`, and everything will be take care of.  For example:
+
+```
+import Color exposing (blue, green)
+import Style
+import Style.Properties exposing (..)
+
+-- Style.Propeties also exposes svg properties
+model {
+    svgStyle = Style.init
+          [ Fill blue
+          , Cx 200
+          , Cy 300
+          , R 50
+          ]
+}
+
+...in your view function, use Style.renderAttr like so.
+
+    svg []
+        [ circle (Style.renderAttr model.svgStyle) []
+        ]
+
+```
+
+Everything else that you learned applies exactly the same to svg properties.  Only the render function changes.
+
+Here are the properties you can use in svg animations.
+   * X
+   * Y
+   * Cx
+   * Cy
+   * R
+   * Rx
+   * Ry
+   * D
+   * Points
+   * Fill
+   * Stroke
+
+
+
+## Morphing Shapes
+Elm Logo [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Logo.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
+
+If you create an svg polygon you can animate using the `points` attribute.  Elm-style-animation will automatically convert between polygons with differing numbers of points.  
+
+```elm
+-- We can define two polygon styles and morph between them
+
+      [ Points
+              <| alignStartingPoint
+                  [ ( 161.649, 152.782 )
+                  , ( 231.514, 82.916 )
+                  , ( 91.783, 82.916 )
+                  ]
+        , Fill palette.orange
+        ]
+      , [ Points
+              <| alignStartingPoint
+                  [ ( 8.867, 0 )
+                  , ( 79.241, 70.375 )
+                  , ( 232.213, 70.375 )
+                  , ( 161.838, 0 )
+                  ]
+        , Fill palette.green
+        ]
+
+
+
+```
+
+To smoothly morph between two polygons, we need to align the starting points.  Fortunately we can do that with `alignStartingPoint`, which rotates a list of coordinates to that the one closest to the origin comes first and the rest follow.  
+
+
+## Morphing Paths - Batman Logos
+[inspiration](http://tavmjong.free.fr/blog/?p=741) / [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Batman.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Batman.elm)
+
+You can also morph between svg [paths](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d) using the `d` property.  Unlike the points property we were just talking about, we can't animate between two paths unless they have the same number of path commands.
+
+Paths are defined using the following.
+```elm
+model = {
+  myPath = Style.init
+      [ D [ MoveTo 256 213
+          , CurveTo [(245,181), (206,187), (234,262), (147,181), (169,71.2), (233,18)]
+          , Close
+          ]
+      ]      
+}
+```
+
+Check out the [batman morphing example](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Batman.elm) to dive in.

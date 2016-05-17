@@ -24,41 +24,6 @@ type Action
     | Animate Float
 
 
-styles =
-    { left =
-        [ Cx 100
-        , Cy 100
-        , R 100
-        , Fill purple
-        ]
-    , right =
-        [ Cx 200
-        , Cy 200
-        , R 150
-        , Fill green
-        ]
-    , start =
-        [ Points
-            <| alignStartingPoint
-                [ ( 8.867, 0 )
-                , ( 79.241, 70.375 )
-                , ( 232.213, 70.375 )
-                , ( 161.838, 0 )
-                ]
-        , Fill <| rgb 127 209 59
-        ]
-    , next =
-        [ Points
-            <| alignStartingPoint
-                [ ( 161.649, 152.782 )
-                , ( 231.514, 82.916 )
-                , ( 91.783, 82.916 )
-                ]
-        , Fill <| rgb 240 173 0
-        ]
-    }
-
-
 palette =
     { orange = rgb 240 173 0
     , green = rgb 127 209 59
