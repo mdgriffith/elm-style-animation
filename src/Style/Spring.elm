@@ -1,7 +1,6 @@
-module Style.Spring exposing (Model, Physical, update, atRest, duration) --where
+module Style.Spring exposing (Model, Physical, update, atRest, duration) 
 
 import Time exposing (Time, second)
-import Debug
 
 {-|  Springs are always modeled from 0-1
 
@@ -60,7 +59,7 @@ update dtms spring phys =
 
 atRest : Model -> Physical -> Bool
 atRest spring physical =
-     abs (spring.destination - physical.position) < tolerance 
+     abs (spring.destination - physical.position) < tolerance
   && abs physical.velocity < vTolerance
 
 
@@ -71,12 +70,8 @@ duration spring phys =
         (\t ( phys, d ) ->
           if atRest spring phys then
             ( phys, d )
-          else 
+          else
            ( update 1 spring phys, t )
         )
         ( phys, 0 )
         [1..10000] -- Ticks in ms
-
-
-
-
