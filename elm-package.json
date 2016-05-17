@@ -1,20 +1,20 @@
 {
-    "version": "3.0.4", 
-    "summary": "Style Animations in Elm", 
-    "repository": "https://github.com/mdgriffith/elm-html-animation.git", 
-    "license": "BSD3", 
+    "version": "1.0.0", 
+    "summary": "Style Animations in Elm",
+    "repository": "https://github.com/mdgriffith/elm-style-animation.git",
+    "license": "BSD3",
     "source-directories": [
         "src"
-    ], 
+    ],
     "exposed-modules": [
-        "Style", 
+        "Style",
         "Style.Properties",
         "Style.Spring.Presets"
-    ], 
+    ],
     "dependencies": {
         "elm-lang/core": "4.0.0 <= v < 5.0.0",
         "elm-lang/svg": "1.0.0 <= v < 2.0.0",
         "elm-lang/animation-frame": "1.0.0 <= v < 2.0.0"
-    }, 
+    },
     "elm-version": "0.17.0 <= v < 0.18.0"
 }
