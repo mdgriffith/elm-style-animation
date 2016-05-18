@@ -84,6 +84,39 @@ elm-html-animation 3.0.4 (new) - on elm 0.17
 ```
 
 
+## Ticking animations forward
+elm-html-animation 3.0.4 (old) - on elm 0.16
+```elm
+
+-- specify helper functions
+onMenu =
+  UI.forwardTo 
+      Animate
+      .style
+      (\w style -> { w | style = style }) -- style setter 
+
+
+--... use helper function
+    Animate action ->
+      onMenu model action
+  
+
+```
+
+
+elm-html-animation 3.0.4 (new) - on elm 0.17
+```elm
+    -- again, no helper functions.
+    -- under the message that you subscribed to with animationFrame, step your animations.
+    Animate time ->
+        ( { model
+            | style = Style.tick time model.style
+          }
+        , Cmd.none
+        )
+```
+
+
 
 
 
