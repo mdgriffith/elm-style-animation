@@ -357,7 +357,7 @@ Now let's animate these properties.  Let's say we want do the following animatio
           ]
       |> Style.andThen
       |> Style.duration (0.7*second)
-      |> Style.props
+      |> Style.to
           [ TranslateY -200 Px
           ]
       |> Style.andThen
