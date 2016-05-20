@@ -395,7 +395,7 @@ Animating svg has to be handled slightly differently than animating html because
 
 However there's an easy solution.  Just use `Style.renderAttr` instead of `Style.render`, and everything will be take care of.  For example:
 
-```
+```elm
 import Color exposing (blue, green)
 import Style
 import Style.Properties exposing (..)
