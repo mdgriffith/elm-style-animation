@@ -1,4 +1,4 @@
-module Style exposing (Animation, init, update, render, renderAttr, animate, queue, on, delay, duration, easing, spring, andThen, set, tick, to)
+module Style exposing (Animation, init, update, render, renderAttr, animate, queue, repeat, queueRepeat, on, delay, duration, easing, spring, andThen, set, tick, to)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -11,7 +11,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation
 
 # Starting an animation
-@docs animate, queue
+@docs animate, queue, repeat, queueRepeat
 
 # Creating animations
 @docs delay, spring, duration, easing, andThen
@@ -28,7 +28,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 # Managing Commands
 @docs on, tick
 
--}
+-} 
 
 import Time exposing (Time, second)
 import String exposing (concat)
@@ -228,6 +228,65 @@ queue =
     { frames = []
     , action = Core.Queue
     }
+
+
+{-| Interrupt the current animation and begin repeating the specified one.
+
+      Style.repeat 3
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left (Style.to 0) Px
+             , Opacity (Style.to 1)
+             ]
+         |> Style.on model.style
+
+You can repeat forever by providing Infinity as the number.
+
+      Style.repeat forever
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left (Style.to 0) Px
+             , Opacity (Style.to 1)
+             ]
+         |> Style.on model.style
+
+
+-}
+repeat : Float -> PreAction
+repeat i =
+    { frames = []
+    , action = Core.Repeat i
+    }
+
+
+{-| Start a repeating animation after the current animation has finished.
+
+      Style.queueRepeat 3
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left (Style.to 0) Px
+             , Opacity (Style.to 1)
+             ]
+         |> Style.on model.style
+
+You can repeat forever by providing Infinity as the number.
+
+      Style.queueRepeat forever
+         |> Style.duration (0.4*second)
+         |> Style.to
+             [ Left (Style.to 0) Px
+             , Opacity (Style.to 1)
+             ]
+         |> Style.on model.style
+
+
+-}
+queueRepeat : Float -> PreAction
+queueRepeat i =
+    { frames = []
+    , action = Core.QueueRepeat i
+    }
+
 
 
 {-| Step the animation

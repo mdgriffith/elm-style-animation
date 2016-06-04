@@ -1,4 +1,6 @@
-module Main exposing (..) 
+module Main exposing (..)
+
+--where
 
 import Html.App as Html
 import Html exposing (..)
@@ -11,6 +13,7 @@ import Style.Spring.Presets
 import AnimationFrame
 import Color exposing (rgb, rgba)
 import Time exposing (Time, second)
+
 
 type alias Model =
     { widgets : List Widget }
@@ -54,23 +57,21 @@ update action model =
         RotateWidget i ->
             let
                 widgets =
-                    Style.queue
-                        -- queue up this animation
-                        -- as opposed to interrupting
-                        |>
-                            Style.duration (1 * second)
-                        |>
-                            Style.update
-                                (\_ prop ->
-                                    case prop of
-                                        Rotate angle unit ->
-                                            Rotate (angle + 1) unit
+                    -- queue up this animation
+                    -- as opposed to interrupting
+                    Style.repeat 3
+                        --|> Style.duration (5 * second)
+                        --|> Style.easing (\x -> x)
+                        |> Style.update
+                            (\_ prop ->
+                                case prop of
+                                    Rotate angle unit ->
+                                        Rotate (angle + 1) unit
 
-                                        _ ->
-                                            prop
-                                )
-                        |>
-                            (\act ->
+                                    _ ->
+                                        prop
+                            )
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -78,7 +79,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
