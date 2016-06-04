@@ -13,6 +13,7 @@ type alias Model =
     , frames : List Keyframe
     , previous : Style
     , interruption : List Interruption
+    , repeatCache : Maybe (Float, List Keyframe)
     }
 
 
@@ -26,6 +27,8 @@ type alias Interruption =
 type Action
     = Queue (List Keyframe)
     | Interrupt (List Keyframe)
+    | Repeat Float (List Keyframe)
+    | QueueRepeat Float (List Keyframe)
     | Tick Time
 
 
@@ -57,6 +60,7 @@ empty =
     , frames = []
     , previous = []
     , interruption = []
+    , repeatCache = Nothing
     }
 
 
@@ -127,7 +131,33 @@ update action model =
                     in
                         { model
                             | interruption = interruptions
+                            , repeatCache = Nothing
                         }
+        Repeat i frames ->
+            if i <= 0 then
+                model
+            else if i == 1 then
+                update (Interrupt frames) model
+            else
+                let 
+                    newModel = update (Interrupt frames) model
+                in
+                    { newModel | repeatCache = Just (i-1, frames) }
+
+        QueueRepeat i frames ->
+            if i <= 0 then
+                model
+            else 
+                let 
+                    newModel = update (Queue frames) model
+                    repeatCache =
+                        if i > 1 then
+                            Just (i-1, frames)
+                        else
+                            Nothing
+                in
+                    { newModel | repeatCache = repeatCache }
+
 
         Tick now ->
             let
@@ -204,15 +234,33 @@ tick model current totalElapsed dt start now =
                         Nothing -> previous
                         Just frame ->
                             amend previous frame
+
                 initialized = mapTo 0 (initializeFrame amended amended) frames
+
+                newModel = 
+                    { model
+                        | elapsed = 0.0
+                        , start = Just now
+                        , previous = amended
+                        , frames = initialized
+                        , interruption = interruption
+                    }
             in
-                { model
-                    | elapsed = 0.0
-                    , start = Just now
-                    , previous = amended
-                    , frames = initialized
-                    , interruption = interruption
-                }
+                if List.length newModel.frames == 0 then
+                    case newModel.repeatCache of 
+                        Nothing -> newModel
+                        Just repeat ->
+                            let 
+                                newRepeat = 
+                                    if fst repeat == 1 then
+                                        Nothing
+                                    else
+                                        Just (fst repeat - 1, snd repeat)
+                            in
+                                update (Queue (snd repeat)) { newModel | repeatCache = newRepeat }
+                else
+                    newModel
+                
         else
             -- normal tick
             { model
@@ -220,6 +268,9 @@ tick model current totalElapsed dt start now =
                 , start = Just start
                 , frames = mapTo 0 (step elapsed dt model.previous) model.frames
             }
+
+
+
 
 
 getTimes : Time -> Model -> ( Time, Time, Time )
