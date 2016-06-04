@@ -59,19 +59,16 @@ update action model =
                 widgets =
                     -- queue up this animation
                     -- as opposed to interrupting
-                    Style.repeat 3
-                        --|> Style.duration (5 * second)
-                        --|> Style.easing (\x -> x)
-                        |>
-                            Style.update
-                                (\_ prop ->
-                                    case prop of
-                                        Rotate angle unit ->
-                                            Rotate (angle + 1) unit
-
-                                        _ ->
-                                            prop
-                                )
+                    Style.animate
+                        |> Style.duration (2 * second)
+                        |> Style.easing (\x -> x)
+                        --|>
+                        --    Style.to
+                        --        [ Rotate 1.0 Turn
+                        --        ]
+                        |> Style.update
+                            [ Rotate ((+) 1) Turn
+                            ]
                         |>
                             (\act ->
                                 mapToIndex i
@@ -126,14 +123,8 @@ update action model =
                         --|> Style.easing easeInBounce
                         |>
                             Style.update
-                                (\_ prop ->
-                                    case prop of
-                                        Rotate angle unit ->
-                                            Rotate (angle + 1) unit
-
-                                        _ ->
-                                            prop
-                                )
+                                [ Rotate ((+) 1) Turn
+                                ]
                         |>
                             (\act ->
                                 mapToIndex i
@@ -154,36 +145,16 @@ update action model =
                 widgets =
                     Style.queue
                         |> Style.update
-                            (\i prop ->
-                                case prop of
-                                    Rotate angle unit ->
-                                        if i == 1 then
-                                            Rotate (angle - 0.5) unit
-                                        else
-                                            Rotate (angle + 0.5) unit
-
-                                    TranslateY _ _ ->
-                                        TranslateY 50 Px
-
-                                    _ ->
-                                        prop
-                            )
+                            [ Rotate ((-) 0.5) Turn
+                            , Rotate ((+) 0.5) Turn
+                            , TranslateY (\_ -> 50) Px
+                            ]
                         |> Style.andThen
                         |> Style.update
-                            (\i prop ->
-                                case prop of
-                                    Rotate angle unit ->
-                                        if i == 1 then
-                                            Rotate (angle - 0.5) unit
-                                        else
-                                            Rotate (angle + 0.5) unit
-
-                                    TranslateY _ _ ->
-                                        TranslateY 0 Px
-
-                                    _ ->
-                                        prop
-                            )
+                            [ Rotate ((-) 0.5) Turn
+                            , Rotate ((+) 0.5) Turn
+                            , TranslateY (\_ -> 0) Px
+                            ]
                         |> (\act ->
                                 mapToIndex i
                                     (\widget ->

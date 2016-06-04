@@ -1,4 +1,4 @@
-module Style.PropertyHelpers exposing (Static, Dynamic, Physics, Style,  baseName, name, is, id, toStatic, toDynamic, update, updateFrom, updateOver, render, renderAttr, emptyEasing, matchPoints) --where
+module Style.PropertyHelpers exposing (Static, Dynamic, Retarget, Physics, Style,  baseName, name, is, id, toStatic, toDynamic, apply, vacate, update, updateFrom, updateOver, render, renderAttr, emptyEasing, matchPoints) --where
 
 import Style.Properties exposing (..)
 import Style.Spring as Spring
@@ -32,6 +32,7 @@ type DynamicColor =
 
 type alias Dynamic = Property Physics DynamicColor
 type alias Static = Property Float ElmColor.Color
+type alias Retarget = Property (Float -> Float) (ElmColor.Color -> ElmColor.Color)
 
 emptyPhysics : Physics
 emptyPhysics =
@@ -1103,8 +1104,13 @@ toStaticColor dynamic =
 
 
 toDynamic prop = map (\_ -> emptyPhysics) (\_ -> emptyDynamicColor) prop
---type alias Dynamic = Property Physics DynamicColor
---type alias Static = Property Float Color
+
+
+vacate : Property a colorA -> Static
+vacate prop =
+    map (\_ -> 0) (\_ -> ElmColor.black) prop
+
+
 
 update : (Physics -> Physics) -> Dynamic -> Dynamic
 update fn prop =
@@ -1115,6 +1121,7 @@ update fn prop =
                                 RGBA (fn r) (fn g) (fn b) (fn a)
                     )
                     prop
+
 
 
 map : (a -> b) -> (colorA -> colorB) -> Property a colorA -> Property b colorB
@@ -1556,6 +1563,595 @@ isColor pred color =
     case color of
         RGBA r g b a ->
             pred r && pred g && pred b && pred a
+
+
+
+apply : Retarget -> Static -> Static
+apply retarget prop =
+    case retarget of
+
+        Display _ ->
+            prop
+
+        Opacity a ->
+            case prop of
+                Opacity b ->
+                    Opacity (a b)
+
+                _ ->
+                    prop
+
+        Height a unit ->
+            case prop of
+                Height b _ ->
+                    Height (a b) unit
+
+                _ ->
+                    prop
+
+        Width a unit ->
+            case prop of
+                Width b _ ->
+                    Width (a b) unit
+
+                _ ->
+                    prop
+
+        Left a unit ->
+            case prop of
+                Left b _ ->
+                    Left (a b) unit
+
+                _ ->
+                    prop
+
+        Top a unit ->
+            case prop of
+                Top b _ ->
+                    Top (a b) unit
+
+                _ ->
+                    prop
+
+        Right a unit ->
+            case prop of
+                Right b _ ->
+                    Right (a b) unit
+
+                _ ->
+                    prop
+
+        Bottom a unit ->
+            case prop of
+                Bottom b _ ->
+                    Bottom (a b) unit
+
+                _ ->
+                    prop
+
+        MaxHeight a unit ->
+            case prop of
+                MaxHeight b _ ->
+                    MaxHeight (a b) unit
+
+                _ ->
+                    prop
+
+        MaxWidth a unit ->
+            case prop of
+                MaxWidth b _ ->
+                    MaxWidth (a b) unit
+
+                _ ->
+                    prop
+
+        MinHeight a unit ->
+            case prop of
+                MinHeight b _ ->
+                    MinHeight (a b) unit
+
+                _ ->
+                    prop
+
+        MinWidth a unit ->
+            case prop of
+                MinWidth b _ ->
+                    MinWidth (a b) unit
+
+                _ ->
+                    prop
+
+        Padding a unit ->
+            case prop of
+                Padding b _ ->
+                    Padding (a b) unit
+
+                _ ->
+                    prop
+
+        PaddingLeft a unit ->
+            case prop of
+                PaddingLeft b _ ->
+                    PaddingLeft (a b) unit
+
+                _ ->
+                    prop
+
+        PaddingRight a unit ->
+            case prop of
+                PaddingRight b _ ->
+                    PaddingRight (a b) unit
+
+                _ ->
+                    prop
+
+        PaddingTop a unit ->
+            case prop of
+                PaddingTop b _ ->
+                    PaddingTop (a b) unit
+
+                _ ->
+                    prop
+
+        PaddingBottom a unit ->
+            case prop of
+                PaddingBottom b _ ->
+                    PaddingBottom (a b) unit
+
+                _ ->
+                    prop
+
+        Margin a unit ->
+            case prop of
+                Margin b _ ->
+                    Margin (a b) unit
+
+                _ ->
+                    prop
+
+        MarginLeft a unit ->
+            case prop of
+                MarginLeft b _ ->
+                    MarginLeft (a b) unit
+
+                _ ->
+                    prop
+
+        MarginRight a unit ->
+            case prop of
+                MarginRight b _ ->
+                    MarginRight (a b) unit
+
+                _ ->
+                    prop
+
+        MarginTop a unit ->
+            case prop of
+                MarginTop b _ ->
+                    MarginTop (a b) unit
+
+                _ ->
+                    prop
+
+        MarginBottom a unit ->
+            case prop of
+                MarginBottom b _ ->
+                    MarginBottom (a b) unit
+
+                _ ->
+                    prop
+
+        BorderWidth a unit ->
+            case prop of
+                BorderWidth b _ ->
+                    BorderWidth (a b) unit
+
+                _ ->
+                    prop
+
+        BorderRadius a unit ->
+            case prop of
+                BorderRadius b _ ->
+                    BorderRadius (a b) unit
+
+                _ ->
+                    prop
+
+        BorderTopLeftRadius a unit ->
+            case prop of
+                BorderTopLeftRadius b _ ->
+                    BorderTopLeftRadius (a b) unit
+
+                _ ->
+                    prop
+
+        BorderTopRightRadius a unit ->
+            case prop of
+                BorderTopRightRadius b _ ->
+                    BorderTopRightRadius (a b) unit
+
+                _ ->
+                    prop
+
+        BorderBottomLeftRadius a unit ->
+            case prop of
+                BorderBottomLeftRadius b _ ->
+                    BorderBottomLeftRadius (a b) unit
+
+                _ ->
+                    prop
+
+        BorderBottomRightRadius a unit ->
+            case prop of
+                BorderBottomRightRadius b _ ->
+                    BorderBottomRightRadius (a b) unit
+
+                _ ->
+                    prop
+
+        LetterSpacing a unit ->
+            case prop of
+                LetterSpacing b _ ->
+                    LetterSpacing (a b) unit
+
+                _ ->
+                    prop
+
+        LineHeight a unit ->
+            case prop of
+                LineHeight b _ ->
+                    LineHeight (a b) unit
+
+                _ ->
+                    prop
+
+        BackgroundPosition x1 y1 unit ->
+            case prop of
+                BackgroundPosition x2 y2 _ ->
+                    BackgroundPosition (x1 x2) (y1 y2) unit
+
+                _ ->
+                    prop
+
+        Color color ->
+            case prop of
+                Color color2 ->
+                    Color (color color2)
+                _ ->
+                    prop
+
+        BorderColor color ->
+            case prop of
+                BorderColor color2 ->
+                    BorderColor (color color2)
+                _ ->
+                    prop
+
+        BackgroundColor color ->
+            case prop of
+                BackgroundColor color2 ->
+                    BackgroundColor (color color2)
+                _ ->
+                    prop
+
+        TransformOrigin x1 y1 z1 unit ->
+            case prop of
+                TransformOrigin x2 y2 z2 _ ->
+                    TransformOrigin (x1 x2) (y1 y2) (z1 z2) unit
+
+                _ ->
+                    prop
+
+        Translate x1 y1 unit ->
+            case prop of
+                Translate x2 y2 _ ->
+                    Translate (x1 x2) (y1 y2) unit
+
+                _ ->
+                    prop
+
+        Translate3d x1 y1 z1 unit ->
+            case prop of
+                Translate3d x2 y2 z2 _ ->
+                    Translate3d (x1 x2) (y1 y2) (z1 z2) unit
+
+                _ ->
+                    prop
+
+        TranslateX a unit ->
+            case prop of
+                TranslateX b _ ->
+                    TranslateX (a b) unit
+
+                _ ->
+                    prop
+
+        TranslateY a unit ->
+            case prop of
+                TranslateY b _ ->
+                    TranslateY (a b) unit
+
+                _ ->
+                    prop
+
+        Scale a ->
+            case prop of
+                Scale b ->
+                    Scale (a b)
+
+                _ ->
+                    prop
+
+        Scale3d x1 y1 z1 ->
+            case prop of
+                Scale3d x2 y2 z2 ->
+                    Scale3d (x1 x2) (y1 y2) (z1 z2)
+
+                _ ->
+                    prop
+
+        ScaleX a ->
+            case prop of
+                ScaleX b ->
+                    ScaleX (a b)
+
+                _ ->
+                    prop
+
+        ScaleY a ->
+            case prop of
+                ScaleY b ->
+                    ScaleY (a b)
+
+                _ ->
+                    prop
+
+        ScaleZ a ->
+            case prop of
+                ScaleZ b ->
+                    ScaleZ (a b)
+
+                _ ->
+                    prop
+
+        Rotate a unit ->
+            case prop of
+                Rotate b _ ->
+                    Rotate (a b) unit
+
+                _ ->
+                    prop
+
+        Rotate3d x1 y1 z1 a1 unit ->
+            case prop of
+                Rotate3d x2 y2 z2 a2 _ ->
+                    Rotate3d (x1 x2) (y1 y2) (z1 z2) (a1 a2) unit
+
+                _ ->
+                    prop
+
+        RotateX a unit ->
+            case prop of
+                RotateX b _ ->
+                    RotateX (a b) unit
+
+                _ ->
+                    prop
+
+        RotateY a unit ->
+            case prop of
+                RotateY b _ ->
+                    RotateY (a b) unit
+
+                _ ->
+                    prop
+
+        Skew x1 y1 unit ->
+            case prop of
+                Skew x2 y2 _ ->
+                    Skew (x1 x2) (y1 y2) unit
+
+                _ ->
+                    prop
+
+        SkewX a unit ->
+            case prop of
+                SkewX b _ ->
+                    SkewX (a b) unit
+
+                _ ->
+                    prop
+
+        SkewY a unit ->
+            case prop of
+                SkewY b _ ->
+                    SkewY (a b) unit
+
+                _ ->
+                    prop
+
+        Perspective a ->
+            case prop of
+                Perspective b ->
+                    Perspective (a b)
+
+                _ ->
+                    prop
+
+        Matrix a1 b1 c1 x1 y1 z1 ->
+            case prop of
+                Matrix a2 b2 c2 x2 y2 z2 ->
+                    Matrix
+                        (a1 a2)
+                        (b1 b2)
+                        (c1 c2)
+                        (x1 x2)
+                        (y1 y2)
+                        (z1 z2)
+
+                _ ->
+                    prop
+
+        Matrix3d a1 b1 c1 d1 e1 f1 g1 h1 i1 j1 k1 l1 m1 n1 o1 p1 ->
+            case prop of
+                Matrix3d a2 b2 c2 d2 e2 f2 g2 h2 i2 j2 k2 l2 m2 n2 o2 p2 ->
+                    Matrix3d (a1 a2)
+                        (b1 b2)
+                        (c1 c2)
+                        (d1 d2)
+                        (e1 e2)
+                        (f1 f2)
+                        (g1 g2)
+                        (h1 h2)
+                        (i1 i2)
+                        (j1 j2)
+                        (k1 k2)
+                        (l1 l2)
+                        (m1 m2)
+                        (n1 n2)
+                        (o1 o2)
+                        (p1 p2)
+
+                _ ->
+                    prop
+
+        X a ->
+            case prop of
+                X b -> X (a b)
+                _ -> prop
+        Y a ->
+            case prop of
+                Y b -> Y (a b)
+                _ -> prop
+        Cx a ->
+            case prop of
+                Cx b -> Cx (a b)
+                _ -> prop
+        Cy a ->
+            case prop of
+                Cy b -> Cy (a b)
+                _ -> prop
+        R a ->
+            case prop of
+                R b -> R (a b)
+                _ -> prop
+        Rx a ->
+            case prop of
+                Rx b -> Rx (a b)
+                _ -> prop
+        Ry a ->
+            case prop of
+                Ry b -> Ry (a b)
+                _ -> prop
+        D a ->
+            case prop of
+                D b -> D (List.map2 applyCmd a b)
+                _ -> prop
+        Points a ->
+            case prop of
+                Points b -> Points <| List.map2 (\(x1, y1) (x2, y2) -> (x1 x2, y1 y2)) a b
+                _ -> prop
+
+        Fill color ->
+            case prop of
+                Fill color2 ->
+                    Fill (color color2)
+                _ ->
+                    prop
+
+        Stroke color ->
+            case prop of
+                Stroke color2 ->
+                    Stroke (color color2)
+                _ ->
+                    prop
+
+
+
+applyCmd : PathCommand (a -> a) -> PathCommand a -> PathCommand a
+applyCmd cmd cmd2 =
+      case cmd of
+          Move x y ->
+            case cmd2 of
+                Move x2 y2 -> Move (x x2) (y y2)
+                _ -> cmd2
+          MoveTo x y ->
+            case cmd2 of
+                MoveTo x2 y2 -> MoveTo (x x2) (y y2)
+                _ -> cmd2
+          Line x y ->
+            case cmd2 of
+                Line x2 y2 -> Line (x x2) (y y2)
+                _ -> cmd2
+          LineTo x y ->
+            case cmd2 of
+                LineTo x2 y2 -> LineTo (x x2) (y y2)
+                _ -> cmd2
+          Horizontal a ->
+            case cmd2 of
+                Horizontal a2 -> Horizontal (a a2)
+                _ -> cmd2
+          HorizontalTo a ->
+            case cmd2 of
+                HorizontalTo a2 -> HorizontalTo (a a2)
+                _ -> cmd2
+          Vertical a ->
+            case cmd2 of
+                Vertical a2 -> Vertical (a a2)
+                _ -> cmd2
+          VerticalTo a ->
+            case cmd2 of
+                VerticalTo a2 -> VerticalTo (a a2)
+                _ -> cmd2
+          Curve points ->
+            case cmd2 of
+                Curve points2 -> Curve (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          CurveTo points ->
+            case cmd2 of
+                Curve points2 -> CurveTo (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          Quadratic points ->
+            case cmd2 of
+                Quadratic points2 -> Quadratic (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          QuadraticTo points ->
+            case cmd2 of
+                QuadraticTo points2 -> QuadraticTo (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          SmoothQuadratic points ->
+            case cmd2 of
+                SmoothQuadratic points2 -> SmoothQuadratic (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          SmoothQuadraticTo points ->
+            case cmd2 of
+              SmoothQuadraticTo points2 -> SmoothQuadraticTo (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+              _ -> cmd2
+          Smooth points ->
+            case cmd2 of
+                Smooth points2 -> Smooth (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          SmoothTo points ->
+            case cmd2 of
+                SmoothTo points2 -> SmoothTo (List.map2 (\(x,y) (x1,y1) -> (x x1, y y1)) points points2)
+                _ -> cmd2
+          Arc rx ry x y ->
+            case cmd2 of
+                Arc rx' ry' x' y' -> Arc (rx rx') (ry ry') (x x') (y y')
+                _ -> cmd2
+          ArcTo rx ry x y ->
+            case cmd2 of
+                ArcTo rx' ry' x' y' -> ArcTo (rx rx') (ry ry') (x x') (y y')
+                _ -> cmd2
+          LargeArc rx ry x y ->
+            case cmd2 of
+                LargeArc rx' ry' x' y' -> LargeArc (rx rx') (ry ry') (x x') (y y')
+                _ -> cmd2
+          LargeArcTo rx ry x y ->
+            case cmd2 of
+              LargeArcTo rx' ry' x' y' -> LargeArcTo (rx rx') (ry ry') (x x') (y y')
+              _ -> cmd2
+          Close -> Close
 
 
 

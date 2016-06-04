@@ -84,7 +84,7 @@ update action model =
                                 Nothing -> model.previous
                                 Just frame ->
                                     amend model.previous frame
-
+                        
                         initialized = mapTo 0 (initializeFrame amended amended) newFrames
                     in
                         { model
@@ -131,7 +131,6 @@ update action model =
                     in
                         { model
                             | interruption = interruptions
-                            , repeatCache = Nothing
                         }
         Repeat i frames ->
             if i <= 0 then
@@ -167,10 +166,11 @@ update action model =
                 case List.head model.interruption of
                     Just interruption ->
                         if elapsed >= interruption.at then
-                            interrupt now
+                           interrupt now
                                 model
                                 interruption.frame
                                 (List.drop 1 model.interruption)
+                               
                         else
                             case List.head model.frames of
                                 Nothing ->
@@ -328,6 +328,7 @@ interrupt now model interruption remaining =
                         interruption
                     )
 
+        
         amended =
             case List.head newFrames of
                 Nothing -> previous
@@ -339,12 +340,9 @@ interrupt now model interruption remaining =
                 Nothing -> prevTarget
                 Just frame ->
                     amend prevTarget frame
-
-        initialized = mapTo 0 (initializeFrame amended amendedTarget) newFrames
-
     in
         { model
-            | frames = initialized
+            | frames = mapTo 0 (initializeFrame amended amendedTarget) newFrames
             , elapsed = 0.0
             , start = Nothing
             , previous = amended
@@ -416,20 +414,32 @@ initializeFrame style prevTargetStyle frame =
         step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
 
 
+
 retargetIfNecessary : Keyframe -> Style -> Keyframe
 retargetIfNecessary frame lastTargetStyle =
     case frame.retarget of
         Nothing -> frame
         Just retarget ->
             let
-                applyRetarget i prop =
-                    { target = retarget 1 prop
-                    , current = toDynamic prop
-                    }
+                _ = Debug.log "retarget" frame
+                possiblePairs =  zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
+                pairs = List.filterMap 
+                            (\(prop, style) ->
+                                case style of 
+                                    Nothing -> Nothing
+                                    Just s ->
+                                        Just (prop, s)
+
+                            ) possiblePairs 
             in
                 { frame |
                     properties =
-                      mapWithCount applyRetarget lastTargetStyle
+                        mapWithCount 
+                            (\i (prop, prevStyle) ->
+                                { prop 
+                                    | target = retarget i prevStyle
+                                }
+                            ) pairs
                 }
 
 
@@ -447,12 +457,15 @@ mapWithCount fn list =
              List.foldl
                 (\x acc ->
                     let
-                        count = getPropCount x acc.past
+                        count = getPropCount (snd x) acc.past
                     in
                         { current = acc.current ++ [fn count x]
-                        , past = acc.past ++ [x]
+                        , past = acc.past ++ [snd x]
                         }
-                ) {current = [], past = []} list
+                ) { current = []
+                  , past = []
+                  } 
+                list
     in mapped.current
 
 
@@ -469,16 +482,12 @@ matchPoints frame lastTargetStyle =
                         case maybeLastTarget of
                             Nothing -> frameProps
                             Just lastTarget ->
-                                let
-                                    matched = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
-                                in
-                                    { frameProps
-                                        | target = matched
-                                        , current = toDynamic matched
-                                    }
+                                { frameProps
+                                    | target = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
+                                    , current = Style.PropertyHelpers.matchPoints frameProps.current lastTarget
+                                }
                     )
                 paired
-
         }
 
 
@@ -646,6 +655,7 @@ applyStep current dt target from physics =
 
             Just easing ->
                 let
+
                     eased =
                         if easing.duration <= 0 then
                             1.0

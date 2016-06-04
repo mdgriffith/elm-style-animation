@@ -28,13 +28,16 @@ Once you have the basic structure of how to use this library, you can refer to t
 # Managing Commands
 @docs on, tick
 
--} 
+-}
+
+--where
 
 import Time exposing (Time, second)
 import String exposing (concat)
 import List
 import Color
-import Style.PropertyHelpers exposing (Style, emptyEasing, Static)
+import Style.Properties exposing (Property(..))
+import Style.PropertyHelpers exposing (Style, emptyEasing, Static, id, apply)
 import Style.Spring as Spring
 import Style.Spring.Presets
 import Style.Core as Core
@@ -46,12 +49,14 @@ import Svg exposing (Attribute)
 type Animation
     = A Core.Model
 
+
 type alias KeyframeWithOptions =
     { frame : Core.Keyframe
     , duration : Maybe Time
     , easing : Maybe (Float -> Float)
     , spring : Maybe Spring.Model
     }
+
 
 emptyKeyframeWithOptions =
     { frame = Core.emptyKeyframe
@@ -69,7 +74,6 @@ type alias PreAction =
     }
 
 
-
 {-| Create an initial style for your init model.
 
 __Note__ All properties that you animate must be present in the init or else that property won't be animated.
@@ -85,9 +89,9 @@ init sty =
                         List.any
                             (\y ->
                                 (Style.PropertyHelpers.id x
-                                    == Style.PropertyHelpers.id y)
-                                && (Style.PropertyHelpers.name x /= "transform")
-
+                                    == Style.PropertyHelpers.id y
+                                )
+                                    && (Style.PropertyHelpers.name x /= "transform")
                             )
                             acc
                     then
@@ -97,12 +101,11 @@ init sty =
                 )
                 []
                 sty
-        empty = Core.empty
+
+        empty =
+            Core.empty
     in
         A { empty | previous = deduped }
-
-
-
 
 
 {-| Animate based on spring physics.
@@ -136,41 +139,58 @@ spring spring action =
         updateOrCreate action (\a -> { a | spring = newSpring })
 
 
-
 {-| Update a style based on it's previous value.
 
      Style.animate
           |> Style.update
-              (\index prev =
-                  case prev of
-                    Cx cx ->
-                        Cx (cx + 1)
-
-                    Cy cy ->
-                        Cy (cy + 1)
-
-                    _ -> prev
-              )
+              [ Cx ((+) 1)
+              , Cy ((+) 1)
+              , Color greyscale
+              ]
           |> Style.on model.style
 
-`index` is the number of times that property has occurred in the stack.
-This can be useful when stacking transforms and you only want to update the 2nd `Rotate` in the stack.
-Refer to the [stacking transforms example](https://github.com/mdgriffith/elm-style-animation) for more information.
-
 -}
-update : (Int -> Static -> Static) -> PreAction -> PreAction
-update styleUpdate action =
-         updateOrCreate action
-            (\kfWithOptions ->
-                let
-                    frame =
-                        kfWithOptions.frame
+update : List Style.PropertyHelpers.Retarget -> PreAction -> PreAction
+update dynamicUpdate action =
+    updateOrCreate action
+        (\kfWithOptions ->
+            let
+                frame =
+                    kfWithOptions.frame
 
-                    updatedFrame =
-                        { frame | retarget = Just styleUpdate }
-                in
-                    { kfWithOptions | frame = updatedFrame }
-            )
+                updatedFrame =
+                    { frame 
+                        | retarget = Just <| convertToRetargetFn dynamicUpdate 
+                        , properties = 
+                              List.map 
+                                (\prop  ->
+                                    let 
+                                        empty = Style.PropertyHelpers.vacate prop
+                                    in
+                                      { target = empty
+                                      , current = Style.PropertyHelpers.toDynamic empty
+                                      }
+                                ) dynamicUpdate 
+                    }
+            in
+                { kfWithOptions | frame = updatedFrame }
+        )
+
+
+convertToRetargetFn : List Style.PropertyHelpers.Retarget -> Int -> Static -> Static
+convertToRetargetFn changes i prop =
+    let
+        dynamicProp =
+            List.filter (\chng -> id chng == id prop) changes
+                |> List.drop (i - 1)
+                |> List.head
+    in
+        case dynamicProp of
+            Nothing ->
+                prop
+
+            Just dyn ->
+                apply dyn prop
 
 
 {-| Apply an update to a Animation model.
@@ -194,7 +214,6 @@ on (A model) preaction =
         A <| Core.update action model
 
 
-
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
 
       Style.animate
@@ -211,6 +230,7 @@ animate =
     { frames = []
     , action = Core.Interrupt
     }
+
 
 {-| The same as `animate` but instead of interrupting the current animation, this will queue up after the current animation is finished.
 
@@ -288,7 +308,6 @@ queueRepeat i =
     }
 
 
-
 {-| Step the animation
 -}
 tick : Float -> Animation -> Animation
@@ -348,15 +367,12 @@ applyKeyframeOptions options =
             in
                 { prop
                     | current = Style.PropertyHelpers.update addOptions prop.current
-
                 }
-
 
         newProperties =
             List.map applyOpt frame.properties
     in
         { frame | properties = newProperties }
-
 
 
 {-| Apply a style immediately.  This takes a list of static style properties, meaning the no `Style.to` functions, only concrete numbers and values.
@@ -377,7 +393,8 @@ applyKeyframeOptions options =
 set : Style -> PreAction -> PreAction
 set staticProps action =
     let
-        actionWithProps = to staticProps action
+        actionWithProps =
+            to staticProps action
     in
         updateOrCreate actionWithProps
             (\kfWithOpts ->
@@ -386,8 +403,6 @@ set staticProps action =
                     , easing = Just (\x -> x)
                 }
             )
-
-
 
 
 {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
@@ -467,24 +482,24 @@ For example, to cycle through colors, we'd use the following:
 -}
 andThen : PreAction -> PreAction
 andThen preaction =
-        { preaction
-            | frames = preaction.frames ++ [ emptyKeyframeWithOptions ]
-        }
+    { preaction
+        | frames = preaction.frames ++ [ emptyKeyframeWithOptions ]
+    }
 
 
 {-| Update the last Core.Keyframe in the queue.  If the queue is empty, create a new Core.Keyframe and update that.
 -}
 updateOrCreate : PreAction -> (KeyframeWithOptions -> KeyframeWithOptions) -> PreAction
 updateOrCreate preaction fn =
-               { preaction
-                    | frames =
-                        case List.reverse preaction.frames of
-                            [] ->
-                                [ fn emptyKeyframeWithOptions ]
+    { preaction
+        | frames =
+            case List.reverse preaction.frames of
+                [] ->
+                    [ fn emptyKeyframeWithOptions ]
 
-                            cur :: rem ->
-                                List.reverse ((fn cur) :: rem)
-               }
+                cur :: rem ->
+                    List.reverse ((fn cur) :: rem)
+    }
 
 
 {-| Animate to a statically specified style.
@@ -501,7 +516,8 @@ to sty action =
                             (\y ->
                                 Style.PropertyHelpers.id x
                                     == Style.PropertyHelpers.id y
-                                    && Style.PropertyHelpers.id x /= "transform"
+                                    && Style.PropertyHelpers.id x
+                                    /= "transform"
                             )
                             acc
                     then
@@ -520,19 +536,18 @@ to sty action =
                     }
                 )
                 deduped
-
     in
-     updateOrCreate action
-        (\kfWithOptions ->
-            let
-                frame =
-                    kfWithOptions.frame
+        updateOrCreate action
+            (\kfWithOptions ->
+                let
+                    frame =
+                        kfWithOptions.frame
 
-                updatedFrame =
-                    { frame | properties = dynamicProperties }
-            in
-                { kfWithOptions | frame = updatedFrame }
-        )
+                    updatedFrame =
+                        { frame | properties = dynamicProperties }
+                in
+                    { kfWithOptions | frame = updatedFrame }
+            )
 
 
 {-| Render into concrete css that can be directly applied to 'style' in elm-html

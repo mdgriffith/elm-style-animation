@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (..) --where
 
 import Html.App as Html
 import Html exposing (..)
@@ -8,7 +8,7 @@ import AnimationFrame
 import Time exposing (second)
 import Style
 import Style.Properties exposing (..)
-
+import Color exposing (green, complement)
 
 type alias Model =
     { style : Style.Animation
@@ -25,10 +25,12 @@ styles =
     { open =
         [ Left 0.0 Px
         , Opacity 1.0
+        , Color (green)
         ]
     , closed =
         [ Left -350.0 Px
         , Opacity 0.0
+        , Color (green)
         ]
     }
 
@@ -40,6 +42,8 @@ update action model =
             ( { model
                 | style =
                     Style.animate
+                        |> Style.duration (5*second)
+                        |> Style.easing (\x -> x)
                         |> Style.to styles.open
                         |> Style.on model.style
               }
@@ -50,6 +54,8 @@ update action model =
             ( { model
                 | style =
                     Style.animate
+                        |> Style.duration (5*second)
+                        |> Style.easing (\x -> x)
                         |> Style.to styles.closed
                         |> Style.on model.style
               }

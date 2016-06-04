@@ -1,4 +1,4 @@
-module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), PathCommand (..), alignStartingPoint)
+module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), PathCommand (..), alignStartingPoint) --where
 
 {-|
 All animatable properties.
