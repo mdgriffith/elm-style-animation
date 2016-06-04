@@ -62,16 +62,18 @@ update action model =
                     Style.repeat 3
                         --|> Style.duration (5 * second)
                         --|> Style.easing (\x -> x)
-                        |> Style.update
-                            (\_ prop ->
-                                case prop of
-                                    Rotate angle unit ->
-                                        Rotate (angle + 1) unit
+                        |>
+                            Style.update
+                                (\_ prop ->
+                                    case prop of
+                                        Rotate angle unit ->
+                                            Rotate (angle + 1) unit
 
-                                    _ ->
-                                        prop
-                            )
-                        |> (\act ->
+                                        _ ->
+                                            prop
+                                )
+                        |>
+                            (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -79,7 +81,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                           )
+                            )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
@@ -151,28 +153,38 @@ update action model =
             let
                 widgets =
                     Style.queue
-                        -- queue up this animation
-                        -- as opposed to interrupting
-                        --|> Style.duration (0.5*second)
-                        --|> Style.easing easeInSine
-                        |>
-                            Style.to
-                                [ Rotate -0.5 Turn
-                                , TranslateY 50 Px
-                                , Rotate 0.5 Turn
-                                ]
-                        |>
-                            Style.andThen
-                        --|> Style.duration (0.5*second)
-                        --|> Style.easing easeOutSine
-                        |>
-                            Style.to
-                                [ Rotate -0.5 Turn
-                                , TranslateY 0 Px
-                                , Rotate 0.5 Turn
-                                ]
-                        |>
-                            (\act ->
+                        |> Style.update
+                            (\i prop ->
+                                case prop of
+                                    Rotate angle unit ->
+                                        if i == 1 then
+                                            Rotate (angle - 0.5) unit
+                                        else
+                                            Rotate (angle + 0.5) unit
+
+                                    TranslateY _ _ ->
+                                        TranslateY 50 Px
+
+                                    _ ->
+                                        prop
+                            )
+                        |> Style.andThen
+                        |> Style.update
+                            (\i prop ->
+                                case prop of
+                                    Rotate angle unit ->
+                                        if i == 1 then
+                                            Rotate (angle - 0.5) unit
+                                        else
+                                            Rotate (angle + 0.5) unit
+
+                                    TranslateY _ _ ->
+                                        TranslateY 0 Px
+
+                                    _ ->
+                                        prop
+                            )
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -180,7 +192,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
