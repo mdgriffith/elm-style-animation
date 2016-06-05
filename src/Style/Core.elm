@@ -86,6 +86,7 @@ update action model =
                                     amend model.previous frame
                         
                         initialized = mapTo 0 (initializeFrame amended amended) newFrames
+
                     in
                         { model
                             | frames = initialized
@@ -421,7 +422,6 @@ retargetIfNecessary frame lastTargetStyle =
         Nothing -> frame
         Just retarget ->
             let
-                _ = Debug.log "retarget" frame
                 possiblePairs =  zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
                 pairs = List.filterMap 
                             (\(prop, style) ->

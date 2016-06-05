@@ -514,10 +514,8 @@ to sty action =
                     if
                         List.any
                             (\y ->
-                                Style.PropertyHelpers.id x
-                                    == Style.PropertyHelpers.id y
-                                    && Style.PropertyHelpers.id x
-                                    /= "transform"
+                                Style.PropertyHelpers.id x == Style.PropertyHelpers.id y
+                                    && Style.PropertyHelpers.name x /= "transform"
                             )
                             acc
                     then
