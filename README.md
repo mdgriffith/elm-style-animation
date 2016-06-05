@@ -7,14 +7,13 @@ A library to simplify creating html and svg animations in elm. My focus was to c
 
   1. Showing a menu on hover - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/SideMenu.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SideMenu.elm)
   2. Chaining Keyframes - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Chaining.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Chaining.elm)
-  3. Updating based on Current Style.
-  4. Animating a List of Elements - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Showcase.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
+  3. Animating a List of Elements - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Showcase.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
       * Staggering animations - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Stagger.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Stagger.elm)
-  5. Stacking transformations for complex animations - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/StackingTransforms.elm)
-  6. Animating SVG
+  4. Stacking transformations for complex animations - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/StackingTransforms.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/StackingTransforms.elm)
+  5. Animating SVG
       * Morphing Shapes - Elm Logo [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Logo.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
       * Morphing Batman Logos - [inspiration](http://tavmjong.free.fr/blog/?p=741) / [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Batman.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Batman.elm)
-  7. Realistic scenario (flower menu) (separate repo) - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/FlowerMenu/) / [view code](https://github.com/mdgriffith/elm-html-animation-flower-menu/blob/master/FlowerMenu.elm)
+  6. Realistic scenario (flower menu) (separate repo) - [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/FlowerMenu/) / [view code](https://github.com/mdgriffith/elm-html-animation-flower-menu/blob/master/FlowerMenu.elm)
 
 
 ## Installation
@@ -205,6 +204,8 @@ Now that we have this animation, it has a few properties that may not be immedia
 
 There may be a situation where we don't want our animation to be interrupted and instead we want an animation to queue up after a currently running animation.  To do this, we would use `Style.queue` instead of `Style.animate`
 
+To create a repeating animation, you can use `Style.repeat 3` instead of `Style.animate`.  To repeat an animation forever you can use `Style.repeat forever` where `forever` is just defined as `1/0` or Infinity.
+
 
 # Example 2: Chaining Keyframes
 
@@ -363,17 +364,9 @@ Now let's animate these properties.  Let's say we want do the following animatio
       |> Style.andThen
       |> Style.duration (0.7*second)
       |> Style.update
-          (\index prop ->
-              case prop of
-                  Rotate angle unit ->
-                     -- make this update apply to the second rotate only.
-                     if index == 2 then
-                        Rotate 360.0 unit
-                    else
-                        Rotate angle unit
-                  _ -> prop
-          )
-
+          [ Rotate identity Deg
+          , Rotate (\_ -> 360) Deg
+          ]
       |> Style.andThen
       |> Style.duration (0.7*second)
       |> Style.to
@@ -471,7 +464,7 @@ To smoothly morph between two polygons, we need to align the starting points.  F
 ## Morphing Paths - Batman Logos
 [inspiration](http://tavmjong.free.fr/blog/?p=741) / [demo](https://mdgriffith.github.io/elm-style-animation/1.0.0/Batman.html) / [view code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Batman.elm)
 
-You can also morph between svg [paths](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d) using the `d` property.  Unlike the points property we were just talking about, we can't animate between two paths unless they have the same number of path commands.
+You can also morph between svg [paths](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d) using the `d` property.  Unlike the points property, we can't animate between two paths unless they have the same number of path commands.
 
 Paths are defined using the following.
 ```elm
