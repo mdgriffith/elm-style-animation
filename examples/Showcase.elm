@@ -13,6 +13,7 @@ import Style.Spring.Presets
 import AnimationFrame
 import Color exposing (rgb, rgba)
 import Time exposing (Time, second)
+import Ease
 
 
 type alias Model =
@@ -57,20 +58,13 @@ update action model =
         RotateWidget i ->
             let
                 widgets =
-                    -- queue up this animation
-                    -- as opposed to interrupting
+                    -- Interrupt any animation on this element and start this animation
                     Style.animate
-                        |> Style.duration (2 * second)
-                        |> Style.easing (\x -> x)
-                        --|>
-                        --    Style.to
-                        --        [ Rotate 1.0 Turn
-                        --        ]
+                        |> Style.spring Style.Spring.Presets.noWobble
                         |> Style.update
                             [ Rotate ((+) 1) Turn
                             ]
-                        |>
-                            (\act ->
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -78,7 +72,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
@@ -87,11 +81,10 @@ update action model =
         RotateAllAxis i ->
             let
                 widgets =
+                    -- queue up this animation
+                    -- as opposed to interrupting
                     Style.queue
-                        -- queue up this animation
-                        -- as opposed to interrupting
-                        |>
-                            Style.duration (1 * second)
+                        --|> Style.duration (1 * second)
                         |>
                             Style.to
                                 [ RotateX 1 Turn
@@ -117,16 +110,12 @@ update action model =
             let
                 widgets =
                     Style.queue
-                        -- queue up this animation
-                        -- as opposed to interrupting
-                        --|> Style.duration (2*second)
-                        --|> Style.easing easeInBounce
-                        |>
-                            Style.update
-                                [ Rotate ((+) 1) Turn
-                                ]
-                        |>
-                            (\act ->
+                        |> Style.duration (2 * second)
+                        |> Style.easing Ease.inBounce
+                        |> Style.update
+                            [ Rotate ((+) 1) Turn
+                            ]
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -134,7 +123,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
@@ -144,14 +133,18 @@ update action model =
             let
                 widgets =
                     Style.queue
+                        |> Style.easing Ease.linear
+                        |> Style.duration (0.4 * second)
                         |> Style.update
-                            [ Rotate ((-) 0.5) Turn
+                            [ Rotate (\x -> x - 0.5) Turn
                             , Rotate ((+) 0.5) Turn
                             , TranslateY (\_ -> 50) Px
                             ]
                         |> Style.andThen
+                        |> Style.easing Ease.linear
+                        |> Style.duration (0.4 * second)
                         |> Style.update
-                            [ Rotate ((-) 0.5) Turn
+                            [ Rotate (\x -> x - 0.5) Turn
                             , Rotate ((+) 0.5) Turn
                             , TranslateY (\_ -> 0) Px
                             ]
@@ -200,15 +193,11 @@ update action model =
             let
                 widgets =
                     Style.animate
-                        -- animate is used to interrupt whatever current animation
-                        -- is running and smoothely move to the new style
-                        |>
-                            Style.to
-                                [ BackgroundColor (rgba 100 100 100 1.0)
-                                , BorderColor (rgba 100 100 100 1.0)
-                                ]
-                        |>
-                            (\act ->
+                        |> Style.to
+                            [ BackgroundColor (rgba 100 100 100 1.0)
+                            , BorderColor (rgba 100 100 100 1.0)
+                            ]
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -216,7 +205,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
@@ -225,23 +214,19 @@ update action model =
         ChangeMultipleColors i ->
             let
                 widgets =
+                    -- animate is used to interrupt whatever current animation
+                    -- is running and smoothely move to the new style
                     Style.animate
-                        -- animate is used to interrupt whatever current animation
-                        -- is running and smoothely move to the new style
-                        |>
-                            Style.to
-                                [ BackgroundColor (rgba 100 100 100 1.0)
-                                , BorderColor (rgba 100 100 100 1.0)
-                                ]
-                        |>
-                            Style.andThen
-                        |>
-                            Style.to
-                                [ BackgroundColor (rgba 178 201 14 1.0)
-                                , BorderColor (rgba 178 201 14 1.0)
-                                ]
-                        |>
-                            (\act ->
+                        |> Style.to
+                            [ BackgroundColor (rgba 100 100 100 1.0)
+                            , BorderColor (rgba 100 100 100 1.0)
+                            ]
+                        |> Style.andThen
+                        |> Style.to
+                            [ BackgroundColor (rgba 178 201 14 1.0)
+                            , BorderColor (rgba 178 201 14 1.0)
+                            ]
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -249,7 +234,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none

@@ -2511,6 +2511,135 @@ var _elm_lang$core$Platform_Sub$none = _elm_lang$core$Platform_Sub$batch(
 		[]));
 var _elm_lang$core$Platform_Sub$map = _elm_lang$core$Native_Platform.map;
 var _elm_lang$core$Platform_Sub$Sub = {ctor: 'Sub'};
+var _elm_community$easing_functions$Ease$reverse = F2(
+	function (easing, time) {
+		return easing(1 - time);
+	});
+var _elm_community$easing_functions$Ease$flip = F2(
+	function (easing, time) {
+		return 1 - easing(1 - time);
+	});
+var _elm_community$easing_functions$Ease$retour = F2(
+	function (easing, time) {
+		return (_elm_lang$core$Native_Utils.cmp(time, 0.5) < 0) ? easing(time * 2) : A2(_elm_community$easing_functions$Ease$flip, easing, (time - 0.5) * 2);
+	});
+var _elm_community$easing_functions$Ease$inOut = F3(
+	function (e1, e2, time) {
+		return (_elm_lang$core$Native_Utils.cmp(time, 0.5) < 0) ? (e1(time * 2) / 2) : (0.5 + (e2((time - 0.5) * 2) / 2));
+	});
+var _elm_community$easing_functions$Ease$inElastic = function (time) {
+	if (_elm_lang$core$Native_Utils.eq(time, 0.0)) {
+		return 0.0;
+	} else {
+		var t$ = time - 1;
+		var p = 0.3;
+		var s = 7.5e-2;
+		return 0 - (Math.pow(2, 10 * t$) * _elm_lang$core$Basics$sin(((t$ - s) * (2 * _elm_lang$core$Basics$pi)) / p));
+	}
+};
+var _elm_community$easing_functions$Ease$outElastic = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inElastic);
+var _elm_community$easing_functions$Ease$inOutElastic = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inElastic, _elm_community$easing_functions$Ease$outElastic);
+var _elm_community$easing_functions$Ease$outBounce = function (time) {
+	var t4 = time - (2.625 / 2.75);
+	var t3 = time - (2.25 / 2.75);
+	var t2 = time - (1.5 / 2.75);
+	var a = 7.5625;
+	return (_elm_lang$core$Native_Utils.cmp(time, 1 / 2.75) < 0) ? ((a * time) * time) : ((_elm_lang$core$Native_Utils.cmp(time, 2 / 2.75) < 0) ? (((a * t2) * t2) + 0.75) : ((_elm_lang$core$Native_Utils.cmp(time, 2.5 / 2.75) < 0) ? (((a * t3) * t3) + 0.9375) : (((a * t4) * t4) + 0.984375)));
+};
+var _elm_community$easing_functions$Ease$inBounce = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$outBounce);
+var _elm_community$easing_functions$Ease$inOutBounce = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inBounce, _elm_community$easing_functions$Ease$outBounce);
+var _elm_community$easing_functions$Ease$inBack = function (time) {
+	return (time * time) * ((2.70158 * time) - 1.70158);
+};
+var _elm_community$easing_functions$Ease$outBack = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inBack);
+var _elm_community$easing_functions$Ease$inOutBack = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inBack, _elm_community$easing_functions$Ease$outBack);
+var _elm_community$easing_functions$Ease$outCirc = function (time) {
+	return _elm_lang$core$Basics$sqrt(
+		1 - Math.pow(time - 1, 2));
+};
+var _elm_community$easing_functions$Ease$inCirc = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$outCirc);
+var _elm_community$easing_functions$Ease$inOutCirc = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inCirc, _elm_community$easing_functions$Ease$outCirc);
+var _elm_community$easing_functions$Ease$inExpo = function (time) {
+	return _elm_lang$core$Native_Utils.eq(time, 0.0) ? 0.0 : Math.pow(2, 10 * (time - 1));
+};
+var _elm_community$easing_functions$Ease$outExpo = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inExpo);
+var _elm_community$easing_functions$Ease$inOutExpo = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inExpo, _elm_community$easing_functions$Ease$outExpo);
+var _elm_community$easing_functions$Ease$outSine = function (time) {
+	return _elm_lang$core$Basics$sin(time * (_elm_lang$core$Basics$pi / 2));
+};
+var _elm_community$easing_functions$Ease$inSine = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$outSine);
+var _elm_community$easing_functions$Ease$inOutSine = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inSine, _elm_community$easing_functions$Ease$outSine);
+var _elm_community$easing_functions$Ease$inQuint = function (time) {
+	return Math.pow(time, 5);
+};
+var _elm_community$easing_functions$Ease$outQuint = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inQuint);
+var _elm_community$easing_functions$Ease$inOutQuint = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inQuint, _elm_community$easing_functions$Ease$outQuint);
+var _elm_community$easing_functions$Ease$inQuart = function (time) {
+	return Math.pow(time, 4);
+};
+var _elm_community$easing_functions$Ease$outQuart = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inQuart);
+var _elm_community$easing_functions$Ease$inOutQuart = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inQuart, _elm_community$easing_functions$Ease$outQuart);
+var _elm_community$easing_functions$Ease$inCubic = function (time) {
+	return Math.pow(time, 3);
+};
+var _elm_community$easing_functions$Ease$outCubic = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inCubic);
+var _elm_community$easing_functions$Ease$inOutCubic = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inCubic, _elm_community$easing_functions$Ease$outCubic);
+var _elm_community$easing_functions$Ease$inQuad = function (time) {
+	return Math.pow(time, 2);
+};
+var _elm_community$easing_functions$Ease$outQuad = _elm_community$easing_functions$Ease$flip(_elm_community$easing_functions$Ease$inQuad);
+var _elm_community$easing_functions$Ease$inOutQuad = A2(_elm_community$easing_functions$Ease$inOut, _elm_community$easing_functions$Ease$inQuad, _elm_community$easing_functions$Ease$outQuad);
+var _elm_community$easing_functions$Ease$bezier = F5(
+	function (x1, y1, x2, y2, time) {
+		var pair = F4(
+			function (interpolate, _p1, _p0, v) {
+				var _p2 = _p1;
+				var _p3 = _p0;
+				return {
+					ctor: '_Tuple2',
+					_0: A3(interpolate, _p2._0, _p3._0, v),
+					_1: A3(interpolate, _p2._1, _p3._1, v)
+				};
+			});
+		var lerp = F3(
+			function (from, to, v) {
+				return from + ((to - from) * v);
+			});
+		var casteljau = function (ps) {
+			casteljau:
+			while (true) {
+				var _p4 = ps;
+				if (((_p4.ctor === '::') && (_p4._0.ctor === '_Tuple2')) && (_p4._1.ctor === '[]')) {
+					return _p4._0._1;
+				} else {
+					var _p5 = _p4;
+					var _v3 = A3(
+						_elm_lang$core$List$map2,
+						F2(
+							function (x, y) {
+								return A4(pair, lerp, x, y, time);
+							}),
+						_p5,
+						A2(
+							_elm_lang$core$Maybe$withDefault,
+							_elm_lang$core$Native_List.fromArray(
+								[]),
+							_elm_lang$core$List$tail(_p5)));
+					ps = _v3;
+					continue casteljau;
+				}
+			}
+		};
+		return casteljau(
+			_elm_lang$core$Native_List.fromArray(
+				[
+					{ctor: '_Tuple2', _0: 0, _1: 0},
+					{ctor: '_Tuple2', _0: x1, _1: y1},
+					{ctor: '_Tuple2', _0: x2, _1: y2},
+					{ctor: '_Tuple2', _0: 1, _1: 1}
+				]));
+	});
+var _elm_community$easing_functions$Ease$linear = _elm_lang$core$Basics$identity;
 var _elm_lang$animation_frame$Native_AnimationFrame = function()
 {
 
@@ -14190,7 +14319,7 @@ var _user$project$Style_Core$applyStep = F5(
 				}
 			}();
 			var physical = physics.physical;
-			var eased = (_elm_lang$core$Native_Utils.cmp(_p7.duration, 0) < 1) ? 1.0 : _p7.ease(current / _p7.duration);
+			var eased = (_elm_lang$core$Native_Utils.cmp(_p7.duration, 0) < 1) ? 1.0 : ((_elm_lang$core$Native_Utils.cmp(current, _p7.duration) > 0) ? 1.0 : _p7.ease(current / _p7.duration));
 			var currentPos = ((target - from) * eased) + from;
 			var finalPhysical = _elm_lang$core$Native_Utils.update(
 				physical,
@@ -14434,19 +14563,18 @@ var _user$project$Style_Core$retargetIfNecessary = F2(
 					}
 				},
 				possiblePairs);
-			var _p30 = A2(_elm_lang$core$Debug$log, 'retarget', frame);
 			return _elm_lang$core$Native_Utils.update(
 				frame,
 				{
 					properties: A2(
 						_user$project$Style_Core$mapWithCount,
 						F2(
-							function (i, _p31) {
-								var _p32 = _p31;
+							function (i, _p30) {
+								var _p31 = _p30;
 								return _elm_lang$core$Native_Utils.update(
-									_p32._0,
+									_p31._0,
 									{
-										target: A2(_p26._0, i, _p32._1)
+										target: A2(_p26._0, i, _p31._1)
 									});
 							}),
 						pairs)
@@ -14468,11 +14596,11 @@ var _user$project$Style_Core$initializeFrame = F3(
 			style);
 		var warnings = A2(
 			_elm_lang$core$List$map,
-			function (_p33) {
-				var _p34 = _p33;
-				var _p37 = _p34._0;
-				var _p35 = _p34._1;
-				if (_p35.ctor === 'Nothing') {
+			function (_p32) {
+				var _p33 = _p32;
+				var _p36 = _p33._0;
+				var _p34 = _p33._1;
+				if (_p34.ctor === 'Nothing') {
 					var warn = A2(
 						_elm_lang$core$Debug$log,
 						'elm-style-animation',
@@ -14481,20 +14609,20 @@ var _user$project$Style_Core$initializeFrame = F3(
 							'There is no initial value for \'',
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								_user$project$Style_PropertyHelpers$id(_p37.current),
+								_user$project$Style_PropertyHelpers$id(_p36.current),
 								A2(
 									_elm_lang$core$Basics_ops['++'],
 									'\', though it is queued to be animated.  Define an initial value for \'',
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										_user$project$Style_PropertyHelpers$id(_p37.current),
+										_user$project$Style_PropertyHelpers$id(_p36.current),
 										'\'')))));
 					return _elm_lang$core$Maybe$Just(warn);
 				} else {
-					var _p36 = _p35._0;
+					var _p35 = _p34._0;
 					if (_elm_lang$core$Native_Utils.eq(
-						_user$project$Style_PropertyHelpers$id(_p37.current),
-						_user$project$Style_PropertyHelpers$id(_p36))) {
+						_user$project$Style_PropertyHelpers$id(_p36.current),
+						_user$project$Style_PropertyHelpers$id(_p35))) {
 						return _elm_lang$core$Maybe$Nothing;
 					} else {
 						var warn = A2(
@@ -14508,13 +14636,13 @@ var _user$project$Style_Core$initializeFrame = F3(
 									'An initial value was given as \'',
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										_user$project$Style_PropertyHelpers$id(_p36),
+										_user$project$Style_PropertyHelpers$id(_p35),
 										A2(
 											_elm_lang$core$Basics_ops['++'],
 											'\' versus the animation which was given as \'',
 											A2(
 												_elm_lang$core$Basics_ops['++'],
-												_user$project$Style_PropertyHelpers$id(_p37.current),
+												_user$project$Style_PropertyHelpers$id(_p36.current),
 												'\'.'))))));
 						return _elm_lang$core$Maybe$Just(warn);
 					}
@@ -14542,14 +14670,14 @@ var _user$project$Style_Core$amend = F2(
 			frame.properties);
 		return A2(
 			_elm_lang$core$List$map,
-			function (_p38) {
-				var _p39 = _p38;
-				var _p41 = _p39._0;
-				var _p40 = _p39._1;
-				if (_p40.ctor === 'Nothing') {
-					return _p41;
+			function (_p37) {
+				var _p38 = _p37;
+				var _p40 = _p38._0;
+				var _p39 = _p38._1;
+				if (_p39.ctor === 'Nothing') {
+					return _p40;
 				} else {
-					return A2(_user$project$Style_PropertyHelpers$matchPoints, _p41, _p40._0.target);
+					return A2(_user$project$Style_PropertyHelpers$matchPoints, _p40, _p39._0.target);
 				}
 			},
 			paired);
@@ -14564,43 +14692,43 @@ var _user$project$Style_Core$getTarget = function (frame) {
 };
 var _user$project$Style_Core$interrupt = F4(
 	function (now, model, interruption, remaining) {
-		var _p42 = function () {
-			var _p43 = _elm_lang$core$List$head(model.frames);
-			if (_p43.ctor === 'Nothing') {
+		var _p41 = function () {
+			var _p42 = _elm_lang$core$List$head(model.frames);
+			if (_p42.ctor === 'Nothing') {
 				return {ctor: '_Tuple3', _0: model.previous, _1: model.previous, _2: interruption};
 			} else {
-				var _p44 = _p43._0;
+				var _p43 = _p42._0;
 				return {
 					ctor: '_Tuple3',
-					_0: A2(_user$project$Style_Core$bake, _p44, model.previous),
-					_1: _user$project$Style_Core$getTarget(_p44),
+					_0: A2(_user$project$Style_Core$bake, _p43, model.previous),
+					_1: _user$project$Style_Core$getTarget(_p43),
 					_2: A3(
 						_user$project$Style_Core$mapTo,
 						0,
 						function (newFrame) {
-							return A2(_user$project$Style_Core$transferVelocity, _p44, newFrame);
+							return A2(_user$project$Style_Core$transferVelocity, _p43, newFrame);
 						},
 						interruption)
 				};
 			}
 		}();
-		var previous = _p42._0;
-		var prevTarget = _p42._1;
-		var newFrames = _p42._2;
+		var previous = _p41._0;
+		var prevTarget = _p41._1;
+		var newFrames = _p41._2;
 		var amended = function () {
-			var _p45 = _elm_lang$core$List$head(newFrames);
-			if (_p45.ctor === 'Nothing') {
+			var _p44 = _elm_lang$core$List$head(newFrames);
+			if (_p44.ctor === 'Nothing') {
 				return previous;
 			} else {
-				return A2(_user$project$Style_Core$amend, previous, _p45._0);
+				return A2(_user$project$Style_Core$amend, previous, _p44._0);
 			}
 		}();
 		var amendedTarget = function () {
-			var _p46 = _elm_lang$core$List$head(newFrames);
-			if (_p46.ctor === 'Nothing') {
+			var _p45 = _elm_lang$core$List$head(newFrames);
+			if (_p45.ctor === 'Nothing') {
 				return prevTarget;
 			} else {
-				return A2(_user$project$Style_Core$amend, prevTarget, _p46._0);
+				return A2(_user$project$Style_Core$amend, prevTarget, _p45._0);
 			}
 		}();
 		return _elm_lang$core$Native_Utils.update(
@@ -14620,11 +14748,11 @@ var _user$project$Style_Core$interrupt = F4(
 var _user$project$Style_Core$getTimes = F2(
 	function (now, model) {
 		var prelimStart = function () {
-			var _p47 = model.start;
-			if (_p47.ctor === 'Nothing') {
+			var _p46 = model.start;
+			if (_p46.ctor === 'Nothing') {
 				return now;
 			} else {
-				return _p47._0;
+				return _p46._0;
 			}
 		}();
 		var prelimElapsed = now - prelimStart;
@@ -14705,14 +14833,17 @@ var _user$project$Style_Core$tick = F6(
 							{at: inter.at - totalElapsed});
 					},
 					model.interruption);
-				var previous = A2(_user$project$Style_Core$bake, current, model.previous);
+				var previous = A2(
+					_user$project$Style_Core$bake,
+					A4(_user$project$Style_Core$step, elapsed, dt, model.previous, current),
+					model.previous);
 				var frames = A2(_elm_lang$core$List$drop, 1, model.frames);
 				var amended = function () {
-					var _p48 = _elm_lang$core$List$head(frames);
-					if (_p48.ctor === 'Nothing') {
+					var _p47 = _elm_lang$core$List$head(frames);
+					if (_p47.ctor === 'Nothing') {
 						return previous;
 					} else {
-						return A2(_user$project$Style_Core$amend, previous, _p48._0);
+						return A2(_user$project$Style_Core$amend, previous, _p47._0);
 					}
 				}();
 				var initialized = A3(
@@ -14732,23 +14863,23 @@ var _user$project$Style_Core$tick = F6(
 				if (_elm_lang$core$Native_Utils.eq(
 					_elm_lang$core$List$length(newModel.frames),
 					0)) {
-					var _p49 = newModel.repeatCache;
-					if (_p49.ctor === 'Nothing') {
+					var _p48 = newModel.repeatCache;
+					if (_p48.ctor === 'Nothing') {
 						return newModel;
 					} else {
-						var _p50 = _p49._0;
+						var _p49 = _p48._0;
 						var newRepeat = _elm_lang$core$Native_Utils.eq(
-							_elm_lang$core$Basics$fst(_p50),
+							_elm_lang$core$Basics$fst(_p49),
 							1) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
 							{
 								ctor: '_Tuple2',
-								_0: _elm_lang$core$Basics$fst(_p50) - 1,
-								_1: _elm_lang$core$Basics$snd(_p50)
+								_0: _elm_lang$core$Basics$fst(_p49) - 1,
+								_1: _elm_lang$core$Basics$snd(_p49)
 							});
 						return A2(
 							_user$project$Style_Core$update,
 							_user$project$Style_Core$Queue(
-								_elm_lang$core$Basics$snd(_p50)),
+								_elm_lang$core$Basics$snd(_p49)),
 							_elm_lang$core$Native_Utils.update(
 								newModel,
 								{repeatCache: newRepeat}));
@@ -14775,25 +14906,25 @@ var _user$project$Style_Core$update = F2(
 	function (action, model) {
 		update:
 		while (true) {
-			var _p51 = action;
-			switch (_p51.ctor) {
+			var _p50 = action;
+			switch (_p50.ctor) {
 				case 'Queue':
-					var _p54 = _p51._0;
-					var _p52 = _elm_lang$core$List$head(model.frames);
-					if (_p52.ctor === 'Nothing') {
+					var _p53 = _p50._0;
+					var _p51 = _elm_lang$core$List$head(model.frames);
+					if (_p51.ctor === 'Nothing') {
 						var amended = function () {
-							var _p53 = _elm_lang$core$List$head(_p54);
-							if (_p53.ctor === 'Nothing') {
+							var _p52 = _elm_lang$core$List$head(_p53);
+							if (_p52.ctor === 'Nothing') {
 								return model.previous;
 							} else {
-								return A2(_user$project$Style_Core$amend, model.previous, _p53._0);
+								return A2(_user$project$Style_Core$amend, model.previous, _p52._0);
 							}
 						}();
 						var initialized = A3(
 							_user$project$Style_Core$mapTo,
 							0,
 							A2(_user$project$Style_Core$initializeFrame, amended, amended),
-							_p54);
+							_p53);
 						return _elm_lang$core$Native_Utils.update(
 							model,
 							{frames: initialized, previous: amended});
@@ -14801,25 +14932,25 @@ var _user$project$Style_Core$update = F2(
 						return _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								frames: A2(_elm_lang$core$Basics_ops['++'], model.frames, _p54)
+								frames: A2(_elm_lang$core$Basics_ops['++'], model.frames, _p53)
 							});
 					}
 				case 'Interrupt':
-					var _p59 = _p51._0;
-					var _p55 = _elm_lang$core$List$head(_p59);
-					if (_p55.ctor === 'Nothing') {
+					var _p58 = _p50._0;
+					var _p54 = _elm_lang$core$List$head(_p58);
+					if (_p54.ctor === 'Nothing') {
 						return model;
 					} else {
-						var _p58 = _p55._0;
+						var _p57 = _p54._0;
 						var last = _elm_lang$core$List$head(
 							_elm_lang$core$List$reverse(model.interruption));
 						var interruptions = function () {
-							var _p56 = last;
-							if (_p56.ctor === 'Nothing') {
+							var _p55 = last;
+							if (_p55.ctor === 'Nothing') {
 								return _elm_lang$core$Native_List.fromArray(
 									[
 										{
-										at: model.elapsed + _p58.delay,
+										at: model.elapsed + _p57.delay,
 										frame: A2(
 											_elm_lang$core$List$map,
 											function (i) {
@@ -14827,18 +14958,18 @@ var _user$project$Style_Core$update = F2(
 													i,
 													{delay: 0});
 											},
-											_p59)
+											_p58)
 									}
 									]);
 							} else {
-								var _p57 = _p56._0;
+								var _p56 = _p55._0;
 								return A2(
 									_elm_lang$core$List_ops['::'],
-									_p57,
+									_p56,
 									_elm_lang$core$Native_List.fromArray(
 										[
 											{
-											at: (model.elapsed + _p58.delay) - _p57.at,
+											at: (model.elapsed + _p57.delay) - _p56.at,
 											frame: A2(
 												_elm_lang$core$List$map,
 												function (i) {
@@ -14846,7 +14977,7 @@ var _user$project$Style_Core$update = F2(
 														i,
 														{delay: 0});
 												},
-												_p59)
+												_p58)
 										}
 										]));
 							}
@@ -14856,13 +14987,13 @@ var _user$project$Style_Core$update = F2(
 							{interruption: interruptions});
 					}
 				case 'Repeat':
-					var _p61 = _p51._0;
-					var _p60 = _p51._1;
-					if (_elm_lang$core$Native_Utils.cmp(_p61, 0) < 1) {
+					var _p60 = _p50._0;
+					var _p59 = _p50._1;
+					if (_elm_lang$core$Native_Utils.cmp(_p60, 0) < 1) {
 						return model;
 					} else {
-						if (_elm_lang$core$Native_Utils.eq(_p61, 1)) {
-							var _v31 = _user$project$Style_Core$Interrupt(_p60),
+						if (_elm_lang$core$Native_Utils.eq(_p60, 1)) {
+							var _v31 = _user$project$Style_Core$Interrupt(_p59),
 								_v32 = model;
 							action = _v31;
 							model = _v32;
@@ -14870,59 +15001,59 @@ var _user$project$Style_Core$update = F2(
 						} else {
 							var newModel = A2(
 								_user$project$Style_Core$update,
-								_user$project$Style_Core$Interrupt(_p60),
+								_user$project$Style_Core$Interrupt(_p59),
 								model);
 							return _elm_lang$core$Native_Utils.update(
 								newModel,
 								{
 									repeatCache: _elm_lang$core$Maybe$Just(
-										{ctor: '_Tuple2', _0: _p61 - 1, _1: _p60})
+										{ctor: '_Tuple2', _0: _p60 - 1, _1: _p59})
 								});
 						}
 					}
 				case 'QueueRepeat':
-					var _p63 = _p51._0;
-					var _p62 = _p51._1;
-					if (_elm_lang$core$Native_Utils.cmp(_p63, 0) < 1) {
+					var _p62 = _p50._0;
+					var _p61 = _p50._1;
+					if (_elm_lang$core$Native_Utils.cmp(_p62, 0) < 1) {
 						return model;
 					} else {
-						var repeatCache = (_elm_lang$core$Native_Utils.cmp(_p63, 1) > 0) ? _elm_lang$core$Maybe$Just(
-							{ctor: '_Tuple2', _0: _p63 - 1, _1: _p62}) : _elm_lang$core$Maybe$Nothing;
+						var repeatCache = (_elm_lang$core$Native_Utils.cmp(_p62, 1) > 0) ? _elm_lang$core$Maybe$Just(
+							{ctor: '_Tuple2', _0: _p62 - 1, _1: _p61}) : _elm_lang$core$Maybe$Nothing;
 						var newModel = A2(
 							_user$project$Style_Core$update,
-							_user$project$Style_Core$Queue(_p62),
+							_user$project$Style_Core$Queue(_p61),
 							model);
 						return _elm_lang$core$Native_Utils.update(
 							newModel,
 							{repeatCache: repeatCache});
 					}
 				default:
-					var _p69 = _p51._0;
-					var _p64 = A2(_user$project$Style_Core$getTimes, _p69, model);
-					var start = _p64._0;
-					var elapsed = _p64._1;
-					var dt = _p64._2;
-					var _p65 = _elm_lang$core$List$head(model.interruption);
-					if (_p65.ctor === 'Just') {
-						var _p67 = _p65._0;
-						if (_elm_lang$core$Native_Utils.cmp(elapsed, _p67.at) > -1) {
+					var _p68 = _p50._0;
+					var _p63 = A2(_user$project$Style_Core$getTimes, _p68, model);
+					var start = _p63._0;
+					var elapsed = _p63._1;
+					var dt = _p63._2;
+					var _p64 = _elm_lang$core$List$head(model.interruption);
+					if (_p64.ctor === 'Just') {
+						var _p66 = _p64._0;
+						if (_elm_lang$core$Native_Utils.cmp(elapsed, _p66.at) > -1) {
 							return A4(
 								_user$project$Style_Core$interrupt,
-								_p69,
+								_p68,
 								model,
-								_p67.frame,
+								_p66.frame,
 								A2(_elm_lang$core$List$drop, 1, model.interruption));
 						} else {
-							var _p66 = _elm_lang$core$List$head(model.frames);
-							if (_p66.ctor === 'Nothing') {
+							var _p65 = _elm_lang$core$List$head(model.frames);
+							if (_p65.ctor === 'Nothing') {
 								return A3(_user$project$Style_Core$continue, model, elapsed, start);
 							} else {
-								return A6(_user$project$Style_Core$tick, model, _p66._0, elapsed, dt, start, _p69);
+								return A6(_user$project$Style_Core$tick, model, _p65._0, elapsed, dt, start, _p68);
 							}
 						}
 					} else {
-						var _p68 = _elm_lang$core$List$head(model.frames);
-						if (_p68.ctor === 'Nothing') {
+						var _p67 = _elm_lang$core$List$head(model.frames);
+						if (_p67.ctor === 'Nothing') {
 							return _elm_lang$core$Native_Utils.update(
 								model,
 								{
@@ -14932,7 +15063,7 @@ var _user$project$Style_Core$update = F2(
 										[])
 								});
 						} else {
-							return A6(_user$project$Style_Core$tick, model, _p68._0, elapsed, dt, start, _p69);
+							return A6(_user$project$Style_Core$tick, model, _p67._0, elapsed, dt, start, _p68);
 						}
 					}
 			}
@@ -15064,6 +15195,7 @@ var _user$project$Style$convertToRetargetFn = F3(
 			return A2(_user$project$Style_PropertyHelpers$apply, _p13._0, prop);
 		}
 	});
+var _user$project$Style$forever = 1 / 0;
 var _user$project$Style$emptyKeyframeWithOptions = {frame: _user$project$Style_Core$emptyKeyframe, duration: _elm_lang$core$Maybe$Nothing, easing: _elm_lang$core$Maybe$Nothing, spring: _elm_lang$core$Maybe$Nothing};
 var _user$project$Style$andThen = function (preaction) {
 	return _elm_lang$core$Native_Utils.update(
@@ -15192,7 +15324,7 @@ var _user$project$Style$to = F2(
 							return _elm_lang$core$Native_Utils.eq(
 								_user$project$Style_PropertyHelpers$id(x),
 								_user$project$Style_PropertyHelpers$id(y)) && (!_elm_lang$core$Native_Utils.eq(
-								_user$project$Style_PropertyHelpers$id(x),
+								_user$project$Style_PropertyHelpers$name(x),
 								'transform'));
 						},
 						acc) ? acc : A2(_elm_lang$core$List_ops['::'], x, acc);
@@ -15409,12 +15541,7 @@ var _user$project$Main$update = F2(
 									})(1),
 								_user$project$Style_Properties$Turn)
 							]),
-						A2(
-							_user$project$Style$easing,
-							function (x) {
-								return x;
-							},
-							A2(_user$project$Style$duration, 2 * _elm_lang$core$Time$second, _user$project$Style$animate))));
+						_user$project$Style$animate));
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -15444,7 +15571,7 @@ var _user$project$Main$update = F2(
 								A2(_user$project$Style_Properties$RotateY, 1, _user$project$Style_Properties$Turn),
 								A2(_user$project$Style_Properties$Rotate, 1, _user$project$Style_Properties$Turn)
 							]),
-						A2(_user$project$Style$duration, 1 * _elm_lang$core$Time$second, _user$project$Style$queue)));
+						_user$project$Style$queue));
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -15478,7 +15605,10 @@ var _user$project$Main$update = F2(
 									})(1),
 								_user$project$Style_Properties$Turn)
 							]),
-						_user$project$Style$queue));
+						A2(
+							_user$project$Style$easing,
+							_elm_community$easing_functions$Ease$inBounce,
+							A2(_user$project$Style$duration, 2 * _elm_lang$core$Time$second, _user$project$Style$queue))));
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
@@ -15506,10 +15636,9 @@ var _user$project$Main$update = F2(
 							[
 								A2(
 								_user$project$Style_Properties$Rotate,
-								F2(
-									function (x, y) {
-										return x - y;
-									})(0.5),
+								function (x) {
+									return x - 0.5;
+								},
 								_user$project$Style_Properties$Turn),
 								A2(
 								_user$project$Style_Properties$Rotate,
@@ -15525,33 +15654,41 @@ var _user$project$Main$update = F2(
 								},
 								_user$project$Style_Properties$Px)
 							]),
-						_user$project$Style$andThen(
+						A2(
+							_user$project$Style$duration,
+							0.4 * _elm_lang$core$Time$second,
 							A2(
-								_user$project$Style$update,
-								_elm_lang$core$Native_List.fromArray(
-									[
+								_user$project$Style$easing,
+								_elm_community$easing_functions$Ease$linear,
+								_user$project$Style$andThen(
+									A2(
+										_user$project$Style$update,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												A2(
+												_user$project$Style_Properties$Rotate,
+												function (x) {
+													return x - 0.5;
+												},
+												_user$project$Style_Properties$Turn),
+												A2(
+												_user$project$Style_Properties$Rotate,
+												F2(
+													function (x, y) {
+														return x + y;
+													})(0.5),
+												_user$project$Style_Properties$Turn),
+												A2(
+												_user$project$Style_Properties$TranslateY,
+												function (_p2) {
+													return 50;
+												},
+												_user$project$Style_Properties$Px)
+											]),
 										A2(
-										_user$project$Style_Properties$Rotate,
-										F2(
-											function (x, y) {
-												return x - y;
-											})(0.5),
-										_user$project$Style_Properties$Turn),
-										A2(
-										_user$project$Style_Properties$Rotate,
-										F2(
-											function (x, y) {
-												return x + y;
-											})(0.5),
-										_user$project$Style_Properties$Turn),
-										A2(
-										_user$project$Style_Properties$TranslateY,
-										function (_p2) {
-											return 50;
-										},
-										_user$project$Style_Properties$Px)
-									]),
-								_user$project$Style$queue))));
+											_user$project$Style$duration,
+											0.4 * _elm_lang$core$Time$second,
+											A2(_user$project$Style$easing, _elm_community$easing_functions$Ease$linear, _user$project$Style$queue))))))));
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
