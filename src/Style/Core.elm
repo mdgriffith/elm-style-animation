@@ -215,11 +215,12 @@ tick model current totalElapsed dt start now =
         else if done elapsed current then
             -- animation is finished, switch to new frame
             let
+
                 frames =
                     List.drop 1 model.frames
 
                 previous =
-                    bake current model.previous
+                    bake (step elapsed dt model.previous current) model.previous
 
                 -- if an animation finishes, but there is still an interruption pending
                 -- Revise the expected interruption time down
@@ -269,8 +270,6 @@ tick model current totalElapsed dt start now =
                 , start = Just start
                 , frames = mapTo 0 (step elapsed dt model.previous) model.frames
             }
-
-
 
 
 
@@ -503,8 +502,8 @@ done time frame =
                     Spring.atRest prop.spring prop.physical
 
                 Just easing ->
-                    time >= easing.duration
-                 && easing.counterForcePhys == Nothing
+                        time >= easing.duration
+                     && easing.counterForcePhys == Nothing
     in
         List.all (\p -> Style.PropertyHelpers.is finished p.current) frame.properties
 
@@ -658,6 +657,8 @@ applyStep current dt target from physics =
 
                     eased =
                         if easing.duration <= 0 then
+                            1.0
+                        else if current > easing.duration then
                             1.0
                         else
                             easing.ease (current / easing.duration)
