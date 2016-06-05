@@ -84,6 +84,7 @@ type alias PreAction =
        |> Style.on model.style
 
 -}
+forever : Float
 forever = 1/0
 
 {-| Create an initial style for your init model.
