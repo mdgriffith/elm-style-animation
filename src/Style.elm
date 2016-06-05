@@ -1,4 +1,4 @@
-module Style exposing (Animation, init, update, render, renderAttr, animate, queue, repeat, queueRepeat, on, delay, duration, easing, spring, andThen, set, tick, to)
+module Style exposing (Animation, init, update, render, renderAttr, animate, queue, repeat, queueRepeat, forever, on, delay, duration, easing, spring, andThen, set, tick, to)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -11,7 +11,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation
 
 # Starting an animation
-@docs animate, queue, repeat, queueRepeat
+@docs animate, queue, repeat, queueRepeat, forever
 
 # Creating animations
 @docs delay, spring, duration, easing, andThen
@@ -73,6 +73,18 @@ type alias PreAction =
     , action : List Core.Keyframe -> Core.Action
     }
 
+{-| For use when defining animations that repeat forever.
+
+  import Style exposing (forever)
+
+  Style.repeat forever
+       |> Style.update
+              [ Rotate ((+) 1) Turn
+              ]
+       |> Style.on model.style
+
+-}
+forever = 1/0
 
 {-| Create an initial style for your init model.
 
