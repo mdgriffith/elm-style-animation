@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (..) --where
 
 import Html.App as Html
 import Html exposing (..)
@@ -40,18 +40,9 @@ update action model =
                         |> Style.andThen
                         |> Style.duration (0.7 * second)
                         |> Style.update
-                            (\i prop ->
-                                case prop of
-                                    Rotate angle unit ->
-                                        -- change only the 2nd rotate in the stack
-                                        if i == 2 then
-                                            Rotate 360 unit
-                                        else
-                                            prop
-
-                                    _ ->
-                                        prop
-                            )
+                            [ Rotate identity Deg
+                            , Rotate (\_ -> 360) Deg
+                            ]
                         |> Style.andThen
                         |> Style.duration (0.7 * second)
                         |> Style.to

@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="elm.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/velocity/1.2.3/velocity.min.js"></script>
+        <style type="text/css">
+            html, body {
+                background-color: #dddddd;
+                font-family:"Open Sans";
+
+            }
+            /*a {
+                text-decoration: none;
+            }
+
+            #elm {
+                position:relative;
+                margin:150px auto;
+                height:90px;
+                width:90px;
+                margin-bottom:100px;
+
+            }
+
+            .main-button {
+                position: absolute;
+                width: 90px;
+                height: 90px;
+                border-radius: 100%;
+                background-color: #68AEF0;
+                cursor: pointer;
+                display: flex;
+                justify-content : center;
+                align-items: center;
+                color: #ffffff;
+                font-weight: lighter;
+                border: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            .child-button {
+                position: absolute;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 50px;
+                height: 50px;
+                left:20px;
+                top:20px;
+                border-radius: 100%;
+                background-color: white;
+                box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 3px;
+                color: #8898A5;
+                z-index: -1;
+            }
+
+            .message {
+                color: #aaa;
+                position:absolute;
+                width:100%;
+                text-align: center;
+                bottom:-30px;
+                left:0;
+                font-family: "Courier New";
+
+            }
+
+            .description {
+                width:500px;
+                position:relative;
+                margin:50px 50px;
+                z-index:0;
+
+            }
+
+*/
+            .dotted-box {
+                position: absolute;
+                left: 250px;
+                top: 200px;
+                width: 350px;
+                height: 350px;
+                border: 2px dashed #AAA;
+            }
+            .dotted-box.right {
+                position: absolute;
+                left: 650px;
+                top: 200px;
+                width: 350px;
+                height: 350px;
+                border: 2px dashed #AAA;
+            }
+            .dotted-box .text {
+                position:absolute;
+                bottom:-25px;
+
+            }
+            .dotted-box .box {
+                position: absolute;
+                left:0;
+                top:0;
+                height:100%;
+                width:100%;
+                background-color:rgb(58,40,69);
+                cursor: pointer;
+            }
+
+        </style>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+            <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <div class="description">
+            <div id="elm"></div>
+            <div class="dotted-box right">
+                <div id="velocity" class="box"></div>
+                <div class="text">VelocityJS</div>
+            </div>
+        </div>
+    </body>
+    <script type="text/javascript">
+        var element = document.getElementById("elm");
+        Elm.Main.embed(element);
+
+
+        var element = document.getElementById("velocity");
+        // element.addEventListener("click", function(){ Velocity(element, { rotateZ: "360deg" }, 1000); });
+        element.addEventListener("click", function(){ Velocity(element, { rotateZ: "360deg" }, [250,15]); });
+
+        
+
+    </script>
+</html>

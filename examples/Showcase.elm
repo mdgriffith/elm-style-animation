@@ -60,9 +60,8 @@ update action model =
                 widgets =
                     -- Interrupt any animation on this element and start this animation
                     Style.animate
-                        |> Style.spring Style.Spring.Presets.noWobble
                         |> Style.update
-                            [ Rotate ((+) 1) Turn
+                            [ Rotate ((+) 1.0) Turn
                             ]
                         |> (\act ->
                                 mapToIndex i
@@ -84,15 +83,12 @@ update action model =
                     -- queue up this animation
                     -- as opposed to interrupting
                     Style.queue
-                        --|> Style.duration (1 * second)
-                        |>
-                            Style.to
-                                [ RotateX 1 Turn
-                                , RotateY 1 Turn
-                                , Rotate 1 Turn
-                                ]
-                        |>
-                            (\act ->
+                        |> Style.update
+                            [ RotateX ((+) 1) Turn
+                            , RotateY ((+) 1) Turn
+                            , Rotate ((+) 1) Turn
+                            ]
+                        |> (\act ->
                                 mapToIndex i
                                     (\widget ->
                                         { widget
@@ -100,7 +96,7 @@ update action model =
                                         }
                                     )
                                     model.widgets
-                            )
+                           )
             in
                 ( { model | widgets = widgets }
                 , Cmd.none
@@ -350,6 +346,7 @@ initialWidgetStyle =
         , RotateX 0.0 Turn
         , RotateY 0.0 Turn
         , TranslateY 0.0 Px
+        , TranslateX 0.0 Px
         , Rotate 0.0 Turn
         , Opacity 1
         , BackgroundColor (rgba 58 40 69 1.0)
