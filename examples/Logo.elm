@@ -33,16 +33,16 @@ palette =
 
 
 polygons =
-    [ [ Points
-            <| alignStartingPoint
+    [ [ Points <|
+            alignStartingPoint
                 [ ( 161.649, 152.782 )
                 , ( 231.514, 82.916 )
                 , ( 91.783, 82.916 )
                 ]
       , Fill palette.orange
       ]
-    , [ Points
-            <| alignStartingPoint
+    , [ Points <|
+            alignStartingPoint
                 [ ( 8.867, 0 )
                 , ( 79.241, 70.375 )
                 , ( 232.213, 70.375 )
@@ -50,32 +50,32 @@ polygons =
                 ]
       , Fill palette.green
       ]
-    , [ Points
-            <| alignStartingPoint
+    , [ Points <|
+            alignStartingPoint
                 [ ( 323.298, 143.724 )
                 , ( 323.298, 0 )
                 , ( 179.573, 0 )
                 ]
       , Fill palette.blue
       ]
-    , [ Points
-            <| alignStartingPoint
+    , [ Points <|
+            alignStartingPoint
                 [ ( 152.781, 161.649 )
                 , ( 0, 8.868 )
                 , ( 0, 314.432 )
                 ]
       , Fill palette.lavender
       ]
-    , [ Points
-            <| alignStartingPoint
+    , [ Points <|
+            alignStartingPoint
                 [ ( 255.522, 246.655 )
                 , ( 323.298, 314.432 )
                 , ( 323.298, 178.879 )
                 ]
       , Fill palette.orange
       ]
-    , [ Points
-            <| alignStartingPoint
+    , [ Points <|
+            alignStartingPoint
                 [ ( 161.649, 170.517 )
                 , ( 8.869, 323.298 )
                 , ( 314.43, 323.298 )
@@ -128,26 +128,27 @@ view : Model -> Html Action
 view model =
     div
         [ onClick EverybodySwitch
-        , Attr.style [ ( "margin", "200px auto" ), ( "width", "500px" ), ( "height", "500px" ), ("cursor", "pointer") ]
+        , Attr.style [ ( "margin", "200px auto" ), ( "width", "500px" ), ( "height", "500px" ), ( "cursor", "pointer" ) ]
         ]
-        [ h1 [] [ text "Click to morph!"]
+        [ h1 [] [ text "Click to morph!" ]
         , svg
             [ version "1.1"
             , x "0"
             , y "0"
             , viewBox "0 0 323.141 322.95"
             ]
-            <| (rect
-                    [ fill "#7FD13B"
-                    , x "192.99"
-                    , y "107.392"
-                    , width "107.676"
-                    , height "108.167"
-                    , transform "matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
-                    ]
-                    []
-               )
-            :: (List.map (\poly -> polygon (Style.renderAttr poly) []) model.styles)
+          <|
+            (rect
+                [ fill "#7FD13B"
+                , x "192.99"
+                , y "107.392"
+                , width "107.676"
+                , height "108.167"
+                , transform "matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
+                ]
+                []
+            )
+                :: (List.map (\poly -> polygon (Style.attrs poly) []) model.styles)
         ]
 
 

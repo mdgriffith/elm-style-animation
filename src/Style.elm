@@ -1,4 +1,4 @@
-module Style exposing (Animation, init, update, render, renderAttr, animate, queue, repeat, queueRepeat, forever, on, delay, duration, easing, spring, andThen, set, tick, to)
+module Style exposing (Animation, init, update, render, attrs, animate, queue, repeat, queueRepeat, forever, on, delay, duration, easing, spring, andThen, set, tick, to)
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -20,7 +20,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs to, set, update
 
 # Render a Animation into CSS or as SVG attributes
-@docs render, renderAttr
+@docs render, attrs
 
 # Set the starting style
 @docs init
@@ -42,6 +42,7 @@ import Style.Spring as Spring
 import Style.Spring.Presets
 import Style.Core as Core
 import Svg exposing (Attribute)
+import Html.Attributes
 
 
 {-| An Animation of CSS properties.
@@ -73,6 +74,7 @@ type alias PreAction =
     , action : List Core.Keyframe -> Core.Action
     }
 
+
 {-| For use when defining animations that repeat forever.
 
   import Style exposing (forever)
@@ -85,7 +87,9 @@ type alias PreAction =
 
 -}
 forever : Float
-forever = 1/0
+forever =
+    1 / 0
+
 
 {-| Create an initial style for your init model.
 
@@ -172,18 +176,20 @@ update dynamicUpdate action =
                     kfWithOptions.frame
 
                 updatedFrame =
-                    { frame 
-                        | retarget = Just <| convertToRetargetFn dynamicUpdate 
-                        , properties = 
-                              List.map 
-                                (\prop  ->
-                                    let 
-                                        empty = Style.PropertyHelpers.vacate prop
+                    { frame
+                        | retarget = Just <| convertToRetargetFn dynamicUpdate
+                        , properties =
+                            List.map
+                                (\prop ->
+                                    let
+                                        empty =
+                                            Style.PropertyHelpers.vacate prop
                                     in
-                                      { target = empty
-                                      , current = Style.PropertyHelpers.toDynamic empty
-                                      }
-                                ) dynamicUpdate 
+                                        { target = empty
+                                        , current = Style.PropertyHelpers.toDynamic empty
+                                        }
+                                )
+                                dynamicUpdate
                     }
             in
                 { kfWithOptions | frame = updatedFrame }
@@ -221,8 +227,8 @@ on : Animation -> PreAction -> Animation
 on (A model) preaction =
     let
         action =
-            preaction.action
-                <| List.map applyKeyframeOptions preaction.frames
+            preaction.action <|
+                List.map applyKeyframeOptions preaction.frames
     in
         A <| Core.update action model
 
@@ -527,8 +533,10 @@ to sty action =
                     if
                         List.any
                             (\y ->
-                                Style.PropertyHelpers.id x == Style.PropertyHelpers.id y
-                                    && Style.PropertyHelpers.name x /= "transform"
+                                Style.PropertyHelpers.id x
+                                    == Style.PropertyHelpers.id y
+                                    && Style.PropertyHelpers.name x
+                                    /= "transform"
                             )
                             acc
                     then
@@ -561,9 +569,12 @@ to sty action =
             )
 
 
-{-| Render into concrete css that can be directly applied to 'style' in elm-html
+{-| Apply style properties as an inline style.
 
-    div [ style Style.render widget.style) ] [ ]
+
+    div [ style <| Style.render widget.style ] [ ]
+
+*Note* - This will not capture properties that cannot be represented as an inline style.  For example, in svg, the `d` property for a `path` element has to be rendered as an attribute.  In this case you'd want to use `Style.attrs` instead.
 
 -}
 render : Animation -> List ( String, String )
@@ -576,11 +587,20 @@ render (A model) =
             Style.PropertyHelpers.render <| Core.bake frame model.previous
 
 
-{-| Render into svg attributes.
+{-| Apply style properties as an inline style and assign svg attributes as necessary.
 
-    polygon (Style.renderAttr widget.style) [ ]
+For example, the 'd' svg attribute for the path element can only be rendered as an attribute.
+
+Long story short, use `Style.attrs` when using SVG, and `Style.render` when you only want an inline style.
+
+    polygon (Style.attrs widget.style) [ ]
 
 -}
+attrs : Animation -> List (Attribute msg)
+attrs animation =
+    (Html.Attributes.style <| render animation) :: renderAttr animation
+
+
 renderAttr : Animation -> List (Attribute msg)
 renderAttr (A model) =
     case List.head model.frames of
