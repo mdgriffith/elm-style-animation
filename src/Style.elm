@@ -1,4 +1,25 @@
-module Style exposing (Animation, init, update, render, attrs, animate, queue, repeat, queueRepeat, forever, on, delay, duration, easing, spring, andThen, set, tick, to)
+module Style
+    exposing
+        ( Animation
+        , init
+        , update
+        , render
+        , attrs
+        , animate
+        , queue
+        , repeat
+        , queueRepeat
+        , forever
+        , on
+        , delay
+        , duration
+        , easing
+        , spring
+        , andThen
+        , set
+        , tick
+        , to
+        )
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
 
@@ -29,8 +50,6 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs on, tick
 
 -}
-
---where
 
 import Time exposing (Time, second)
 import String exposing (concat)

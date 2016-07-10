@@ -1,4 +1,12 @@
-module Style.Properties exposing (Property (..), Length (..), Angle (..), DisplayMode (..), PathCommand (..), alignStartingPoint) --where
+module Style.Properties
+    exposing
+        ( Property(..)
+        , Length(..)
+        , Angle(..)
+        , DisplayMode(..)
+        , PathCommand(..)
+        , alignStartingPoint
+        )
 
 {-|
 All animatable properties.
@@ -12,6 +20,8 @@ All animatable properties.
 @docs alignStartingPoint
 
 -}
+
+--where
 
 import String exposing (concat)
 import Color as ElmColor
@@ -74,8 +84,7 @@ type Property a color
     | SkewX a Angle
     | SkewY a Angle
     | Perspective a
-
-    -- SVG properties
+      -- SVG properties
     | X a
     | Y a
     | Cx a
@@ -84,9 +93,10 @@ type Property a color
     | Rx a
     | Ry a
     | D (List (PathCommand a))
-    | Points (List (a,a))
+    | Points (List ( a, a ))
     | Fill color
     | Stroke color
+
 
 {-| Units representing length.
 -}
@@ -130,7 +140,6 @@ type DisplayMode
     | ListItem
 
 
-
 {-| Describe a path.  To be used in conjunction with the D property for styling svg.
 
 `To` versions of the commands are absolute, while others are relative.
@@ -145,14 +154,14 @@ type PathCommand a
     | HorizontalTo a
     | Vertical a
     | VerticalTo a
-    | Curve (List (a,a))
-    | CurveTo (List (a,a))
-    | Quadratic (List (a,a))
-    | QuadraticTo (List (a,a))
-    | SmoothQuadratic (List (a,a))
-    | SmoothQuadraticTo (List (a,a))
-    | Smooth (List (a,a))
-    | SmoothTo (List (a,a))
+    | Curve (List ( a, a ))
+    | CurveTo (List ( a, a ))
+    | Quadratic (List ( a, a ))
+    | QuadraticTo (List ( a, a ))
+    | SmoothQuadratic (List ( a, a ))
+    | SmoothQuadraticTo (List ( a, a ))
+    | Smooth (List ( a, a ))
+    | SmoothTo (List ( a, a ))
     | Arc a a a a
     | ArcTo a a a a
     | LargeArc a a a a
@@ -164,24 +173,35 @@ type PathCommand a
 
 This is useful to align polygon coordinates so that they can morph smoothely into each other.
 -}
-alignStartingPoint : List (Float, Float) -> List (Float, Float)
+alignStartingPoint : List ( Float, Float ) -> List ( Float, Float )
 alignStartingPoint points =
     let
-        sums = List.map (\(x,y) -> x + y) points
-        maybeMin = List.minimum sums
+        sums =
+            List.map (\( x, y ) -> x + y) points
+
+        maybeMin =
+            List.minimum sums
 
         indexOfLowestPoint =
             case maybeMin of
                 Nothing ->
                     Nothing
+
                 Just min ->
-                    List.head
-                        <| List.filterMap identity
-                        <| List.indexedMap (\i val -> if val == min then Just i else Nothing) sums
-
-
+                    List.head <|
+                        List.filterMap identity <|
+                            List.indexedMap
+                                (\i val ->
+                                    if val == min then
+                                        Just i
+                                    else
+                                        Nothing
+                                )
+                                sums
     in
         case indexOfLowestPoint of
-            Nothing -> points
+            Nothing ->
+                points
+
             Just i ->
                 (List.drop i points) ++ (List.take i points)

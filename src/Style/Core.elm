@@ -1,5 +1,14 @@
-module Style.Core exposing (Model, Action(..), Keyframe, Interruption, update, bake, empty, emptyKeyframe)
---where
+module Style.Core
+    exposing
+        ( Model
+        , Action(..)
+        , Keyframe
+        , Interruption
+        , update
+        , bake
+        , empty
+        , emptyKeyframe
+        )
 
 import Time exposing (Time, second)
 import Style.Properties exposing (Property)
@@ -13,7 +22,7 @@ type alias Model =
     , frames : List Keyframe
     , previous : Style
     , interruption : List Interruption
-    , repeatCache : Maybe (Float, List Keyframe)
+    , repeatCache : Maybe ( Float, List Keyframe )
     }
 
 
@@ -44,13 +53,13 @@ type alias Keyframe =
 
 
 type alias DynamicProperty =
-        Targeted Dynamic Static
+    Targeted Dynamic Static
 
-type alias Targeted current target
-    = { current : current
-      , target : target
-      }
 
+type alias Targeted current target =
+    { current : current
+    , target : target
+    }
 
 
 empty : Model
@@ -81,12 +90,14 @@ update action model =
                     let
                         amended =
                             case List.head newFrames of
-                                Nothing -> model.previous
+                                Nothing ->
+                                    model.previous
+
                                 Just frame ->
                                     amend model.previous frame
-                        
-                        initialized = mapTo 0 (initializeFrame amended amended) newFrames
 
+                        initialized =
+                            mapTo 0 (initializeFrame amended amended) newFrames
                     in
                         { model
                             | frames = initialized
@@ -104,8 +115,8 @@ update action model =
                 Just first ->
                     let
                         last =
-                            List.head
-                                <| List.reverse model.interruption
+                            List.head <|
+                                List.reverse model.interruption
 
                         interruptions =
                             case last of
@@ -133,31 +144,34 @@ update action model =
                         { model
                             | interruption = interruptions
                         }
+
         Repeat i frames ->
             if i <= 0 then
                 model
             else if i == 1 then
                 update (Interrupt frames) model
             else
-                let 
-                    newModel = update (Interrupt frames) model
+                let
+                    newModel =
+                        update (Interrupt frames) model
                 in
-                    { newModel | repeatCache = Just (i-1, frames) }
+                    { newModel | repeatCache = Just ( i - 1, frames ) }
 
         QueueRepeat i frames ->
             if i <= 0 then
                 model
-            else 
-                let 
-                    newModel = update (Queue frames) model
+            else
+                let
+                    newModel =
+                        update (Queue frames) model
+
                     repeatCache =
                         if i > 1 then
-                            Just (i-1, frames)
+                            Just ( i - 1, frames )
                         else
                             Nothing
                 in
                     { newModel | repeatCache = repeatCache }
-
 
         Tick now ->
             let
@@ -167,11 +181,10 @@ update action model =
                 case List.head model.interruption of
                     Just interruption ->
                         if elapsed >= interruption.at then
-                           interrupt now
+                            interrupt now
                                 model
                                 interruption.frame
                                 (List.drop 1 model.interruption)
-                               
                         else
                             case List.head model.frames of
                                 Nothing ->
@@ -215,7 +228,6 @@ tick model current totalElapsed dt start now =
         else if done elapsed current then
             -- animation is finished, switch to new frame
             let
-
                 frames =
                     List.drop 1 model.frames
 
@@ -233,13 +245,16 @@ tick model current totalElapsed dt start now =
 
                 amended =
                     case List.head frames of
-                        Nothing -> previous
+                        Nothing ->
+                            previous
+
                         Just frame ->
                             amend previous frame
 
-                initialized = mapTo 0 (initializeFrame amended amended) frames
+                initialized =
+                    mapTo 0 (initializeFrame amended amended) frames
 
-                newModel = 
+                newModel =
                     { model
                         | elapsed = 0.0
                         , start = Just now
@@ -249,20 +264,21 @@ tick model current totalElapsed dt start now =
                     }
             in
                 if List.length newModel.frames == 0 then
-                    case newModel.repeatCache of 
-                        Nothing -> newModel
+                    case newModel.repeatCache of
+                        Nothing ->
+                            newModel
+
                         Just repeat ->
-                            let 
-                                newRepeat = 
+                            let
+                                newRepeat =
                                     if fst repeat == 1 then
                                         Nothing
                                     else
-                                        Just (fst repeat - 1, snd repeat)
+                                        Just ( fst repeat - 1, snd repeat )
                             in
                                 update (Queue (snd repeat)) { newModel | repeatCache = newRepeat }
                 else
                     newModel
-                
         else
             -- normal tick
             { model
@@ -270,7 +286,6 @@ tick model current totalElapsed dt start now =
                 , start = Just start
                 , frames = mapTo 0 (step elapsed dt model.previous) model.frames
             }
-
 
 
 getTimes : Time -> Model -> ( Time, Time, Time )
@@ -323,21 +338,24 @@ interrupt now model interruption remaining =
                     , getTarget frame
                     , mapTo 0
                         (\newFrame ->
-                           transferVelocity frame newFrame
+                            transferVelocity frame newFrame
                         )
                         interruption
                     )
 
-        
         amended =
             case List.head newFrames of
-                Nothing -> previous
+                Nothing ->
+                    previous
+
                 Just frame ->
                     amend previous frame
 
         amendedTarget =
             case List.head newFrames of
-                Nothing -> prevTarget
+                Nothing ->
+                    prevTarget
+
                 Just frame ->
                     amend prevTarget frame
     in
@@ -352,8 +370,7 @@ interrupt now model interruption remaining =
 
 getTarget : Keyframe -> Style
 getTarget frame =
-        List.map (\prop -> prop.target) frame.properties
-
+    List.map (\prop -> prop.target) frame.properties
 
 
 {-| amend the style to compensate for the number of points in the Points property
@@ -361,35 +378,41 @@ getTarget frame =
 amend : Style -> Keyframe -> Style
 amend style frame =
     let
-        paired =  zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b.target) style frame.properties
+        paired =
+            zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b.target) style frame.properties
     in
         List.map
-            (\(styleProps, maybeFrame) ->
+            (\( styleProps, maybeFrame ) ->
                 case maybeFrame of
-                    Nothing -> styleProps
+                    Nothing ->
+                        styleProps
+
                     Just frame ->
                         Style.PropertyHelpers.matchPoints styleProps frame.target
             )
-        paired
+            paired
 
 
 initializeFrame : Style -> Style -> Keyframe -> Keyframe
 initializeFrame style prevTargetStyle frame =
     let
-        matched =  zipWith (\a b -> (Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b)) frame.properties style
+        matched =
+            zipWith (\a b -> (Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b)) frame.properties style
+
         warnings =
             List.map
-                (\(a, maybeB) ->
+                (\( a, maybeB ) ->
                     case maybeB of
                         Nothing ->
                             let
                                 warn =
                                     Debug.log "elm-style-animation"
                                         ("There is no initial value for '"
-                                        ++ Style.PropertyHelpers.id a.current
-                                        ++ "', though it is queued to be animated.  Define an initial value for '"
-                                        ++ Style.PropertyHelpers.id a.current
-                                        ++ "'")
+                                            ++ Style.PropertyHelpers.id a.current
+                                            ++ "', though it is queued to be animated.  Define an initial value for '"
+                                            ++ Style.PropertyHelpers.id a.current
+                                            ++ "'"
+                                        )
                             in
                                 Just warn
 
@@ -399,98 +422,115 @@ initializeFrame style prevTargetStyle frame =
                             else
                                 let
                                     warn =
-                                         Debug.log "elm-style-animation"
+                                        Debug.log "elm-style-animation"
                                             ("Wrong units provided.  "
-                                            ++ "An initial value was given as '"
-                                            ++ Style.PropertyHelpers.id b
-                                            ++ "' versus the animation which was given as '"
-                                            ++ Style.PropertyHelpers.id a.current
-                                            ++ "'.")
+                                                ++ "An initial value was given as '"
+                                                ++ Style.PropertyHelpers.id b
+                                                ++ "' versus the animation which was given as '"
+                                                ++ Style.PropertyHelpers.id a.current
+                                                ++ "'."
+                                            )
                                 in
                                     Just warn
-                ) matched
-        retargeted = retargetIfNecessary frame prevTargetStyle
+                )
+                matched
+
+        retargeted =
+            retargetIfNecessary frame prevTargetStyle
     in
         step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
-
 
 
 retargetIfNecessary : Keyframe -> Style -> Keyframe
 retargetIfNecessary frame lastTargetStyle =
     case frame.retarget of
-        Nothing -> frame
+        Nothing ->
+            frame
+
         Just retarget ->
             let
-                possiblePairs =  zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
-                pairs = List.filterMap 
-                            (\(prop, style) ->
-                                case style of 
-                                    Nothing -> Nothing
-                                    Just s ->
-                                        Just (prop, s)
+                possiblePairs =
+                    zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
 
-                            ) possiblePairs 
+                pairs =
+                    List.filterMap
+                        (\( prop, style ) ->
+                            case style of
+                                Nothing ->
+                                    Nothing
+
+                                Just s ->
+                                    Just ( prop, s )
+                        )
+                        possiblePairs
             in
-                { frame |
-                    properties =
-                        mapWithCount 
-                            (\i (prop, prevStyle) ->
-                                { prop 
+                { frame
+                    | properties =
+                        mapWithCount
+                            (\i ( prop, prevStyle ) ->
+                                { prop
                                     | target = retarget i prevStyle
                                 }
-                            ) pairs
+                            )
+                            pairs
                 }
 
 
 getPropCount x list =
-    List.foldl (\y acc ->
-                    if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then
-                        acc+1
-                    else acc
-                ) 1 list
+    List.foldl
+        (\y acc ->
+            if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then
+                acc + 1
+            else
+                acc
+        )
+        1
+        list
 
 
 mapWithCount fn list =
     let
         mapped =
-             List.foldl
+            List.foldl
                 (\x acc ->
                     let
-                        count = getPropCount (snd x) acc.past
+                        count =
+                            getPropCount (snd x) acc.past
                     in
-                        { current = acc.current ++ [fn count x]
-                        , past = acc.past ++ [snd x]
+                        { current = acc.current ++ [ fn count x ]
+                        , past = acc.past ++ [ snd x ]
                         }
-                ) { current = []
-                  , past = []
-                  } 
+                )
+                { current = []
+                , past = []
+                }
                 list
-    in mapped.current
-
+    in
+        mapped.current
 
 
 matchPoints : Keyframe -> Style -> Keyframe
 matchPoints frame lastTargetStyle =
     let
-        paired =  zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
+        paired =
+            zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
     in
-        { frame |
-            properties =
+        { frame
+            | properties =
                 List.map
-                    (\(frameProps, maybeLastTarget) ->
+                    (\( frameProps, maybeLastTarget ) ->
                         case maybeLastTarget of
-                            Nothing -> frameProps
+                            Nothing ->
+                                frameProps
+
                             Just lastTarget ->
                                 { frameProps
                                     | target = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
                                     , current = Style.PropertyHelpers.matchPoints frameProps.current lastTarget
                                 }
                     )
-                paired
+                    paired
         }
-
-
-
 
 
 done : Time -> Keyframe -> Bool
@@ -502,90 +542,90 @@ done time frame =
                     Spring.atRest prop.spring prop.physical
 
                 Just easing ->
-                        time >= easing.duration
-                     && easing.counterForcePhys == Nothing
+                    time
+                        >= easing.duration
+                        && easing.counterForcePhys
+                        == Nothing
     in
         List.all (\p -> Style.PropertyHelpers.is finished p.current) frame.properties
-
-
-
 
 
 transferVelocity : Keyframe -> Keyframe -> Keyframe
 transferVelocity old new =
     let
-        matched = zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b.current) old.properties new.properties
+        matched =
+            zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b.current) old.properties new.properties
 
         newProperties =
             List.map
-                (\(a, maybeB) ->
+                (\( a, maybeB ) ->
                     case maybeB of
                         Nothing ->
                             a
 
                         Just b ->
                             let
-                                newCurrent = Style.PropertyHelpers.updateFrom transferVelocityProp a.current b.current
+                                newCurrent =
+                                    Style.PropertyHelpers.updateFrom transferVelocityProp a.current b.current
                             in
                                 { b | current = newCurrent }
-                ) matched
+                )
+                matched
     in
         { new | properties = newProperties }
 
 
-
 transferVelocityProp : Physics -> Physics -> Physics
 transferVelocityProp old target =
-            let
-                newPhys =
-                    target.physical
+    let
+        newPhys =
+            target.physical
 
-                newV =
-                    { newPhys | velocity = old.physical.velocity }
+        newV =
+            { newPhys | velocity = old.physical.velocity }
 
-                -- If the target physics is easing based,
-                --  calculate a new velocity based on
-                -- what the easing velocity will be minus the old.physical.velocity
-                --  Everyhting left over will transfer to the counterForce spring
-            in
-                case target.easing of
-                    Nothing ->
-                        { target | physical = newV }
+        -- If the target physics is easing based,
+        --  calculate a new velocity based on
+        -- what the easing velocity will be minus the old.physical.velocity
+        --  Everyhting left over will transfer to the counterForce spring
+    in
+        case target.easing of
+            Nothing ->
+                { target | physical = newV }
 
-                    Just easing ->
-                        let
-                            sampleSize =
-                                16.0
+            Just easing ->
+                let
+                    sampleSize =
+                        16.0
 
-                            -- how many milliseconds to take the sample at
-                            eased =
-                                if easing.duration <= 0 then
-                                    1.0
-                                else
-                                    easing.ease (sampleSize / easing.duration)
+                    -- how many milliseconds to take the sample at
+                    eased =
+                        if easing.duration <= 0 then
+                            1.0
+                        else
+                            easing.ease (sampleSize / easing.duration)
 
-                            easeV =
-                                velocity 0 eased sampleSize
+                    easeV =
+                        velocity 0 eased sampleSize
 
-                            -- easing initial velocity
-                            deltaV =
-                                old.physical.velocity - easeV
+                    -- easing initial velocity
+                    deltaV =
+                        old.physical.velocity - easeV
 
-                            newEasing =
-                                Just
-                                    <| { easing
-                                        | counterForcePhys =
-                                            Just
-                                                <| { position = 0
-                                                   , velocity = deltaV
-                                                   }
-                                       }
-                        in
-                            { target
-                                | easing = newEasing
-                                , physical = newV
+                    newEasing =
+                        Just <|
+                            { easing
+                                | counterForcePhys =
+                                    Just <|
+                                        { position = 0
+                                        , velocity = deltaV
+                                        }
                             }
-
+                in
+                    { target
+                        | easing = newEasing
+                        , physical = newV
+                    }
 
 
 velocity : Float -> Float -> Time -> Float
@@ -593,114 +633,113 @@ velocity oldPos newPos dt =
     (newPos - oldPos) / dt
 
 
-
 {-| Advance a Keyframe given the existing style and the current times.
 -}
 step : Time -> Time -> Style -> Keyframe -> Keyframe
 step time dt style frame =
-     let
+    let
         newProperties =
             zipWith (\a b -> Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b) frame.properties style
-                 |> List.map
-                        (\(a, maybeB) ->
-                            case maybeB of
-                                Nothing ->
-                                    a
+                |> List.map
+                    (\( a, maybeB ) ->
+                        case maybeB of
+                            Nothing ->
+                                a
 
-                                Just b ->
-                                    { a
-                                      | current = Style.PropertyHelpers.updateOver (applyStep time dt) a.target b a.current
-                                    }
-                        )
+                            Just b ->
+                                { a
+                                    | current = Style.PropertyHelpers.updateOver (applyStep time dt) a.target b a.current
+                                }
+                    )
     in
         { frame | properties = newProperties }
 
 
 applyStep : Time -> Time -> Float -> Float -> Physics -> Physics
 applyStep current dt target from physics =
-        case physics.easing of
-            Nothing ->
-                --physics
-                let
-                    positioned =
-                        -- Kind of a hack to establish initial values :/
-                        if current == 0.0 && dt == 0.0 then
-                            { position = from
-                            , velocity = physics.physical.velocity
-                            }
-                        else
-                            physics.physical
-
-                    newSpring =
-                        physics.spring
-
-                    targeted =
-                        { newSpring
-                            | destination = target
-                            --| destination = physics.target from 1.0
+    case physics.easing of
+        Nothing ->
+            --physics
+            let
+                positioned =
+                    -- Kind of a hack to establish initial values :/
+                    if current == 0.0 && dt == 0.0 then
+                        { position = from
+                        , velocity = physics.physical.velocity
                         }
-
-                    --positioned =
-                    --  { newPhysical
-                    --    | position = pos
-                    --  }
-                    finalPhysical =
-                        Spring.update dt targeted positioned
-                in
-                    { physics
-                        | physical = finalPhysical
-                        , spring = targeted
-                    }
-
-            Just easing ->
-                let
-
-                    eased =
-                        if easing.duration <= 0 then
-                            1.0
-                        else if current > easing.duration then
-                            1.0
-                        else
-                            easing.ease (current / easing.duration)
-
-                    physical =
+                    else
                         physics.physical
 
-                    currentPos =
-                        ((target - from) * eased) + from
-                        --physics.target from eased
+                newSpring =
+                    physics.spring
 
-                    counterSpring =
-                        case easing.counterForcePhys of
-                            Nothing ->
-                                Just easing
+                targeted =
+                    { newSpring
+                        | destination =
+                            target
+                            --| destination = physics.target from 1.0
+                    }
 
-                            Just phys ->
-                                let
-                                    newCounterSpring =
-                                        Spring.update dt easing.counterForce phys
-                                in
-                                    if Spring.atRest easing.counterForce newCounterSpring then
-                                        Just
-                                            <| { easing
-                                                | counterForcePhys = Nothing
-                                               }
-                                    else
-                                        Just
-                                            <| { easing
-                                                | counterForcePhys = Just newCounterSpring
-                                               }
+                --positioned =
+                --  { newPhysical
+                --    | position = pos
+                --  }
+                finalPhysical =
+                    Spring.update dt targeted positioned
+            in
+                { physics
+                    | physical = finalPhysical
+                    , spring = targeted
+                }
 
-                    finalPhysical =
-                        { physical
-                            | position = currentPos
-                            , velocity = velocity physics.physical.position currentPos dt
-                        }
-                in
-                    { physics
-                        | physical = finalPhysical
-                        , easing = counterSpring
-                        }
+        Just easing ->
+            let
+                eased =
+                    if easing.duration <= 0 then
+                        1.0
+                    else if current > easing.duration then
+                        1.0
+                    else
+                        easing.ease (current / easing.duration)
+
+                physical =
+                    physics.physical
+
+                currentPos =
+                    ((target - from) * eased) + from
+
+                --physics.target from eased
+                counterSpring =
+                    case easing.counterForcePhys of
+                        Nothing ->
+                            Just easing
+
+                        Just phys ->
+                            let
+                                newCounterSpring =
+                                    Spring.update dt easing.counterForce phys
+                            in
+                                if Spring.atRest easing.counterForce newCounterSpring then
+                                    Just <|
+                                        { easing
+                                            | counterForcePhys = Nothing
+                                        }
+                                else
+                                    Just <|
+                                        { easing
+                                            | counterForcePhys = Just newCounterSpring
+                                        }
+
+                finalPhysical =
+                    { physical
+                        | position = currentPos
+                        , velocity = velocity physics.physical.position currentPos dt
+                    }
+            in
+                { physics
+                    | physical = finalPhysical
+                    , easing = counterSpring
+                }
 
 
 mapTo : Int -> (a -> a) -> List a -> List a
@@ -717,33 +756,36 @@ mapTo i fn xs =
 
 bake : Keyframe -> Style -> Style
 bake frame style =
-    fill style
-        <| List.map
+    fill style <|
+        List.map
             (\prop ->
                 toStatic prop.current
             )
             frame.properties
 
-zipWith : (a -> b -> Bool) -> List a -> List b -> List (a, Maybe b)
+
+zipWith : (a -> b -> Bool) -> List a -> List b -> List ( a, Maybe b )
 zipWith fn listA listB =
-    fst <| List.foldl
-                (\a (stack, bStack) ->
-                    let
-                        (matching, unmatching) = List.partition (\b -> fn a b) bStack
-                        maybeB = List.head matching
-                        remaining = Maybe.withDefault [] <| List.tail matching
-                    in
-                        (stack ++ [(a, maybeB)], unmatching ++ remaining)
+    fst <|
+        List.foldl
+            (\a ( stack, bStack ) ->
+                let
+                    ( matching, unmatching ) =
+                        List.partition (\b -> fn a b) bStack
 
-                )
-                ([], listB)
-                listA
+                    maybeB =
+                        List.head matching
 
-
-
+                    remaining =
+                        Maybe.withDefault [] <| List.tail matching
+                in
+                    ( stack ++ [ ( a, maybeB ) ], unmatching ++ remaining )
+            )
+            ( [], listB )
+            listA
 
 
 fill : Style -> Style -> Style
 fill existing new =
-        zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b) existing new
-     |> List.map (\(a, maybeB) -> Maybe.withDefault a maybeB )
+    zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b) existing new
+        |> List.map (\( a, maybeB ) -> Maybe.withDefault a maybeB)
