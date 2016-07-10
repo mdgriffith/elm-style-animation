@@ -619,6 +619,7 @@ transferVelocityProp old target =
                                     Just <|
                                         { position = 0
                                         , velocity = deltaV
+                                        , mass = 1
                                         }
                             }
                 in
@@ -666,6 +667,7 @@ applyStep current dt target from physics =
                     if current == 0.0 && dt == 0.0 then
                         { position = from
                         , velocity = physics.physical.velocity
+                        , mass = 1
                         }
                     else
                         physics.physical

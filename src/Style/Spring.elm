@@ -1,77 +1,92 @@
-module Style.Spring exposing (Model, Physical, update, atRest, duration) 
+module Style.Spring exposing (Model, Physical, update, atRest, duration)
 
 import Time exposing (Time, second)
 
-{-|  Springs are always modeled from 0-1
+
+{-| Springs are always modeled from 0-1
 
 
 -}
-
 type alias Model =
-  { stiffness : Float
-  , damping : Float
-  , destination : Float
-  }
+    { stiffness : Float
+    , damping : Float
+    , destination : Float
+    }
+
 
 type alias Physical =
-  { position : Float
-  , velocity : Float
-  }
+    { position : Float
+    , velocity : Float
+    , mass : Float
+    }
 
-tolerance = 0.01
 
-vTolerance = 0.1
-  --1.0e-2
+tolerance =
+    0.01
+
+
+vTolerance =
+    0.1
+
+
+
+--1.0e-2
+
 
 update : Time -> Model -> Physical -> Physical
 update dtms spring phys =
-          let
-            dt =
-              dtms / 1000
+    let
+        dt =
+            dtms / 1000
 
-            fspring =
-              -spring.stiffness * (phys.position - spring.destination)
+        fspring =
+            -spring.stiffness * (phys.position - spring.destination)
 
-            fdamper =
-              -spring.damping * phys.velocity
+        fdamper =
+            -spring.damping * phys.velocity
 
-            a =
-              fspring + fdamper
+        a =
+            fspring + fdamper
 
-            newV =
-              phys.velocity + a * dt
+        newV =
+            phys.velocity + a * dt
 
-            newX =
-              phys.position + newV * dt
-
-          in
-            if (abs (spring.destination - newX)) < tolerance && abs newV < vTolerance then
-              { phys
+        newX =
+            phys.position + newV * dt
+    in
+        if (abs (spring.destination - newX)) < tolerance && abs newV < vTolerance then
+            { phys
                 | position = spring.destination
                 , velocity = 0.0
-              }
-            else
-              { phys
+            }
+        else
+            { phys
                 | position = newX
                 , velocity = newV
-              }
+            }
 
 
 atRest : Model -> Physical -> Bool
 atRest spring physical =
-     abs (spring.destination - physical.position) < tolerance
-  && abs physical.velocity < vTolerance
+    abs (spring.destination - physical.position)
+        < tolerance
+        && abs physical.velocity
+        < vTolerance
 
 
 duration : Model -> Physical -> Time
 duration spring phys =
-  snd
-    <| List.foldl
-        (\t ( phys, d ) ->
-          if atRest spring phys then
-            ( phys, d )
-          else
-           ( update 1 spring phys, t )
-        )
-        ( phys, 0 )
-        [1..10000] -- Ticks in ms
+    snd <|
+        List.foldl
+            (\t ( phys, d ) ->
+                if atRest spring phys then
+                    ( phys, d )
+                else
+                    ( update 1 spring phys, t )
+            )
+            ( phys, 0 )
+            [1..10000]
+
+
+
+-- Ticks in ms

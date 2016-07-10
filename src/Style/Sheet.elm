@@ -3,6 +3,7 @@ module Style.Sheet exposing (Model, tick, render, attrs, update, init)
 import Style
 import Style.Properties
 import Color as ElmColor
+import Svg exposing (Attribute)
 
 
 type alias Model id =

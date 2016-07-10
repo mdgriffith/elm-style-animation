@@ -73,6 +73,7 @@ emptyPhysics =
     { physical =
         { position = 0
         , velocity = 0
+        , mass = 1
         }
     , spring =
         { stiffness = 170
