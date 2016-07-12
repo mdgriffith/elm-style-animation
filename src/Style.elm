@@ -157,8 +157,8 @@ __Note:__ This will cause both `duration` and `easing` to be ignored as they are
                 , damping = 28
                 }
          |> Style.to
-             [ Left (Style.to 0) Px
-             , Opacity (Style.to 1)
+             [ Left 0 Px
+             , Opacity 1
              ]
          |> Style.on model.style
 -}
