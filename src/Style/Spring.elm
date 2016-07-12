@@ -29,10 +29,6 @@ vTolerance =
     0.1
 
 
-
---1.0e-2
-
-
 update : Time -> Model -> Physical -> Physical
 update dtms spring phys =
     let

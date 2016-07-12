@@ -2,8 +2,8 @@ module Style.Sheet exposing (Model, tick, render, attrs, update, init)
 
 import Style
 import Style.Properties
-import Color as ElmColor
-import Svg exposing (Attribute)
+import Color
+import Svg
 
 
 type alias Model id =
@@ -29,7 +29,7 @@ render sheet id =
                 Style.render <| snd style
 
 
-attrs : Model id -> id -> List (Attribute msg)
+attrs : Model id -> id -> List (Svg.Attribute msg)
 attrs sheet id =
     let
         matching =
@@ -52,7 +52,7 @@ update sheet fn =
         sheet
 
 
-init : List id -> (id -> List (Style.Properties.Property Float ElmColor.Color)) -> Model id
+init : List id -> (id -> List (Style.Properties.Property Float Color.Color)) -> Model id
 init ids initFn =
     List.map
         (\id ->
