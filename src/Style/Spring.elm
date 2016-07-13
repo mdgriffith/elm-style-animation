@@ -3,7 +3,7 @@ module Style.Spring exposing (Model, Physical, update, atRest, duration)
 import Time exposing (Time, second)
 
 
-{-| Springs are always modeled from 0-1
+{-|
 
 
 -}
