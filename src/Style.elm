@@ -124,9 +124,7 @@ init sty =
                     if
                         List.any
                             (\y ->
-                                (Style.PropertyHelpers.id x
-                                    == Style.PropertyHelpers.id y
-                                )
+                                (Style.PropertyHelpers.id x == Style.PropertyHelpers.id y)
                                     && (Style.PropertyHelpers.name x /= "transform")
                             )
                             acc
@@ -419,9 +417,9 @@ applyKeyframeOptions options =
     Style.animate
          |> Style.duration (0.4*second)
          |> Style.to
-             [ Opacity (Style.to 1)
+             [ Opacity 1
              ]
-      |> Style.andThen
+         |> Style.andThen
          |> Style.set
              [ Display None
              ]
@@ -500,21 +498,23 @@ easing ease action =
 
 For example, to cycle through colors, we'd use the following:
 
+
+
       Style.animate
           |> Style.to
-              [ BackgroundColor
-                    Style.toRGBA 100 100 100 1.0
+              [ BackgroundColor <|
+                    Color.rgba 100 100 100 1.0
               ]
           |> Style.andThen -- create a new keyframe
           |> Style.duration (1*second)
           |> Style.to
-              [ BackgroundColor
-                    Style.toRGBA 178 201 14 1.0
+              [ BackgroundColor <|
+                    Color.rgba 178 201 14 1.0
               ]
           |> Style.andThen
           |> Style.to
-              [ BackgroundColor
-                    Style.toRGBA 58 40 69 1.0
+              [ BackgroundColor <|
+                    Color.rgba 58 40 69 1.0
               ]
           |> Style.on model.style
 -}
