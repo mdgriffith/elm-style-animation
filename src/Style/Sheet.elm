@@ -43,8 +43,8 @@ attrs sheet id =
                 Style.attrs <| snd style
 
 
-update : Model id -> (id -> Style.Animation -> Style.Animation) -> Model id
-update sheet fn =
+update : (id -> Style.Animation -> Style.Animation) -> Model id -> Model id
+update fn sheet =
     List.map
         (\( id, x ) ->
             ( id, fn id x )
@@ -52,8 +52,8 @@ update sheet fn =
         sheet
 
 
-init : List id -> (id -> List (Style.Properties.Property Float Color.Color)) -> Model id
-init ids initFn =
+init : (id -> List (Style.Properties.Property Float Color.Color)) -> List id -> Model id
+init initFn ids =
     List.map
         (\id ->
             ( id, Style.init <| initFn id )
