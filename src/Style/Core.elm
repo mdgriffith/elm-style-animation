@@ -537,15 +537,7 @@ done : Time -> Keyframe -> Bool
 done time frame =
     let
         finished prop =
-            case prop.easing of
-                Nothing ->
-                    Spring.atRest prop.spring prop.physical
-
-                Just easing ->
-                    time
-                        >= easing.duration
-                        && easing.counterForcePhys
-                        == Nothing
+            Spring.atRest prop.spring prop.physical
     in
         List.all (\p -> Style.PropertyHelpers.is finished p.current) frame.properties
 
@@ -583,50 +575,8 @@ transferVelocityProp old target =
 
         newV =
             { newPhys | velocity = old.physical.velocity }
-
-        -- If the target physics is easing based,
-        --  calculate a new velocity based on
-        -- what the easing velocity will be minus the old.physical.velocity
-        --  Everyhting left over will transfer to the counterForce spring
     in
-        case target.easing of
-            Nothing ->
-                { target | physical = newV }
-
-            Just easing ->
-                let
-                    sampleSize =
-                        16.0
-
-                    -- how many milliseconds to take the sample at
-                    eased =
-                        if easing.duration <= 0 then
-                            1.0
-                        else
-                            easing.ease (sampleSize / easing.duration)
-
-                    easeV =
-                        velocity 0 eased sampleSize
-
-                    -- easing initial velocity
-                    deltaV =
-                        old.physical.velocity - easeV
-
-                    newEasing =
-                        Just <|
-                            { easing
-                                | counterForcePhys =
-                                    Just <|
-                                        { position = 0
-                                        , velocity = deltaV
-                                        , mass = 1
-                                        }
-                            }
-                in
-                    { target
-                        | easing = newEasing
-                        , physical = newV
-                    }
+        { target | physical = newV }
 
 
 velocity : Float -> Float -> Time -> Float
@@ -658,90 +608,32 @@ step time dt style frame =
 
 applyStep : Time -> Time -> Float -> Float -> Physics -> Physics
 applyStep current dt target from physics =
-    case physics.easing of
-        Nothing ->
-            --physics
-            let
-                positioned =
-                    -- Kind of a hack to establish initial values :/
-                    if current == 0.0 && dt == 0.0 then
-                        { position = from
-                        , velocity = physics.physical.velocity
-                        , mass = 1
-                        }
-                    else
-                        physics.physical
-
-                newSpring =
-                    physics.spring
-
-                targeted =
-                    { newSpring
-                        | destination =
-                            target
-                            --| destination = physics.target from 1.0
-                    }
-
-                --positioned =
-                --  { newPhysical
-                --    | position = pos
-                --  }
-                finalPhysical =
-                    Spring.update dt targeted positioned
-            in
-                { physics
-                    | physical = finalPhysical
-                    , spring = targeted
+    let
+        positioned =
+            -- Kind of a hack to establish initial values :/
+            if current == 0.0 && dt == 0.0 then
+                { position = from
+                , velocity = physics.physical.velocity
+                , mass = 1
                 }
+            else
+                physics.physical
 
-        Just easing ->
-            let
-                eased =
-                    if easing.duration <= 0 then
-                        1.0
-                    else if current > easing.duration then
-                        1.0
-                    else
-                        easing.ease (current / easing.duration)
+        newSpring =
+            physics.spring
 
-                physical =
-                    physics.physical
+        targeted =
+            { newSpring
+                | destination = target
+            }
 
-                currentPos =
-                    ((target - from) * eased) + from
-
-                --physics.target from eased
-                counterSpring =
-                    case easing.counterForcePhys of
-                        Nothing ->
-                            Just easing
-
-                        Just phys ->
-                            let
-                                newCounterSpring =
-                                    Spring.update dt easing.counterForce phys
-                            in
-                                if Spring.atRest easing.counterForce newCounterSpring then
-                                    Just <|
-                                        { easing
-                                            | counterForcePhys = Nothing
-                                        }
-                                else
-                                    Just <|
-                                        { easing
-                                            | counterForcePhys = Just newCounterSpring
-                                        }
-
-                finalPhysical =
-                    { physical
-                        | position = currentPos
-                        , velocity = velocity physics.physical.position currentPos dt
-                    }
-            in
-                { physics
-                    | physical = finalPhysical
-                    , easing = counterSpring
-                }
+        finalPhysical =
+            Spring.update dt targeted positioned
+    in
+        { physics
+            | physical = finalPhysical
+            , spring = targeted
+        }
 
 
 mapTo : Int -> (a -> a) -> List a -> List a

@@ -1,4 +1,4 @@
-module Main exposing (..) 
+module Main exposing (..)
 
 import Html.App as Html
 import Html exposing (..)
@@ -28,26 +28,19 @@ update action model =
             let
                 style =
                     Style.animate
-                        |>
-                            Style.to
-                                [ BackgroundColor (rgba 100 100 100 1.0)
-                                ]
-                        |>
-                            Style.andThen -- create a new keyframe
-                        |>
-                            Style.duration (1 * second)
-                        |>
-                            Style.to
-                                [ BackgroundColor (rgba 178 201 14 1.0)
-                                ]
-                        |>
-                            Style.andThen
-                        |>
-                            Style.to
-                                [ BackgroundColor (rgba 58 40 69 1.0)
-                                ]
-                        |>
-                            Style.on model.style
+                        |> Style.to
+                            [ BackgroundColor (rgba 100 100 100 1.0)
+                            ]
+                        |> Style.andThen
+                        |> Style.duration (1 * second)
+                        |> Style.to
+                            [ BackgroundColor (rgba 178 201 14 1.0)
+                            ]
+                        |> Style.andThen
+                        |> Style.to
+                            [ BackgroundColor (rgba 58 40 69 1.0)
+                            ]
+                        |> Style.on model.style
             in
                 ( { model | style = style }
                 , Cmd.none
