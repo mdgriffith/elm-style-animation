@@ -84,6 +84,22 @@ emptyPhysics =
     }
 
 
+physicsInit : Float -> Physics
+physicsInit x =
+    { physical =
+        { position = x
+        , velocity = 0
+        , mass = 1
+        }
+    , spring =
+        { stiffness = 170
+        , damping = 26
+        , destination = 1
+        }
+    , easing = Nothing
+    }
+
+
 emptyEasing =
     { ease = defaultEasing
     , counterForce =
@@ -109,6 +125,19 @@ defaultEasing x =
 emptyDynamicColor : DynamicColor
 emptyDynamicColor =
     RGBA emptyPhysics emptyPhysics emptyPhysics emptyPhysics
+
+
+initDynamicColor : ElmColor.Color -> DynamicColor
+initDynamicColor color =
+    let
+        { red, blue, green, alpha } =
+            ElmColor.toRgb color
+    in
+        RGBA
+            (physicsInit <| toFloat red)
+            (physicsInit <| toFloat blue)
+            (physicsInit <| toFloat green)
+            (physicsInit alpha)
 
 
 {-| Render style properties into their css values.
@@ -1316,8 +1345,9 @@ toStaticColor dynamic =
             ElmColor.rgba (round r.physical.position) (round g.physical.position) (round b.physical.position) (a.physical.position)
 
 
+toDynamic : Static -> Dynamic
 toDynamic prop =
-    map (\_ -> emptyPhysics) (\_ -> emptyDynamicColor) prop
+    map physicsInit initDynamicColor prop
 
 
 vacate : Property a colorA -> Static

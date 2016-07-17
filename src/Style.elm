@@ -2,20 +2,15 @@ module Style
     exposing
         ( Animation
         , init
-        , update
+          -- , update
         , render
         , attrs
         , animate
         , queue
-        , repeat
-        , queueRepeat
         , forever
         , on
-        , delay
-        , duration
-        , easing
-        , spring
-        , andThen
+        , wait
+          -- , spring
         , set
         , tick
         , to
@@ -32,10 +27,10 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs Animation
 
 # Starting an animation
-@docs animate, queue, repeat, queueRepeat, forever
+@docs animate, queue, forever
 
 # Creating animations
-@docs delay, spring, duration, easing, andThen
+@docs wait
 
 # Animating Properties
 @docs to, set, update
@@ -60,6 +55,7 @@ import Style.PropertyHelpers exposing (Style, emptyEasing, Static, id, apply)
 import Style.Spring as Spring
 import Style.Spring.Presets
 import Style.Core as Core
+import Style.Collection
 import Svg exposing (Attribute)
 import Html.Attributes
 
@@ -70,26 +66,10 @@ type Animation
     = A Core.Model
 
 
-type alias KeyframeWithOptions =
-    { frame : Core.Keyframe
-    , duration : Maybe Time
-    , easing : Maybe (Float -> Float)
-    , spring : Maybe Spring.Model
-    }
-
-
-emptyKeyframeWithOptions =
-    { frame = Core.emptyKeyframe
-    , duration = Nothing
-    , easing = Nothing
-    , spring = Nothing
-    }
-
-
 {-| A Temporary type that is used in constructing actions.
 -}
 type alias PreAction =
-    { frames : List KeyframeWithOptions
+    { frames : List Core.Keyframe
     , action : List Core.Keyframe -> Core.Action
     }
 
@@ -116,101 +96,79 @@ __Note__ All properties that you animate must be present in the init or else tha
 
 -}
 init : Style -> Animation
-init sty =
-    let
-        deduped =
-            List.foldr
-                (\x acc ->
-                    if
-                        List.any
-                            (\y ->
-                                (Style.PropertyHelpers.id x == Style.PropertyHelpers.id y)
-                                    && (Style.PropertyHelpers.name x /= "transform")
-                            )
-                            acc
-                    then
-                        acc
-                    else
-                        x :: acc
-                )
-                []
-                sty
-
-        empty =
-            Core.empty
-    in
-        A { empty | previous = deduped }
+init style =
+    A <| Core.init style
 
 
-{-| Animate based on spring physics.
 
-You'll need to provide both a stiffness and a dampness to this function.
-
-__Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
-
-     Style.animate
-      -- |> Style.spring Style.noWobble -- set using a UI preset
-         |> Style.spring
-                { stiffness = 400
-                , damping = 28
-                }
-         |> Style.to
-             [ Left 0 Px
-             , Opacity 1
-             ]
-         |> Style.on model.style
--}
-spring : Style.Spring.Presets.SpringProps -> PreAction -> PreAction
-spring spring action =
-    let
-        newSpring =
-            Just
-                { destination = 1.0
-                , damping = spring.damping
-                , stiffness = spring.stiffness
-                }
-    in
-        updateOrCreate action (\a -> { a | spring = newSpring })
-
-
-{-| Update a style based on it's previous value.
-
-     Style.animate
-          |> Style.update
-              [ Cx ((+) 1)
-              , Cy ((+) 1)
-              , Color greyscale
-              ]
-          |> Style.on model.style
-
--}
-update : List Style.PropertyHelpers.Retarget -> PreAction -> PreAction
-update dynamicUpdate action =
-    updateOrCreate action
-        (\kfWithOptions ->
-            let
-                frame =
-                    kfWithOptions.frame
-
-                updatedFrame =
-                    { frame
-                        | retarget = Just <| convertToRetargetFn dynamicUpdate
-                        , properties =
-                            List.map
-                                (\prop ->
-                                    let
-                                        empty =
-                                            Style.PropertyHelpers.vacate prop
-                                    in
-                                        { target = empty
-                                        , current = Style.PropertyHelpers.toDynamic empty
-                                        }
-                                )
-                                dynamicUpdate
-                    }
-            in
-                { kfWithOptions | frame = updatedFrame }
-        )
+--
+-- {-| Animate based on spring physics.
+--
+-- You'll need to provide both a stiffness and damping to this function.
+--
+-- __Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
+--
+--      Style.animate
+--       -- |> Style.spring Style.noWobble -- set using a UI preset
+--          |> Style.spring
+--                 { stiffness = 400
+--                 , damping = 28
+--                 }
+--          |> Style.to
+--              [ Left 0 Px
+--              , Opacity 1
+--              ]
+--          |> Style.on model.style
+-- -}
+-- spring : Style.Spring.Presets.SpringProps -> PreAction -> PreAction
+-- spring spring action =
+--     let
+--         newSpring =
+--             Just
+--                 { destination = 1.0
+--                 , damping = spring.damping
+--                 , stiffness = spring.stiffness
+--                 }
+--     in
+--         updateOrCreate action (\a -> { a | spring = newSpring })
+-- {-| Update a style based on it's previous value.
+--
+--      Style.animate
+--           |> Style.update
+--               [ Cx ((+) 1)
+--               , Cy ((+) 1)
+--               , Color greyscale
+--               ]
+--           |> Style.on model.style
+--
+-- -}
+-- update : List Style.PropertyHelpers.Retarget -> PreAction -> PreAction
+-- update dynamicUpdate action =
+--     updateOrCreate action
+--         (\kfWithOptions ->
+--             let
+--                 frame =
+--                     kfWithOptions.frame
+--
+--                 updatedFrame =
+--                     { frame
+--                         | retarget = Just <| convertToRetargetFn dynamicUpdate
+--                         , properties =
+--                             List.map
+--                                 (\prop ->
+--                                     let
+--                                         empty =
+--                                             Style.PropertyHelpers.vacate prop
+--                                     in
+--                                         { target = empty
+--                                         , current = Style.PropertyHelpers.toDynamic empty
+--                                         }
+--                                 )
+--                                 dynamicUpdate
+--                     }
+--             in
+--                 { kfWithOptions | frame = updatedFrame }
+--         )
 
 
 convertToRetargetFn : List Style.PropertyHelpers.Retarget -> Int -> Static -> Static
@@ -243,11 +201,19 @@ convertToRetargetFn changes i prop =
 on : Animation -> PreAction -> Animation
 on (A model) preaction =
     let
-        action =
-            preaction.action <|
-                List.map applyKeyframeOptions preaction.frames
+        corrected =
+            List.map
+                (\frame ->
+                    case frame of
+                        Core.Wait t ->
+                            Core.Wait <| t + model.times.current
+
+                        f ->
+                            f
+                )
+                preaction.frames
     in
-        A <| Core.update action model
+        A <| Core.update (preaction.action corrected) model
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -286,62 +252,64 @@ queue =
     }
 
 
-{-| Interrupt the current animation and begin repeating the specified one.
 
-      Style.repeat 3
-         |> Style.duration (0.4*second)
-         |> Style.to
-             [ Left (Style.to 0) Px
-             , Opacity (Style.to 1)
-             ]
-         |> Style.on model.style
-
-You can repeat forever by providing Infinity as the number.
-
-      Style.repeat forever
-         |> Style.duration (0.4*second)
-         |> Style.to
-             [ Left (Style.to 0) Px
-             , Opacity (Style.to 1)
-             ]
-         |> Style.on model.style
-
-
--}
-repeat : Float -> PreAction
-repeat i =
-    { frames = []
-    , action = Core.Repeat i
-    }
-
-
-{-| Start a repeating animation after the current animation has finished.
-
-      Style.queueRepeat 3
-         |> Style.duration (0.4*second)
-         |> Style.to
-             [ Left (Style.to 0) Px
-             , Opacity (Style.to 1)
-             ]
-         |> Style.on model.style
-
-You can repeat forever by providing Infinity as the number.
-
-      Style.queueRepeat forever
-         |> Style.duration (0.4*second)
-         |> Style.to
-             [ Left (Style.to 0) Px
-             , Opacity (Style.to 1)
-             ]
-         |> Style.on model.style
-
-
--}
-queueRepeat : Float -> PreAction
-queueRepeat i =
-    { frames = []
-    , action = Core.QueueRepeat i
-    }
+--
+-- {-| Interrupt the current animation and begin repeating the specified one.
+--
+--       Style.repeat 3
+--          |> Style.duration (0.4*second)
+--          |> Style.to
+--              [ Left (Style.to 0) Px
+--              , Opacity (Style.to 1)
+--              ]
+--          |> Style.on model.style
+--
+-- You can repeat forever by providing Infinity as the number.
+--
+--       Style.repeat forever
+--          |> Style.duration (0.4*second)
+--          |> Style.to
+--              [ Left (Style.to 0) Px
+--              , Opacity (Style.to 1)
+--              ]
+--          |> Style.on model.style
+--
+--
+-- -}
+-- repeat : Float -> PreAction
+-- repeat i =
+--     { frames = []
+--     , action = Core.Repeat i
+--     }
+--
+--
+-- {-| Start a repeating animation after the current animation has finished.
+--
+--       Style.queueRepeat 3
+--          |> Style.duration (0.4*second)
+--          |> Style.to
+--              [ Left (Style.to 0) Px
+--              , Opacity (Style.to 1)
+--              ]
+--          |> Style.on model.style
+--
+-- You can repeat forever by providing Infinity as the number.
+--
+--       Style.queueRepeat forever
+--          |> Style.duration (0.4*second)
+--          |> Style.to
+--              [ Left (Style.to 0) Px
+--              , Opacity (Style.to 1)
+--              ]
+--          |> Style.on model.style
+--
+--
+-- -}
+-- queueRepeat : Float -> PreAction
+-- queueRepeat i =
+--     { frames = []
+--     , action = Core.QueueRepeat i
+--     }
 
 
 {-| Step the animation
@@ -349,66 +317,6 @@ queueRepeat i =
 tick : Float -> Animation -> Animation
 tick time (A model) =
     A <| Core.update (Core.Tick time) model
-
-
-applyKeyframeOptions : KeyframeWithOptions -> Core.Keyframe
-applyKeyframeOptions options =
-    let
-        frame =
-            options.frame
-
-        applyOpt prop =
-            let
-                addOptions a =
-                    let
-                        newSpring =
-                            case options.spring of
-                                Nothing ->
-                                    a.spring
-
-                                Just partialSpring ->
-                                    let
-                                        oldSpring =
-                                            a.spring
-                                    in
-                                        { oldSpring
-                                            | stiffness = partialSpring.stiffness
-                                            , damping = partialSpring.damping
-                                        }
-
-                        withEase =
-                            Maybe.map
-                                (\ease ->
-                                    { emptyEasing | ease = ease }
-                                )
-                                options.easing
-
-                        withDuration =
-                            case options.duration of
-                                Nothing ->
-                                    withEase
-
-                                Just dur ->
-                                    case withEase of
-                                        Nothing ->
-                                            Just { emptyEasing | duration = dur }
-
-                                        Just ease ->
-                                            Just { ease | duration = dur }
-                    in
-                        { a
-                            | spring = newSpring
-                            , easing = withDuration
-                        }
-            in
-                { prop
-                    | current = Style.PropertyHelpers.update addOptions prop.current
-                }
-
-        newProperties =
-            List.map applyOpt frame.properties
-    in
-        { frame | properties = newProperties }
 
 
 {-| Apply a style immediately.  This takes a list of static style properties, meaning the no `Style.to` functions, only concrete numbers and values.
@@ -419,7 +327,6 @@ applyKeyframeOptions options =
          |> Style.to
              [ Opacity 1
              ]
-         |> Style.andThen
          |> Style.set
              [ Display None
              ]
@@ -427,36 +334,40 @@ applyKeyframeOptions options =
 
 -}
 set : Style -> PreAction -> PreAction
-set staticProps action =
-    let
-        actionWithProps =
-            to staticProps action
-    in
-        updateOrCreate actionWithProps
-            (\kfWithOpts ->
-                { kfWithOpts
-                    | duration = Just 0
-                    , easing = Just (\x -> x)
-                }
-            )
+set props preAction =
+    { preAction
+        | frames = preAction.frames ++ [ Core.Set props ]
+    }
 
 
-{-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
 
-If an easing is specified but no duration, the default duration is 350ms.
-
-     Style.animate
-         |> Style.easing (\x -> x)  -- linear easing
-         |> Style.duration (0.4*second)
-         |> Style.to
-             [ Left 0 Px
-             , Opacity 1
-             ]
-         |> Style.on model.style
--}
-duration : Time -> PreAction -> PreAction
-duration dur action =
-    updateOrCreate action (\a -> { a | duration = Just dur })
+-- let
+--     actionWithProps =
+--         to staticProps action
+-- in
+--     updateOrCreate actionWithProps
+--         (\kfWithOpts ->
+--             { kfWithOpts
+--                 | duration = Just 0
+--                 , easing = Just (\x -> x)
+--             }
+--         )
+-- {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
+--
+-- If an easing is specified but no duration, the default duration is 350ms.
+--
+--      Style.animate
+--          |> Style.easing (\x -> x)  -- linear easing
+--          |> Style.duration (0.4*second)
+--          |> Style.to
+--              [ Left 0 Px
+--              , Opacity 1
+--              ]
+--          |> Style.on model.style
+-- -}
+-- duration : Time -> PreAction -> PreAction
+-- duration dur action =
+--     updateOrCreate action (\a -> { a | duration = Just dur })
 
 
 {-| Specify a delay.
@@ -471,121 +382,30 @@ If not specified, the default is 0.
              ]
          |> Style.on model.style
 -}
-delay : Time -> PreAction -> PreAction
-delay delay action =
-    updateOrCreate action
-        (\a ->
-            let
-                frame =
-                    a.frame
-
-                updatedFrame =
-                    { frame | delay = delay }
-            in
-                { a | frame = updatedFrame }
-        )
-
-
-{-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal in-out.
-
--}
-easing : (Float -> Float) -> PreAction -> PreAction
-easing ease action =
-    updateOrCreate action (\a -> { a | easing = Just ease })
-
-
-{-| Append another keyframe.  This is used for multistage animations.
-
-For example, to cycle through colors, we'd use the following:
-
-
-
-      Style.animate
-          |> Style.to
-              [ BackgroundColor <|
-                    Color.rgba 100 100 100 1.0
-              ]
-          |> Style.andThen -- create a new keyframe
-          |> Style.duration (1*second)
-          |> Style.to
-              [ BackgroundColor <|
-                    Color.rgba 178 201 14 1.0
-              ]
-          |> Style.andThen
-          |> Style.to
-              [ BackgroundColor <|
-                    Color.rgba 58 40 69 1.0
-              ]
-          |> Style.on model.style
--}
-andThen : PreAction -> PreAction
-andThen preaction =
-    { preaction
-        | frames = preaction.frames ++ [ emptyKeyframeWithOptions ]
+wait : Time -> PreAction -> PreAction
+wait delay preAction =
+    { preAction
+        | frames = preAction.frames ++ [ Core.Wait delay ]
     }
 
 
-{-| Update the last Core.Keyframe in the queue.  If the queue is empty, create a new Core.Keyframe and update that.
--}
-updateOrCreate : PreAction -> (KeyframeWithOptions -> KeyframeWithOptions) -> PreAction
-updateOrCreate preaction fn =
-    { preaction
-        | frames =
-            case List.reverse preaction.frames of
-                [] ->
-                    [ fn emptyKeyframeWithOptions ]
 
-                cur :: rem ->
-                    List.reverse ((fn cur) :: rem)
-    }
+-- {-| Specify an easing function.  It is expected that values should match up at the beginning and end.  So, f 0 == 0 and f 1 == 1.  The default easing is sinusoidal in-out.
+--
+-- -}
+-- easing : (Float -> Float) -> PreAction -> PreAction
+-- easing ease action =
+--     updateOrCreate action (\a -> { a | easing = Just ease })
+--
+--
 
 
 {-| Animate to a statically specified style.
 
 -}
 to : Style -> PreAction -> PreAction
-to sty action =
-    let
-        deduped =
-            List.foldr
-                (\x acc ->
-                    if
-                        List.any
-                            (\y ->
-                                Style.PropertyHelpers.id x
-                                    == Style.PropertyHelpers.id y
-                                    && Style.PropertyHelpers.name x
-                                    /= "transform"
-                            )
-                            acc
-                    then
-                        acc
-                    else
-                        x :: acc
-                )
-                []
-                sty
-
-        dynamicProperties =
-            List.map
-                (\prop ->
-                    { target = prop
-                    , current = Style.PropertyHelpers.toDynamic prop
-                    }
-                )
-                deduped
-    in
-        updateOrCreate action
-            (\kfWithOptions ->
-                let
-                    frame =
-                        kfWithOptions.frame
-
-                    updatedFrame =
-                        { frame | properties = dynamicProperties }
-                in
-                    { kfWithOptions | frame = updatedFrame }
-            )
+to sty preAction =
+    { preAction | frames = preAction.frames ++ [ Core.To sty ] }
 
 
 {-| Apply style properties as an inline style.
@@ -593,17 +413,14 @@ to sty action =
 
     div [ style <| Style.render widget.style ] [ ]
 
-*Note* - This will not capture properties that cannot be represented as an inline style.  For example, in svg, the `d` property for a `path` element has to be rendered as an attribute.  In this case you'd want to use `Style.attrs` instead.
+*Note* - This will not capture properties that cannot be represented as an inline style.
+For example, in svg, the `d` property for a `path` element has to be rendered as an attribute.
+In this case you'd want to use `Style.attrs` instead.
 
 -}
 render : Animation -> List ( String, String )
 render (A model) =
-    case List.head model.frames of
-        Nothing ->
-            Style.PropertyHelpers.render model.previous
-
-        Just frame ->
-            Style.PropertyHelpers.render <| Core.bake frame model.previous
+    Style.PropertyHelpers.render <| Style.Collection.bake model.current model.previous
 
 
 {-| Apply style properties as an inline style and assign svg attributes as necessary.
@@ -622,9 +439,4 @@ attrs animation =
 
 renderAttr : Animation -> List (Attribute msg)
 renderAttr (A model) =
-    case List.head model.frames of
-        Nothing ->
-            Style.PropertyHelpers.renderAttr model.previous
-
-        Just frame ->
-            Style.PropertyHelpers.renderAttr <| Core.bake frame model.previous
+    Style.PropertyHelpers.renderAttr <| Style.Collection.bake model.current model.previous

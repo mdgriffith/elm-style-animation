@@ -1,4 +1,4 @@
-module Style.Spring exposing (Model, Physical, update, atRest, duration)
+module Style.Spring exposing (Model, Preset, Physical, update, atRest, duration)
 
 import Time exposing (Time, second)
 
@@ -11,6 +11,12 @@ type alias Model =
     { stiffness : Float
     , damping : Float
     , destination : Float
+    }
+
+
+type alias Preset =
+    { stiffness : Float
+    , damping : Float
     }
 
 

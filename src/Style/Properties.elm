@@ -21,8 +21,6 @@ All animatable properties.
 
 -}
 
---where
-
 import String exposing (concat)
 import Color as ElmColor
 
