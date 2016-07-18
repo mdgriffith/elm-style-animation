@@ -22,6 +22,7 @@ type alias Model =
     , frames : List Keyframe
     , interruption : List Interruption
     , defaults : Defaults
+    , nudges : List Style
     }
 
 
@@ -56,6 +57,7 @@ type alias Interruption =
 type Action
     = Queue (List Keyframe)
     | Interrupt (List Keyframe)
+    | Nudge Style
     | Tick Time
 
 
@@ -67,15 +69,13 @@ type Keyframe
     = Wait Time
     | To Style
     | Set Style
+    | Update (List Retarget)
 
 
 
+-- | Repeat Float Float (List Keyframe) (List Keyframe)
 -- | WithSpring
 -- | Send externalMsg
--- | SetSpringDefault
--- { properties : List DynamicProperty
--- , retarget : Maybe (Int -> Static -> Static)
--- }
 
 
 type alias DynamicProperty =
@@ -96,9 +96,17 @@ init static =
         , dt = 0.0
         }
     , frames = []
-    , current = List.map Style.PropertyHelpers.toDynamic static
+    , current =
+        List.map
+            (Style.PropertyHelpers.toDynamic
+                { stiffness = 170
+                , damping = 26
+                }
+            )
+            static
     , previous = static
     , interruption = []
+    , nudges = []
     , defaults =
         { spring =
             { stiffness = 170
@@ -112,11 +120,12 @@ update : Action -> Model -> Model
 update action model =
     case action of
         Queue frames ->
-            let
-                _ =
-                    Debug.log "queue" (toString frames)
-            in
-                { model | frames = model.frames ++ frames }
+            { model | frames = model.frames ++ frames }
+
+        Nudge nudge ->
+            { model
+                | nudges = nudge :: model.nudges
+            }
 
         Interrupt frames ->
             case List.head frames of
@@ -146,49 +155,29 @@ update action model =
 
         Tick now ->
             let
-                -- ( start, elapsed, dt ) =
-                --     getTimes now model
                 modelWithTime =
-                    setTimes now model
-
-                -- _ =
-                -- Debug.log "primary tick" (toString <| List.head modelWithTime.frames)
+                    applyNudges <| setTimes now model
             in
                 case List.head model.interruption of
                     Just interruption ->
                         if modelWithTime.times.current >= interruption.at then
-                            let
-                                _ =
-                                    Debug.log "interrupt" (toString now)
-                            in
-                                setStart (Just now) <|
-                                    interrupt
-                                        model
-                                        interruption.frame
-                                        (List.drop 1 model.interruption)
+                            setStart (Just now) <|
+                                interrupt
+                                    model
+                                    interruption.frame
+                                    (List.drop 1 model.interruption)
                         else
-                            let
-                                _ =
-                                    Debug.log "interruptions that aren't triggered" "test"
-                            in
-                                case List.head model.frames of
-                                    Nothing ->
-                                        modelWithTime
+                            case List.head model.frames of
+                                Nothing ->
+                                    modelWithTime
 
-                                    Just current ->
-                                        tick current modelWithTime
+                                Just current ->
+                                    tick current modelWithTime
 
                     Nothing ->
                         case List.head model.frames of
                             Nothing ->
-                                let
-                                    _ =
-                                        if model.times.start /= Nothing then
-                                            Debug.log "set to nothing" (toString now)
-                                        else
-                                            ""
-                                in
-                                    setStart Nothing modelWithTime
+                                setStart Nothing modelWithTime
 
                             Just current ->
                                 case model.times.start of
@@ -197,6 +186,32 @@ update action model =
 
                                     Just s ->
                                         tick current modelWithTime
+
+
+applyNudges : Model -> Model
+applyNudges model =
+    { model
+        | nudges = []
+        , current =
+            List.foldl
+                (\nudge current ->
+                    Style.Collection.map2
+                        (\x phys ->
+                            let
+                                physical =
+                                    phys.physical
+
+                                newVelocity =
+                                    { physical | velocity = physical.velocity + x }
+                            in
+                                { phys | physical = newVelocity }
+                        )
+                        nudge
+                        current
+                )
+                model.current
+                model.nudges
+    }
 
 
 setTimes : Time -> Model -> Model
@@ -230,37 +245,6 @@ setStart start model =
         { model | times = restarted }
 
 
-
---
--- getTimes : Time -> Model -> ( Time, Time, Time )
--- getTimes now model =
---     let
---         prelimStart =
---             Maybe.withDefault now model.start
---
---         prelimElapsed =
---             now - prelimStart
---
---         prelimDt =
---             prelimElapsed - model.elapsed
---
---         -- if dt is very large (starting at, maybe, 300ms)
---         -- then it's most likely because someone left the
---         -- browser mid animation and then returned.
---         -- The browser 'pauses' the animation until it's viewed again.
---         -- the longer the user is gone, the longer the pause.
---         --  This can cause very screwy results, as you might imagine.
---         -- To fix this, if there is a large dt, then
---         --   * start is reset
---         --   * elapsed is reset
---         --   * this frame is essentially skipped.
---     in
---         if prelimDt > 300 then
---             ( now - model.elapsed, model.elapsed, 0 )
---         else
---             ( prelimStart, prelimElapsed, prelimDt )
-
-
 tick : Keyframe -> Model -> Model
 tick currentFrame model =
     if model.times.dt == 0 || elapsed model.times < 0 then
@@ -268,7 +252,7 @@ tick currentFrame model =
         model
     else
         let
-            ( props, done ) =
+            ( props, done, revisedFrame ) =
                 step currentFrame model
         in
             if done then
@@ -286,6 +270,7 @@ tick currentFrame model =
             else
                 { model
                     | current = props
+                    , frames = revisedFrame :: List.drop 1 model.frames
                 }
 
 
@@ -456,102 +441,6 @@ interrupt model interruption remaining =
 --                 step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
 --
 --
--- retargetIfNecessary : Keyframe -> Style -> Keyframe
--- retargetIfNecessary frame lastTargetStyle =
---     frame
---
---
---
--- -- case frame.retarget of
--- --     Nothing ->
--- --         frame
--- --
--- --     Just retarget ->
--- --         let
--- --             possiblePairs =
--- --                 zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
--- --
--- --             pairs =
--- --                 List.filterMap
--- --                     (\( prop, style ) ->
--- --                         case style of
--- --                             Nothing ->
--- --                                 Nothing
--- --
--- --                             Just s ->
--- --                                 Just ( prop, s )
--- --                     )
--- --                     possiblePairs
--- --         in
--- --             { frame
--- --                 | properties =
--- --                     mapWithCount
--- --                         (\i ( prop, prevStyle ) ->
--- --                             { prop
--- --                                 | target = retarget i prevStyle
--- --                             }
--- --                         )
--- --                         pairs
--- --             }
---
---
--- getPropCount x list =
---     List.foldl
---         (\y acc ->
---             if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then
---                 acc + 1
---             else
---                 acc
---         )
---         1
---         list
---
---
--- mapWithCount fn list =
---     let
---         mapped =
---             List.foldl
---                 (\x acc ->
---                     let
---                         count =
---                             getPropCount (snd x) acc.past
---                     in
---                         { current = acc.current ++ [ fn count x ]
---                         , past = acc.past ++ [ snd x ]
---                         }
---                 )
---                 { current = []
---                 , past = []
---                 }
---                 list
---     in
---         mapped.current
---
---
--- matchPoints : Keyframe -> Style -> Keyframe
--- matchPoints frame lastTargetStyle =
---     let
---         paired =
---             zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
---     in
---         { frame
---             | properties =
---                 List.map
---                     (\( frameProps, maybeLastTarget ) ->
---                         case maybeLastTarget of
---                             Nothing ->
---                                 frameProps
---
---                             Just lastTarget ->
---                                 { frameProps
---                                     | target = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
---                                     , current = Style.PropertyHelpers.matchPoints frameProps.current lastTarget
---                                 }
---                     )
---                     paired
---         }
---
---
 
 
 isDone : List Dynamic -> Bool
@@ -563,27 +452,18 @@ isDone style =
         List.all (\prop -> Style.PropertyHelpers.is finished prop) style
 
 
-
---
--- velocity : Float -> Float -> Time -> Float
--- velocity oldPos newPos dt =
---     (newPos - oldPos) / dt
---
---
-
-
 {-| Advance apply a keyframe using the current times.
 
 Return the resultant style properties and indicate if the frame is finished or not.
 -}
-step : Keyframe -> Model -> ( List Dynamic, Bool )
+step : Keyframe -> Model -> ( List Dynamic, Bool, Keyframe )
 step frame model =
     case frame of
         Wait till ->
             if till <= model.times.current then
-                ( model.current, True )
+                ( model.current, True, frame )
             else
-                ( model.current, False )
+                ( model.current, False, frame )
 
         Set target ->
             let
@@ -593,7 +473,7 @@ step frame model =
                         target
                         model.current
             in
-                ( advanced, True )
+                ( advanced, True, frame )
 
         To target ->
             let
@@ -603,7 +483,26 @@ step frame model =
                         target
                         model.current
             in
-                ( advanced, isDone advanced )
+                ( advanced, isDone advanced, frame )
+
+        Update retarget ->
+            let
+                target =
+                    Style.Collection.apply retarget model.previous
+            in
+                step (To target) model
+
+
+
+-- Repeat i limit current cache ->
+--     if i >= limit then
+--         (,True, frame)
+--     else
+--         let
+--             revisedFrame =
+--                 Repeat (i+1) limit current cache
+--         in
+--             (advanced, False, revisedFrame)
 
 
 applyStep : Model -> Float -> Float -> Physics -> Physics
@@ -645,15 +544,3 @@ setStep model from target physics =
             , mass = physics.physical.mass
             }
     }
-
-
-mapTo : Int -> (a -> a) -> List a -> List a
-mapTo i fn xs =
-    let
-        update j x =
-            if j == i then
-                fn x
-            else
-                x
-    in
-        List.indexedMap update xs

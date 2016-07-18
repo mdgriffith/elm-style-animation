@@ -1,7 +1,9 @@
 module Style
     exposing
         ( Animation
+        , Options
         , init
+        , initWith
           -- , update
         , render
         , attrs
@@ -100,8 +102,30 @@ init style =
     A <| Core.init style
 
 
+{-| An Options object that can be used to set the defaults that are used.
+-}
+type alias Options =
+    { spring : Spring.Preset }
 
---
+
+{-| Initialize a style with custom defaults such as the default spring model to use.
+-}
+initWith : Options -> Style -> Animation
+initWith options style =
+    let
+        model =
+            Core.init style
+
+        newDefaults =
+            model.defaults
+
+        withSpring =
+            { newDefaults | spring = options.spring }
+    in
+        A <| { model | defaults = withSpring }
+
+
+
 -- {-| Animate based on spring physics.
 --
 -- You'll need to provide both a stiffness and damping to this function.
@@ -110,18 +134,14 @@ init style =
 --
 --      Style.animate
 --       -- |> Style.spring Style.noWobble -- set using a UI preset
---          |> Style.spring
---                 { stiffness = 400
---                 , damping = 28
---                 }
---          |> Style.to
+--          |> Style.spring { stiffness = 400, damping = 28 }
 --              [ Left 0 Px
 --              , Opacity 1
 --              ]
 --          |> Style.on model.style
 -- -}
--- spring : Style.Spring.Presets.SpringProps -> PreAction -> PreAction
--- spring spring action =
+-- spring : Style.Spring.Presets.SpringProps -> Style -> PreAction -> PreAction
+-- spring spring sty action =
 --     let
 --         newSpring =
 --             Just
@@ -130,61 +150,25 @@ init style =
 --                 , stiffness = spring.stiffness
 --                 }
 --     in
---         updateOrCreate action (\a -> { a | spring = newSpring })
--- {-| Update a style based on it's previous value.
---
---      Style.animate
---           |> Style.update
---               [ Cx ((+) 1)
---               , Cy ((+) 1)
---               , Color greyscale
---               ]
---           |> Style.on model.style
---
--- -}
--- update : List Style.PropertyHelpers.Retarget -> PreAction -> PreAction
--- update dynamicUpdate action =
---     updateOrCreate action
---         (\kfWithOptions ->
---             let
---                 frame =
---                     kfWithOptions.frame
---
---                 updatedFrame =
---                     { frame
---                         | retarget = Just <| convertToRetargetFn dynamicUpdate
---                         , properties =
---                             List.map
---                                 (\prop ->
---                                     let
---                                         empty =
---                                             Style.PropertyHelpers.vacate prop
---                                     in
---                                         { target = empty
---                                         , current = Style.PropertyHelpers.toDynamic empty
---                                         }
---                                 )
---                                 dynamicUpdate
---                     }
---             in
---                 { kfWithOptions | frame = updatedFrame }
---         )
+--         { action | frames = preAction.frames ++ [ Core.To sty ] }
 
 
-convertToRetargetFn : List Style.PropertyHelpers.Retarget -> Int -> Static -> Static
-convertToRetargetFn changes i prop =
-    let
-        dynamicProp =
-            List.filter (\chng -> id chng == id prop) changes
-                |> List.drop (i - 1)
-                |> List.head
-    in
-        case dynamicProp of
-            Nothing ->
-                prop
+{-| Update a style based on it's previous value.
 
-            Just dyn ->
-                apply dyn prop
+     Style.animate
+          |> Style.update
+              [ Cx ((+) 1)
+              , Cy ((+) 1)
+              , Color greyscale
+              ]
+          |> Style.on model.style
+
+-}
+update : List Style.PropertyHelpers.Retarget -> PreAction -> PreAction
+update props preAction =
+    { preAction
+        | frames = preAction.frames ++ [ Core.Update props ]
+    }
 
 
 {-| Apply an update to a Animation model.
@@ -250,6 +234,11 @@ queue =
     { frames = []
     , action = Core.Queue
     }
+
+
+nudge : Style -> Animation -> Animation
+nudge style (A model) =
+    A <| Core.update (Core.Nudge style) model
 
 
 
@@ -319,8 +308,7 @@ tick time (A model) =
     A <| Core.update (Core.Tick time) model
 
 
-{-| Apply a style immediately.  This takes a list of static style properties, meaning the no `Style.to` functions, only concrete numbers and values.
-
+{-| Apply a style immediately.
 
     Style.animate
          |> Style.duration (0.4*second)
@@ -341,17 +329,6 @@ set props preAction =
 
 
 
--- let
---     actionWithProps =
---         to staticProps action
--- in
---     updateOrCreate actionWithProps
---         (\kfWithOpts ->
---             { kfWithOpts
---                 | duration = Just 0
---                 , easing = Just (\x -> x)
---             }
---         )
 -- {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
 --
 -- If an easing is specified but no duration, the default duration is 350ms.
@@ -370,12 +347,10 @@ set props preAction =
 --     updateOrCreate action (\a -> { a | duration = Just dur })
 
 
-{-| Specify a delay.
-If not specified, the default is 0.
+{-| Wait until applying the next keyframe.
 
      Style.animate
-         |> Style.duration (0.4*second)
-         |> Style.delay (0.5*second)
+         |> Style.wait (0.5*second)
          |> Style.to
              [ Left 0 Px
              , Opacity 1

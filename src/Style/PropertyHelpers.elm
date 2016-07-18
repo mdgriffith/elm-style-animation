@@ -5,6 +5,7 @@ module Style.PropertyHelpers
         , Retarget
         , Physics
         , Style
+        , DynamicColor(..)
         , baseName
         , name
         , is
@@ -13,6 +14,7 @@ module Style.PropertyHelpers
         , toDynamic
         , apply
         , vacate
+        , map2
         , update
         , updateFrom
         , updateOver
@@ -84,18 +86,14 @@ emptyPhysics =
     }
 
 
-physicsInit : Float -> Physics
-physicsInit x =
+physicsInit : Spring.Model -> Float -> Physics
+physicsInit spring x =
     { physical =
         { position = x
         , velocity = 0
         , mass = 1
         }
-    , spring =
-        { stiffness = 170
-        , damping = 26
-        , destination = 1
-        }
+    , spring = spring
     , easing = Nothing
     }
 
@@ -127,17 +125,17 @@ emptyDynamicColor =
     RGBA emptyPhysics emptyPhysics emptyPhysics emptyPhysics
 
 
-initDynamicColor : ElmColor.Color -> DynamicColor
-initDynamicColor color =
+initDynamicColor : Spring.Model -> ElmColor.Color -> DynamicColor
+initDynamicColor spring color =
     let
         { red, blue, green, alpha } =
             ElmColor.toRgb color
     in
         RGBA
-            (physicsInit <| toFloat red)
-            (physicsInit <| toFloat blue)
-            (physicsInit <| toFloat green)
-            (physicsInit alpha)
+            (physicsInit spring <| toFloat red)
+            (physicsInit spring <| toFloat blue)
+            (physicsInit spring <| toFloat green)
+            (physicsInit spring alpha)
 
 
 {-| Render style properties into their css values.
@@ -1345,9 +1343,16 @@ toStaticColor dynamic =
             ElmColor.rgba (round r.physical.position) (round g.physical.position) (round b.physical.position) (a.physical.position)
 
 
-toDynamic : Static -> Dynamic
-toDynamic prop =
-    map physicsInit initDynamicColor prop
+toDynamic : Spring.Preset -> Static -> Dynamic
+toDynamic spring prop =
+    let
+        springModel =
+            { destination = 1
+            , stiffness = spring.stiffness
+            , damping = spring.damping
+            }
+    in
+        map (physicsInit springModel) (initDynamicColor springModel) prop
 
 
 vacate : Property a colorA -> Static

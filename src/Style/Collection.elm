@@ -1,6 +1,58 @@
-module Style.Collection exposing (map3, bake)
+module Style.Collection exposing (apply, map2, map3, bake)
 
-import Style.PropertyHelpers exposing (..)
+import Style.PropertyHelpers exposing (id, Style, Dynamic, Physics, Retarget, DynamicColor(..))
+import Color
+
+
+map2 : (Float -> Physics -> Physics) -> Style -> List Dynamic -> List Dynamic
+map2 fn style dyn =
+    let
+        matched =
+            zipWith (\a b -> id a == id b) dyn style
+
+        colorFn prevColor currentDColor =
+            let
+                { red, blue, green, alpha } =
+                    Color.toRgb prevColor
+            in
+                case currentDColor of
+                    RGBA r2 g2 b2 a2 ->
+                        RGBA (fn (toFloat red) r2) (fn (toFloat green) g2) (fn (toFloat blue) b2) (fn alpha a2)
+    in
+        List.filterMap
+            (\( dynamic, mTarget ) ->
+                Maybe.map (\target -> Style.PropertyHelpers.map2 fn colorFn target dynamic) mTarget
+            )
+            matched
+
+
+
+-- updateFrom : (Physics -> Physics -> Physics) -> Dynamic -> Dynamic -> Dynamic
+-- updateFrom fn prev prop =
+--     map2
+--         fn
+--         (\prevDColor currentDColor ->
+--             case prevDColor of
+--                 RGBA r1 g1 b1 a1 ->
+--                     case currentDColor of
+--                         RGBA r2 g2 b2 a2 ->
+--                             RGBA (fn r1 r2) (fn g1 g2) (fn b1 b2) (fn a1 a2)
+--         )
+--         prev
+--         prop
+
+
+apply : List Retarget -> Style -> Style
+apply retarget style =
+    let
+        matched =
+            zipWith (\a b -> id a == id b) retarget style
+    in
+        List.filterMap
+            (\( retarg, mSty ) ->
+                Maybe.map (Style.PropertyHelpers.apply retarg) mSty
+            )
+            matched
 
 
 map3 : (Float -> Float -> Physics -> Physics) -> Style -> Style -> List Dynamic -> List Dynamic
@@ -87,5 +139,78 @@ bake : List Dynamic -> Style -> Style
 bake dynamic style =
     fill style <|
         List.map
-            toStatic
+            Style.PropertyHelpers.toStatic
             dynamic
+
+
+mapTo : Int -> (a -> a) -> List a -> List a
+mapTo i fn xs =
+    let
+        update j x =
+            if j == i then
+                fn x
+            else
+                x
+    in
+        List.indexedMap update xs
+
+
+
+--
+-- getPropCount x list =
+--     List.foldl
+--         (\y acc ->
+--             if Style.PropertyHelpers.id x == Style.PropertyHelpers.id y then
+--                 acc + 1
+--             else
+--                 acc
+--         )
+--         1
+--         list
+--
+--
+-- mapWithCount fn list =
+--     let
+--         mapped =
+--             List.foldl
+--                 (\x acc ->
+--                     let
+--                         count =
+--                             getPropCount (snd x) acc.past
+--                     in
+--                         { current = acc.current ++ [ fn count x ]
+--                         , past = acc.past ++ [ snd x ]
+--                         }
+--                 )
+--                 { current = []
+--                 , past = []
+--                 }
+--                 list
+--     in
+--         mapped.current
+--
+--
+-- matchPoints : Keyframe -> Style -> Keyframe
+-- matchPoints frame lastTargetStyle =
+--     let
+--         paired =
+--             zipWith (\a b -> Style.PropertyHelpers.id a.target == Style.PropertyHelpers.id b) frame.properties lastTargetStyle
+--     in
+--         { frame
+--             | properties =
+--                 List.map
+--                     (\( frameProps, maybeLastTarget ) ->
+--                         case maybeLastTarget of
+--                             Nothing ->
+--                                 frameProps
+--
+--                             Just lastTarget ->
+--                                 { frameProps
+--                                     | target = Style.PropertyHelpers.matchPoints frameProps.target lastTarget
+--                                     , current = Style.PropertyHelpers.matchPoints frameProps.current lastTarget
+--                                 }
+--                     )
+--                     paired
+--         }
+--
+--
