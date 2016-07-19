@@ -26,22 +26,6 @@ map2 fn style dyn =
             matched
 
 
-
--- updateFrom : (Physics -> Physics -> Physics) -> Dynamic -> Dynamic -> Dynamic
--- updateFrom fn prev prop =
---     map2
---         fn
---         (\prevDColor currentDColor ->
---             case prevDColor of
---                 RGBA r1 g1 b1 a1 ->
---                     case currentDColor of
---                         RGBA r2 g2 b2 a2 ->
---                             RGBA (fn r1 r2) (fn g1 g2) (fn b1 b2) (fn a1 a2)
---         )
---         prev
---         prop
-
-
 apply : List Retarget -> Style -> Style
 apply retarget style =
     let
@@ -153,6 +137,58 @@ mapTo i fn xs =
                 x
     in
         List.indexedMap update xs
+
+
+{-| Amend the style to compensate for the number of points in the Points property
+-}
+amend : Style -> List Dynamic -> Style
+amend style dynamic =
+    let
+        paired =
+            zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b) style dynamic
+    in
+        List.map
+            (\( styleProps, maybeFrame ) ->
+                case maybeFrame of
+                    Nothing ->
+                        styleProps
+
+                    Just frame ->
+                        Style.PropertyHelpers.matchPoints styleProps frame
+            )
+            paired
+
+
+warnings : Style -> Style -> List String
+warnings style target =
+    let
+        matched =
+            zipWith (\a b -> (Style.PropertyHelpers.baseName a == Style.PropertyHelpers.baseName b)) target style
+    in
+        List.filterMap
+            (\( a, maybeB ) ->
+                case maybeB of
+                    Nothing ->
+                        Just <|
+                            "There is no initial value for '"
+                                ++ Style.PropertyHelpers.id a
+                                ++ "', though it is queued to be animated.  Define an initial value for '"
+                                ++ Style.PropertyHelpers.id a
+                                ++ "'"
+
+                    Just b ->
+                        if Style.PropertyHelpers.id a == Style.PropertyHelpers.id b then
+                            Nothing
+                        else
+                            Just <|
+                                "Wrong units provided.  "
+                                    ++ "An initial value was given as '"
+                                    ++ Style.PropertyHelpers.id b
+                                    ++ "' versus the animation which was given as '"
+                                    ++ Style.PropertyHelpers.id a
+                                    ++ "'."
+            )
+            matched
 
 
 

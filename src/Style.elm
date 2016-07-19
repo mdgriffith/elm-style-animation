@@ -16,6 +16,7 @@ module Style
         , set
         , tick
         , to
+        , send
         )
 
 {-| This library is for animating css properties and is meant to work well with elm-html.
@@ -125,32 +126,25 @@ initWith options style =
         A <| { model | defaults = withSpring }
 
 
+{-| Animate based on spring physics.
 
--- {-| Animate based on spring physics.
---
--- You'll need to provide both a stiffness and damping to this function.
---
--- __Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
---
---      Style.animate
---       -- |> Style.spring Style.noWobble -- set using a UI preset
---          |> Style.spring { stiffness = 400, damping = 28 }
---              [ Left 0 Px
---              , Opacity 1
---              ]
---          |> Style.on model.style
--- -}
--- spring : Style.Spring.Presets.SpringProps -> Style -> PreAction -> PreAction
--- spring spring sty action =
---     let
---         newSpring =
---             Just
---                 { destination = 1.0
---                 , damping = spring.damping
---                 , stiffness = spring.stiffness
---                 }
---     in
---         { action | frames = preAction.frames ++ [ Core.To sty ] }
+You'll need to provide both a stiffness and damping to this function.
+
+__Note:__ This will cause both `duration` and `easing` to be ignored as they are now controlled by the spring.
+
+     Style.animate
+      -- |> Style.spring Style.noWobble -- set using a UI preset
+         |> Style.spring { stiffness = 400, damping = 28 }
+             [ Left 0 Px
+             , Opacity 1
+             ]
+         |> Style.on model.style
+-}
+spring : Spring.Preset -> Style -> PreAction msg -> PreAction msg
+spring spring sty action =
+    { action
+        | frames = action.frames ++ [ Core.WithSpringTo spring sty ]
+    }
 
 
 {-| Update a style based on it's previous value.
@@ -184,20 +178,7 @@ update props preAction =
 -}
 on : Animation msg -> PreAction msg -> Animation msg
 on (A model) preaction =
-    let
-        corrected =
-            List.map
-                (\frame ->
-                    case frame of
-                        Core.Wait t ->
-                            Core.Wait <| t + model.times.current
-
-                        f ->
-                            f
-                )
-                preaction.frames
-    in
-        A <| Core.update (preaction.action corrected) model
+    A <| Core.update (preaction.action preaction.frames) model
 
 
 {-| Begin describing an animation.  This animation will cleanly interrupt any animation that is currently running.
@@ -337,25 +318,6 @@ set props preAction =
     }
 
 
-
--- {-| Specify a duration.  This is ignored unless an easing is specified as well!  This is because spring functions (the default), have dynamically created durations.
---
--- If an easing is specified but no duration, the default duration is 350ms.
---
---      Style.animate
---          |> Style.easing (\x -> x)  -- linear easing
---          |> Style.duration (0.4*second)
---          |> Style.to
---              [ Left 0 Px
---              , Opacity 1
---              ]
---          |> Style.on model.style
--- -}
--- duration : Time -> PreAction -> PreAction
--- duration dur action =
---     updateOrCreate action (\a -> { a | duration = Just dur })
-
-
 {-| Wait until applying the next keyframe.
 
      Style.animate
@@ -390,6 +352,14 @@ wait delay preAction =
 to : Style -> PreAction msg -> PreAction msg
 to sty preAction =
     { preAction | frames = preAction.frames ++ [ Core.To sty ] }
+
+
+{-| Send a custom Msg after all previous keyframes have finished
+
+-}
+send : msg -> PreAction msg -> PreAction msg
+send msg preAction =
+    { preAction | frames = preAction.frames ++ [ Core.Send msg ] }
 
 
 {-| Apply style properties as an inline style.

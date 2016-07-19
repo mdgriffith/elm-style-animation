@@ -68,10 +68,12 @@ it has a function that takes the previous value, the current time, and provides 
 -}
 type Keyframe msg
     = Wait Time
+    | WaitTill Time
     | To Style
+    | WithSpringTo Spring.Preset Style
     | Set Style
-    | Send msg
     | Update (List Retarget)
+    | Send msg
 
 
 
@@ -159,7 +161,7 @@ update action model =
         Tick now ->
             let
                 modelWithTime =
-                    applyNudges <| setTimes now model
+                    getMessages <| initWaitTimes <| applyNudges <| setTimes now model
             in
                 case List.head model.interruption of
                     Just interruption ->
@@ -170,7 +172,7 @@ update action model =
                                     interruption.frame
                                     (List.drop 1 model.interruption)
                         else
-                            case List.head model.frames of
+                            case List.head modelWithTime.frames of
                                 Nothing ->
                                     modelWithTime
 
@@ -178,17 +180,113 @@ update action model =
                                     tick current modelWithTime
 
                     Nothing ->
-                        case List.head model.frames of
+                        case List.head modelWithTime.frames of
                             Nothing ->
                                 setStart Nothing modelWithTime
 
                             Just current ->
-                                case model.times.start of
+                                case modelWithTime.times.start of
                                     Nothing ->
                                         tick current <| setStart (Just now) modelWithTime
 
                                     Just s ->
                                         tick current modelWithTime
+
+
+interrupt : Model msg -> List (Keyframe msg) -> List (Interruption msg) -> Model msg
+interrupt model interruption remaining =
+    { model
+        | frames = interruption
+        , interruption = remaining
+        , previous =
+            case List.head model.frames of
+                Nothing ->
+                    model.previous
+
+                Just frame ->
+                    Style.Collection.bake model.current model.previous
+    }
+
+
+getMessages : Model msg -> Model msg
+getMessages model =
+    let
+        isSendMsg frame =
+            case frame of
+                Send _ ->
+                    True
+
+                _ ->
+                    False
+
+        extractMsg frame =
+            case frame of
+                Send x ->
+                    Just x
+
+                _ ->
+                    Nothing
+
+        msgs =
+            List.filterMap extractMsg <|
+                takeWhile isSendMsg model.frames
+
+        remaining =
+            dropWhile isSendMsg model.frames
+    in
+        { model
+            | messages = msgs ++ model.messages
+            , frames = remaining
+        }
+
+
+initWaitTimes : Model msg -> Model msg
+initWaitTimes model =
+    case List.head model.frames of
+        Nothing ->
+            model
+
+        Just frame ->
+            case frame of
+                Wait rel ->
+                    { model
+                        | frames =
+                            WaitTill (rel + model.times.current)
+                                :: List.drop 1 model.frames
+                    }
+
+                _ ->
+                    model
+
+
+{-| Take elements in order as long as the predicate evaluates to `True`
+-}
+takeWhile : (a -> Bool) -> List a -> List a
+takeWhile predicate list =
+    case list of
+        [] ->
+            []
+
+        x :: xs ->
+            if (predicate x) then
+                x :: takeWhile predicate xs
+            else
+                []
+
+
+{-| Drop elements in order as long as the predicate evaluates to `True`
+-}
+dropWhile : (a -> Bool) -> List a -> List a
+dropWhile predicate list =
+    case list of
+        [] ->
+            []
+
+        x :: xs ->
+            if (predicate x) then
+                dropWhile predicate xs
+            else
+                list
 
 
 applyNudges : Model msg -> Model msg
@@ -255,7 +353,7 @@ tick currentFrame model =
         model
     else
         let
-            ( props, done, revisedFrame ) =
+            ( props, done ) =
                 step currentFrame model
         in
             if done then
@@ -273,177 +371,66 @@ tick currentFrame model =
             else
                 { model
                     | current = props
-                    , frames = revisedFrame :: List.drop 1 model.frames
                 }
 
 
+{-| Advance apply a keyframe using the current times.
 
---     if done elapsed frame then
---     -- animation is finished, switch to new frame
---     let
---         frames =
---             List.drop 1 model.frames
---
---         previous =
---             bake (step elapsed dt model.previous frame) model.previous
---
---         -- if an animation finishes, but there is still an interruption pending
---         -- Revise the expected interruption time down
---         interruption =
---             List.map
---                 (\inter ->
---                     { inter | at = inter.at - elapsed }
---                 )
---                 model.interruption
---
---         amended =
---             case List.head frames of
---                 Nothing ->
---                     previous
---
---                 Just frame ->
---                     amend previous frame
---
---         initialized =
---             mapTo 0 (initializeFrame amended amended) frames
---
---         newModel =
---             { model
---                 | elapsed = 0.0
---                 , start = Just now
---                 , previous = amended
---                 , frames = initialized
---                 , interruption = interruption
---             }
---     in
---         if List.length newModel.frames == 0 then
---             case newModel.repeatCache of
---                 Nothing ->
---                     newModel
---
---                 Just repeat ->
---                     let
---                         newRepeat =
---                             if fst repeat == 1 then
---                                 Nothing
---                             else
---                                 Just ( fst repeat - 1, snd repeat )
---                     in
---                         update (Queue (snd repeat)) { newModel | repeatCache = newRepeat }
---         else
---             newModel
--- else
---     -- normal tick
---     { model
---         | elapsed = elapsed
---         , start = Just start
---         , frames = mapTo 0 (step elapsed dt model.previous) model.frames
---     }
+Return the resultant style properties and indicate if the frame is finished or not.
+-}
+step : Keyframe msg -> Model msg -> ( List Dynamic, Bool )
+step frame model =
+    case frame of
+        WaitTill till ->
+            if till <= model.times.current then
+                ( model.current, True )
+            else
+                ( model.current, False )
 
+        Wait _ ->
+            -- This action should never occur because all 'Wait' actions
+            -- are transformed into WaitTill via `initWaitTimes`
+            ( model.current, True )
 
-interrupt : Model msg -> List (Keyframe msg) -> List (Interruption msg) -> Model msg
-interrupt model interruption remaining =
-    let
-        previous =
-            case List.head model.frames of
-                Nothing ->
-                    model.previous
+        Send msg ->
+            ( model.current, True )
 
-                Just frame ->
-                    Style.Collection.bake model.current model.previous
+        Set target ->
+            let
+                advanced =
+                    Style.Collection.map3 (setStep model)
+                        model.previous
+                        target
+                        model.current
+            in
+                ( advanced, True )
 
-        -- amended =
-        --     case List.head newFrames of
-        --         Nothing ->
-        --             previous
-        --
-        --         Just frame ->
-        --             amend previous frame
-        --
-    in
-        { model
-            | frames =
-                interruption
-            , previous = previous
-            , interruption = remaining
-        }
+        To target ->
+            let
+                advanced =
+                    Style.Collection.map3 (applyStep model model.defaults.spring)
+                        model.previous
+                        target
+                        model.current
+            in
+                ( advanced, isDone advanced )
 
+        WithSpringTo spring target ->
+            let
+                advanced =
+                    Style.Collection.map3 (applyStep model spring)
+                        model.previous
+                        target
+                        model.current
+            in
+                ( advanced, isDone advanced )
 
-
---
--- {-| amend the style to compensate for the number of points in the Points property
--- -}
--- amend : Style -> Keyframe -> Style
--- amend style frame =
---     let
---         paired =
---             zipWith (\a b -> Style.PropertyHelpers.id a == Style.PropertyHelpers.id b.target) style frame.properties
---     in
---         List.map
---             (\( styleProps, maybeFrame ) ->
---                 case maybeFrame of
---                     Nothing ->
---                         styleProps
---
---                     Just frame ->
---                         Style.PropertyHelpers.matchPoints styleProps frame.target
---             )
---             paired
---
---
--- initializeFrame : Style -> Style -> Keyframe -> Keyframe
--- initializeFrame style prevTargetStyle frame =
---     case frame of
---         Wait time ->
---             Wait time
---
---         To targetStyle ->
---             let
---                 matched =
---                     zipWith (\a b -> (Style.PropertyHelpers.baseName a.current == Style.PropertyHelpers.baseName b)) targetStyle style
---
---                 warnings =
---                     List.map
---                         (\( a, maybeB ) ->
---                             case maybeB of
---                                 Nothing ->
---                                     let
---                                         warn =
---                                             Debug.log "elm-style-animation"
---                                                 ("There is no initial value for '"
---                                                     ++ Style.PropertyHelpers.id a.current
---                                                     ++ "', though it is queued to be animated.  Define an initial value for '"
---                                                     ++ Style.PropertyHelpers.id a.current
---                                                     ++ "'"
---                                                 )
---                                     in
---                                         Just warn
---
---                                 Just b ->
---                                     if Style.PropertyHelpers.id a.current == Style.PropertyHelpers.id b then
---                                         Nothing
---                                     else
---                                         let
---                                             warn =
---                                                 Debug.log "elm-style-animation"
---                                                     ("Wrong units provided.  "
---                                                         ++ "An initial value was given as '"
---                                                         ++ Style.PropertyHelpers.id b
---                                                         ++ "' versus the animation which was given as '"
---                                                         ++ Style.PropertyHelpers.id a.current
---                                                         ++ "'."
---                                                     )
---                                         in
---                                             Just warn
---                         )
---                         matched
---
---                 retargeted =
---                     retargetIfNecessary frame prevTargetStyle
---             in
---                 step 0.0 0.0 style (matchPoints retargeted prevTargetStyle)
---
---
+        Update retarget ->
+            let
+                target =
+                    Style.Collection.apply retarget model.previous
+            in
+                step (To target) model
 
 
 isDone : List Dynamic -> Bool
@@ -455,64 +442,8 @@ isDone style =
         List.all (\prop -> Style.PropertyHelpers.is finished prop) style
 
 
-{-| Advance apply a keyframe using the current times.
-
-Return the resultant style properties and indicate if the frame is finished or not.
--}
-step : Keyframe msg -> Model msg -> ( List Dynamic, Bool, Keyframe msg )
-step frame model =
-    case frame of
-        Wait till ->
-            if till <= model.times.current then
-                ( model.current, True, frame )
-            else
-                ( model.current, False, frame )
-
-        Send msg ->
-            ( model.current, True, frame )
-
-        Set target ->
-            let
-                advanced =
-                    Style.Collection.map3 (setStep model)
-                        model.previous
-                        target
-                        model.current
-            in
-                ( advanced, True, frame )
-
-        To target ->
-            let
-                advanced =
-                    Style.Collection.map3 (applyStep model)
-                        model.previous
-                        target
-                        model.current
-            in
-                ( advanced, isDone advanced, frame )
-
-        Update retarget ->
-            let
-                target =
-                    Style.Collection.apply retarget model.previous
-            in
-                step (To target) model
-
-
-
--- Repeat i limit current cache ->
---     if i >= limit then
---         (,True, frame)
---     else
---         let
---             revisedFrame =
---                 Repeat (i+1) limit current cache
---         in
---             (advanced, False, revisedFrame)
-
-
-applyStep : Model msg -> Float -> Float -> Physics -> Physics
-applyStep model from target physics =
+applyStep : Model msg -> Spring.Preset -> Float -> Float -> Physics -> Physics
+applyStep model spring from target physics =
     let
         positioned =
             -- a hack to establish initial values :/
@@ -524,12 +455,10 @@ applyStep model from target physics =
             else
                 physics.physical
 
-        newSpring =
-            physics.spring
-
         targeted =
-            { newSpring
-                | destination = target
+            { destination = target
+            , stiffness = spring.stiffness
+            , damping = spring.damping
             }
 
         finalPhysical =

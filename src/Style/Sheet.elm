@@ -1,4 +1,4 @@
-module Style.Sheet exposing (Model, tick, render, attrs, update, init)
+module Style.Sheet exposing (Model, tick, render, attrs, update, init, initWith)
 
 import Style
 import Style.Properties

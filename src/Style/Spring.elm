@@ -70,10 +70,17 @@ update dtms spring phys =
 
 atRest : Model -> Physical -> Bool
 atRest spring physical =
-    abs (spring.destination - physical.position)
-        < tolerance
-        && abs physical.velocity
-        < vTolerance
+    let
+        -- positionDelta =
+        --     abs (spring.destination - physical.position)
+        velocityDelta =
+            abs physical.velocity
+    in
+        -- positionDelta
+        -- < tolerance
+        -- &&
+        velocityDelta
+            < vTolerance
 
 
 duration : Model -> Physical -> Time
