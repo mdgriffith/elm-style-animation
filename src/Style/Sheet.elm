@@ -6,16 +6,27 @@ import Color
 import Svg
 
 
-type alias Model id =
-    List ( id, Style.Animation )
+type alias Model id msg =
+    List ( id, Style.Animation msg )
 
 
-tick : Float -> Model id -> Model id
+tick : Float -> Model id msg -> ( Model id msg, List msg )
 tick time sheet =
-    List.map (\( i, x ) -> ( i, Style.tick time x )) sheet
+    List.foldl
+        (\( class, style ) ( styles, messages ) ->
+            let
+                ( updated, msgs ) =
+                    Style.tick time style
+            in
+                ( styles ++ [ ( class, updated ) ]
+                , messages ++ msgs
+                )
+        )
+        ( [], [] )
+        sheet
 
 
-render : Model id -> id -> List ( String, String )
+render : Model id msg -> id -> List ( String, String )
 render sheet id =
     let
         matching =
@@ -29,7 +40,7 @@ render sheet id =
                 Style.render <| snd style
 
 
-attrs : Model id -> id -> List (Svg.Attribute msg)
+attrs : Model id msg -> id -> List (Svg.Attribute msg)
 attrs sheet id =
     let
         matching =
@@ -43,7 +54,7 @@ attrs sheet id =
                 Style.attrs <| snd style
 
 
-update : (id -> Style.Animation -> Style.Animation) -> Model id -> Model id
+update : (id -> Style.Animation msg -> Style.Animation msg) -> Model id msg -> Model id msg
 update fn sheet =
     List.map
         (\( id, x ) ->
@@ -52,7 +63,16 @@ update fn sheet =
         sheet
 
 
-init : (id -> List (Style.Properties.Property Float Color.Color)) -> List id -> Model id
+initWith : Style.Options -> (id -> List (Style.Properties.Property Float Color.Color)) -> List id -> Model id msg
+initWith options initFn ids =
+    List.map
+        (\id ->
+            ( id, Style.initWith options <| initFn id )
+        )
+        ids
+
+
+init : (id -> List (Style.Properties.Property Float Color.Color)) -> List id -> Model id msg
 init initFn ids =
     List.map
         (\id ->

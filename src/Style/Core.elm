@@ -15,14 +15,15 @@ import Style.Collection
 import Style.Spring as Spring
 
 
-type alias Model =
+type alias Model msg =
     { times : Times
     , previous : Style
     , current : List Dynamic
-    , frames : List Keyframe
-    , interruption : List Interruption
+    , frames : List (Keyframe msg)
+    , interruption : List (Interruption msg)
     , defaults : Defaults
     , nudges : List Style
+    , messages : List msg
     }
 
 
@@ -47,16 +48,16 @@ elapsed times =
             times.current - t
 
 
-type alias Interruption =
+type alias Interruption msg =
     { at : Time
-    , frame : List Keyframe
+    , frame : List (Keyframe msg)
     }
 
 
 {-| -}
-type Action
-    = Queue (List Keyframe)
-    | Interrupt (List Keyframe)
+type Action msg
+    = Queue (List (Keyframe msg))
+    | Interrupt (List (Keyframe msg))
     | Nudge Style
     | Tick Time
 
@@ -65,10 +66,11 @@ type Action
 This is a list of Propertys, but instead of having a static value like '5',
 it has a function that takes the previous value, the current time, and provides the current value.
 -}
-type Keyframe
+type Keyframe msg
     = Wait Time
     | To Style
     | Set Style
+    | Send msg
     | Update (List Retarget)
 
 
@@ -88,7 +90,7 @@ type alias Targeted current target =
     }
 
 
-init : Style -> Model
+init : Style -> Model msg
 init static =
     { times =
         { current = 0.0
@@ -107,6 +109,7 @@ init static =
     , previous = static
     , interruption = []
     , nudges = []
+    , messages = []
     , defaults =
         { spring =
             { stiffness = 170
@@ -116,7 +119,7 @@ init static =
     }
 
 
-update : Action -> Model -> Model
+update : Action msg -> Model msg -> Model msg
 update action model =
     case action of
         Queue frames ->
@@ -188,7 +191,7 @@ update action model =
                                         tick current modelWithTime
 
 
-applyNudges : Model -> Model
+applyNudges : Model msg -> Model msg
 applyNudges model =
     { model
         | nudges = []
@@ -214,7 +217,7 @@ applyNudges model =
     }
 
 
-setTimes : Time -> Model -> Model
+setTimes : Time -> Model msg -> Model msg
 setTimes now model =
     let
         dt =
@@ -233,7 +236,7 @@ setTimes now model =
         { model | times = newTimes }
 
 
-setStart : Maybe Time -> Model -> Model
+setStart : Maybe Time -> Model msg -> Model msg
 setStart start model =
     let
         times =
@@ -245,7 +248,7 @@ setStart start model =
         { model | times = restarted }
 
 
-tick : Keyframe -> Model -> Model
+tick : Keyframe msg -> Model msg -> Model msg
 tick currentFrame model =
     if model.times.dt == 0 || elapsed model.times < 0 then
         -- Nothing has happened
@@ -338,7 +341,7 @@ tick currentFrame model =
 --     }
 
 
-interrupt : Model -> List Keyframe -> List Interruption -> Model
+interrupt : Model msg -> List (Keyframe msg) -> List (Interruption msg) -> Model msg
 interrupt model interruption remaining =
     let
         previous =
@@ -456,7 +459,7 @@ isDone style =
 
 Return the resultant style properties and indicate if the frame is finished or not.
 -}
-step : Keyframe -> Model -> ( List Dynamic, Bool, Keyframe )
+step : Keyframe msg -> Model msg -> ( List Dynamic, Bool, Keyframe msg )
 step frame model =
     case frame of
         Wait till ->
@@ -464,6 +467,9 @@ step frame model =
                 ( model.current, True, frame )
             else
                 ( model.current, False, frame )
+
+        Send msg ->
+            ( model.current, True, frame )
 
         Set target ->
             let
@@ -505,7 +511,7 @@ step frame model =
 --             (advanced, False, revisedFrame)
 
 
-applyStep : Model -> Float -> Float -> Physics -> Physics
+applyStep : Model msg -> Float -> Float -> Physics -> Physics
 applyStep model from target physics =
     let
         positioned =
@@ -535,7 +541,7 @@ applyStep model from target physics =
         }
 
 
-setStep : Model -> Float -> Float -> Physics -> Physics
+setStep : Model msg -> Float -> Float -> Physics -> Physics
 setStep model from target physics =
     { physics
         | physical =

@@ -4,7 +4,7 @@ module Style
         , Options
         , init
         , initWith
-          -- , update
+        , update
         , render
         , attrs
         , animate
@@ -41,7 +41,7 @@ Once you have the basic structure of how to use this library, you can refer to t
 @docs render, attrs
 
 # Set the starting style
-@docs init
+@docs init, initWith
 
 # Managing Commands
 @docs on, tick
@@ -64,15 +64,15 @@ import Html.Attributes
 
 {-| An Animation of CSS properties.
 -}
-type Animation
-    = A Core.Model
+type Animation msg
+    = A (Core.Model msg)
 
 
 {-| A Temporary type that is used in constructing actions.
 -}
-type alias PreAction =
-    { frames : List Core.Keyframe
-    , action : List Core.Keyframe -> Core.Action
+type alias PreAction msg =
+    { frames : List (Core.Keyframe msg)
+    , action : List (Core.Keyframe msg) -> Core.Action msg
     }
 
 
@@ -97,7 +97,7 @@ forever =
 __Note__ All properties that you animate must be present in the init or else that property won't be animated.
 
 -}
-init : Style -> Animation
+init : Style -> Animation msg
 init style =
     A <| Core.init style
 
@@ -110,7 +110,7 @@ type alias Options =
 
 {-| Initialize a style with custom defaults such as the default spring model to use.
 -}
-initWith : Options -> Style -> Animation
+initWith : Options -> Style -> Animation msg
 initWith options style =
     let
         model =
@@ -164,7 +164,7 @@ initWith options style =
           |> Style.on model.style
 
 -}
-update : List Style.PropertyHelpers.Retarget -> PreAction -> PreAction
+update : List Style.PropertyHelpers.Retarget -> PreAction msg -> PreAction msg
 update props preAction =
     { preAction
         | frames = preAction.frames ++ [ Core.Update props ]
@@ -182,7 +182,7 @@ update props preAction =
          |> Style.on model.style
 
 -}
-on : Animation -> PreAction -> Animation
+on : Animation msg -> PreAction msg -> Animation msg
 on (A model) preaction =
     let
         corrected =
@@ -211,7 +211,7 @@ on (A model) preaction =
          |> Style.on model.style
 
 -}
-animate : PreAction
+animate : PreAction msg
 animate =
     { frames = []
     , action = Core.Interrupt
@@ -229,14 +229,14 @@ animate =
          |> Style.on model.style
 
 -}
-queue : PreAction
+queue : PreAction msg
 queue =
     { frames = []
     , action = Core.Queue
     }
 
 
-nudge : Style -> Animation -> Animation
+nudge : Style -> Animation msg -> Animation msg
 nudge style (A model) =
     A <| Core.update (Core.Nudge style) model
 
@@ -303,9 +303,18 @@ nudge style (A model) =
 
 {-| Step the animation
 -}
-tick : Float -> Animation -> Animation
+tick : Float -> Animation msg -> ( Animation msg, List msg )
 tick time (A model) =
-    A <| Core.update (Core.Tick time) model
+    let
+        new =
+            Core.update (Core.Tick time) model
+
+        msgs =
+            new.messages
+    in
+        ( A <| { new | messages = [] }
+        , msgs
+        )
 
 
 {-| Apply a style immediately.
@@ -321,7 +330,7 @@ tick time (A model) =
          |> Style.on model.style
 
 -}
-set : Style -> PreAction -> PreAction
+set : Style -> PreAction msg -> PreAction msg
 set props preAction =
     { preAction
         | frames = preAction.frames ++ [ Core.Set props ]
@@ -357,7 +366,7 @@ set props preAction =
              ]
          |> Style.on model.style
 -}
-wait : Time -> PreAction -> PreAction
+wait : Time -> PreAction msg -> PreAction msg
 wait delay preAction =
     { preAction
         | frames = preAction.frames ++ [ Core.Wait delay ]
@@ -378,7 +387,7 @@ wait delay preAction =
 {-| Animate to a statically specified style.
 
 -}
-to : Style -> PreAction -> PreAction
+to : Style -> PreAction msg -> PreAction msg
 to sty preAction =
     { preAction | frames = preAction.frames ++ [ Core.To sty ] }
 
@@ -393,7 +402,7 @@ For example, in svg, the `d` property for a `path` element has to be rendered as
 In this case you'd want to use `Style.attrs` instead.
 
 -}
-render : Animation -> List ( String, String )
+render : Animation msg -> List ( String, String )
 render (A model) =
     Style.PropertyHelpers.render <| Style.Collection.bake model.current model.previous
 
@@ -407,11 +416,11 @@ Long story short, use `Style.attrs` when using SVG, and `Style.render` when you 
     polygon (Style.attrs widget.style) [ ]
 
 -}
-attrs : Animation -> List (Attribute msg)
+attrs : Animation msg -> List (Attribute msg)
 attrs animation =
     (Html.Attributes.style <| render animation) :: renderAttr animation
 
 
-renderAttr : Animation -> List (Attribute msg)
+renderAttr : Animation msg -> List (Attribute msg)
 renderAttr (A model) =
     Style.PropertyHelpers.renderAttr <| Style.Collection.bake model.current model.previous
