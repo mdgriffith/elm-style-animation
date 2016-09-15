@@ -7,21 +7,19 @@ import Html.Attributes as Attr
 import Html.Events exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import AnimationFrame
-import Style
-import Style.Properties exposing (..)
+import Animation exposing (px)
 import Color exposing (purple, green, rgb)
 
 
 type alias Model =
-    { styles : List Style.Animation
+    { styles : List Animation.State
     , index : Int
     }
 
 
 type Action
     = EverybodySwitch
-    | Animate Float
+    | Animate Animation.Msg
 
 
 palette =
@@ -33,54 +31,48 @@ palette =
 
 
 polygons =
-    [ [ Points <|
-            alignStartingPoint
-                [ ( 161.649, 152.782 )
-                , ( 231.514, 82.916 )
-                , ( 91.783, 82.916 )
-                ]
-      , Fill palette.orange
+    [ [ Animation.points
+            [ ( 161.649, 152.782 )
+            , ( 231.514, 82.916 )
+            , ( 91.783, 82.916 )
+            ]
+      , Animation.fill palette.orange
       ]
-    , [ Points <|
-            alignStartingPoint
-                [ ( 8.867, 0 )
-                , ( 79.241, 70.375 )
-                , ( 232.213, 70.375 )
-                , ( 161.838, 0 )
-                ]
-      , Fill palette.green
+    , [ Animation.points
+            [ ( 8.867, 0 )
+            , ( 79.241, 70.375 )
+            , ( 232.213, 70.375 )
+            , ( 161.838, 0 )
+            ]
+      , Animation.fill palette.green
       ]
-    , [ Points <|
-            alignStartingPoint
-                [ ( 323.298, 143.724 )
-                , ( 323.298, 0 )
-                , ( 179.573, 0 )
-                ]
-      , Fill palette.blue
+    , [ Animation.points
+            [ ( 323.298, 143.724 )
+            , ( 323.298, 0 )
+            , ( 179.573, 0 )
+            ]
+      , Animation.fill palette.blue
       ]
-    , [ Points <|
-            alignStartingPoint
-                [ ( 152.781, 161.649 )
-                , ( 0, 8.868 )
-                , ( 0, 314.432 )
-                ]
-      , Fill palette.lavender
+    , [ Animation.points
+            [ ( 152.781, 161.649 )
+            , ( 0, 8.868 )
+            , ( 0, 314.432 )
+            ]
+      , Animation.fill palette.lavender
       ]
-    , [ Points <|
-            alignStartingPoint
-                [ ( 255.522, 246.655 )
-                , ( 323.298, 314.432 )
-                , ( 323.298, 178.879 )
-                ]
-      , Fill palette.orange
+    , [ Animation.points
+            [ ( 255.522, 246.655 )
+            , ( 323.298, 314.432 )
+            , ( 323.298, 178.879 )
+            ]
+      , Animation.fill palette.orange
       ]
-    , [ Points <|
-            alignStartingPoint
-                [ ( 161.649, 170.517 )
-                , ( 8.869, 323.298 )
-                , ( 314.43, 323.298 )
-                ]
-      , Fill palette.blue
+    , [ Animation.points
+            [ ( 161.649, 170.517 )
+            , ( 8.869, 323.298 )
+            , ( 314.43, 323.298 )
+            ]
+      , Animation.fill palette.blue
       ]
     ]
 
@@ -104,10 +96,11 @@ update action model =
                     , styles =
                         List.map3
                             (\i style newStyle ->
-                                Style.animate
-                                    |> Style.delay (toFloat i * 0.05 * second)
-                                    |> Style.to newStyle
-                                    |> Style.on style
+                                Animation.interrupt
+                                    [ Animation.wait (toFloat i * 0.05 * second)
+                                    , Animation.to newStyle
+                                    ]
+                                    style
                             )
                             [0..List.length model.styles]
                             model.styles
@@ -118,7 +111,7 @@ update action model =
 
         Animate time ->
             ( { model
-                | styles = List.map (\s -> Style.tick time s) model.styles
+                | styles = List.map (Animation.update time) model.styles
               }
             , Cmd.none
             )
@@ -138,7 +131,7 @@ view model =
             , viewBox "0 0 323.141 322.95"
             ]
           <|
-            (rect
+            [ rect
                 [ fill "#7FD13B"
                 , x "192.99"
                 , y "107.392"
@@ -147,19 +140,15 @@ view model =
                 , transform "matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)"
                 ]
                 []
-            )
-                :: (List.map (\poly -> polygon (Style.attrs poly) []) model.styles)
+            , Svg.g []
+                (List.map (\poly -> polygon (Animation.render poly) []) model.styles)
+            ]
         ]
-
-
-subscriptions : Model -> Sub Action
-subscriptions model =
-    AnimationFrame.times Animate
 
 
 init : ( Model, Cmd Action )
 init =
-    ( { styles = List.map Style.init polygons
+    ( { styles = List.map Animation.style polygons
       , index = 1
       }
     , Cmd.none
@@ -173,3 +162,8 @@ main =
         , update = update
         , subscriptions = subscriptions
         }
+
+
+subscriptions model =
+    Animation.subscription Animate
+        model.styles
