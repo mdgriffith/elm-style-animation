@@ -1,9 +1,4 @@
-# Elm-Style-Animation Rewrite
-This code will eventually be released as a major version to [elm-style-animation](https://github.com/mdgriffith/elm-style-animation).
-
-The main purpose of this rewrite was to change the API to use a list based api vs the pipes based api that was used previously.  I also wanted to take the time to add some polish.
-
-I've filed a number of issues on this repo on design points that I would love feedback on.  Please reply to them if you have any thoughts or submit an issue if you've thought of something I've missed!
+# The elm-style-animation library!
 
 
 ## Basic Animation
@@ -90,8 +85,6 @@ Here's generally how we compose animations.
     * `Animation.wait (5 * second)` - wait for some amount of time
     * `Animation.repeat x [..list of steps to repeat]` - Repeat a list of steps x times.
     * `Animation.loop [..list of steps to repeat]` - Loop a list of steps forever/until interrupted.
-
-
 
 
 # Examples
