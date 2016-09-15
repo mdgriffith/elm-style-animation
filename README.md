@@ -1,7 +1,7 @@
-# The elm-style-animation library!
+# The Style Animation library for Elm!
 
 
-## Basic Animation
+## The Basics
 
 To get started, there are a few things that need to happen.
 
