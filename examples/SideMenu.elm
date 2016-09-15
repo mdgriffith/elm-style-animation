@@ -1,36 +1,33 @@
-module Main exposing (..) --where
+module Main exposing (..)
 
 import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import AnimationFrame
 import Time exposing (second)
-import Style
-import Style.Properties exposing (..)
+import Animation exposing (px)
 import Color exposing (green, complement)
 
+
 type alias Model =
-    { style : Style.Animation
+    { style : Animation.State
     }
 
 
 type Msg
     = Show
     | Hide
-    | Animate Float
+    | Animate Animation.Msg
 
 
 styles =
     { open =
-        [ Left 0.0 Px
-        , Opacity 1.0
-        , Color (green)
+        [ Animation.left (px 0.0)
+        , Animation.opacity 1.0
         ]
     , closed =
-        [ Left -350.0 Px
-        , Opacity 0.0
-        , Color (green)
+        [ Animation.left (px -200.0)
+        , Animation.opacity 0
         ]
     }
 
@@ -41,11 +38,10 @@ update action model =
         Show ->
             ( { model
                 | style =
-                    Style.animate
-                        |> Style.duration (5*second)
-                        |> Style.easing (\x -> x)
-                        |> Style.to styles.open
-                        |> Style.on model.style
+                    Animation.interrupt
+                        [ Animation.to styles.open
+                        ]
+                        model.style
               }
             , Cmd.none
             )
@@ -53,18 +49,17 @@ update action model =
         Hide ->
             ( { model
                 | style =
-                    Style.animate
-                        |> Style.duration (5*second)
-                        |> Style.easing (\x -> x)
-                        |> Style.to styles.closed
-                        |> Style.on model.style
+                    Animation.interrupt
+                        [ Animation.to styles.closed
+                        ]
+                        model.style
               }
             , Cmd.none
             )
 
-        Animate time ->
+        Animate animMsg ->
             ( { model
-                | style = Style.tick time model.style
+                | style = Animation.update animMsg model.style
               }
             , Cmd.none
             )
@@ -87,20 +82,20 @@ view model =
         [ h1 [ style [ ( "padding", "25px" ) ] ]
             [ text "Hover here to see menu!" ]
         , div
-            [ style
-                ([ ( "position", "absolute" )
-                 , ( "top", "-2px" )
-                 , ( "margin-left", "-2px" )
-                 , ( "padding", "25px" )
-                 , ( "width", "300px" )
-                 , ( "height", "100%" )
-                 , ( "background-color", "rgb(58,40,69)" )
-                 , ( "color", "white" )
-                 , ( "border", "2px solid rgb(58,40,69)" )
-                 ]
-                    ++ (Style.render model.style)
-                )
-            ]
+            (Animation.render model.style
+                ++ [ style
+                        [ ( "position", "absolute" )
+                        , ( "top", "-2px" )
+                        , ( "margin-left", "-2px" )
+                        , ( "padding", "25px" )
+                        , ( "width", "300px" )
+                        , ( "height", "100%" )
+                        , ( "background-color", "rgb(58,40,69)" )
+                        , ( "color", "white" )
+                        , ( "border", "2px solid rgb(58,40,69)" )
+                        ]
+                   ]
+            )
             [ h1 [] [ text "Hidden Menu" ]
             , ul []
                 [ li [] [ text "Some things" ]
@@ -112,12 +107,12 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    AnimationFrame.times Animate
+    Animation.subscription Animate [ model.style ]
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { style = Style.init styles.closed }
+    ( { style = Animation.style styles.closed }
     , Cmd.none
     )
 
