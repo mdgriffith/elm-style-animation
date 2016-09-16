@@ -94,10 +94,9 @@ Here's generally how we compose animations.
  * Logo - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Logo.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
  * Showcase - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Showcase.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
 
+# Advanced!
 
- # Advanced!
-
- ## Sending Messages
+## Sending Messages
 
 You can send messages importing `Animation.Messenger`
 
