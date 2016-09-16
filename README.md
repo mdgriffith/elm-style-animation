@@ -88,9 +88,86 @@ Here's generally how we compose animations.
 
 
 # Examples
- * Gears - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Gears.html) - [Code](https://github.com/mdgriffith/ui-animation/blob/master/examples/Gears.elm)
- * Menu - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/FlowerMenu/) - [Code](https://github.com/mdgriffith/elm-html-animation-flower-menu/tree/split-out-animation)
- * Logo - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Logo.html) - [Code](https://github.com/mdgriffith/ui-animation/blob/master/examples/Logo.elm)
- * Showcase - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Showcase.html) - [Code](https://github.com/mdgriffith/ui-animation/blob/master/examples/Showcase.elm)
+ * Gears - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Gears.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Gears.elm)
+ * Menu - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/FlowerMenu/) - [Code](https://github.com/mdgriffith/elm-animation-flower-menu)
+
+ * Logo - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Logo.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
+ * Showcase - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Showcase.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
+
+
+ # Advanced!
+
+ ## Sending Messages
+
+You can send messages importing `Animation.Messenger`
+
+Change your `Animation.State` to `Animation.Messenger MyMsgType`.
+
+You can now use `Animation.Messenger.send MyCustomMessage` as a step in composing your animation.
+
+You need to update this new animation state using `Animation.Messenger.update`, which will return `(newAnimState, messagesSentinCmdForm)`.  So you need to change your animation update section to something like the following
+
+
+```elm
+case msgs of
+    Animate animMsg ->
+        let 
+            (newStyle, cmds) = 
+                Animation.Messenger.update
+                    animMsg
+                    model.style
+        in
+            ( { model
+                 | style = newStyle
+              },
+              cmds
+            )
+```
+
+## Setting Custom Interpolation
+
+Behind the curtain elm-style-animation mostly uses springs to animate values from A to B.  However you can specify custom values for a spring, or a duration and easing if you want. There are two basic ways to do this.
+
+
+### Set them with your initial style.
+
+Use `Animation.styleWith` or `Animation.styleWithEach` to set your initial style instead of `Animation.style`.  
+
+```elm
+Animation.styleWith 
+    (Animation.spring 
+        { stiffness = 400
+        , damping = 23 }
+    )
+    [ Animation.opacity 0
+    , Animation.left (px 20)
+    ]
+```
+
+This will set the spring used for these properties.  Alternatively `Animation.styleWithEach` is a way to set a custom interpolation for each individual property.
+
+
+### Set a temporary spring/duration + easing 
+
+You can also use `Animation.toWith` and `Animation.toWithEach`.  These can be substituted for `Animation.to` and allow you to specify a spring or duration+easing that lasts for exactly one step.  After that step, whatever default spring or duration/easing there is (either the auto default or via being specified in `Animation.styleWith`) is then used.
+
+```elm
+Animation.interrupt
+    [ Animation.toWith 
+        (Animation.easing 
+            { duration = 2*second
+            , ease = (\x -> x^2)
+            }
+        ) 
+        [ Animation.left (px 0.0)
+        , Animation.opacity 1.0
+        ]
+    ]
+    model.style
+```
+
+
+
+
 
 
