@@ -4,9 +4,7 @@ import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Time exposing (second)
 import Animation exposing (px)
-import Color exposing (green, complement)
 
 
 type alias Model =
@@ -20,6 +18,13 @@ type Msg
     | Animate Animation.Msg
 
 
+type alias Styles =
+    { open : List Animation.Prop
+    , closed : List Animation.Prop
+    }
+
+
+styles : Styles
 styles =
     { open =
         [ Animation.left (px 0.0)
@@ -117,6 +122,7 @@ init =
     )
 
 
+main : Program Never
 main =
     Html.program
         { init = init

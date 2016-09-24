@@ -17,15 +17,18 @@ module Animation
         , style
         , styleWith
         , styleWithEach
+        , Interp
         , spring
         , easing
         , speed
+        , Prop
         , opacity
         , display
         , inline
         , inlineBlock
         , flex
         , inlineFlex
+        , listItem
         , block
         , none
         , top
@@ -78,6 +81,7 @@ module Animation
         , radiusY
         , points
         , path
+        , PathStep
         , move
         , moveTo
         , close
@@ -115,10 +119,10 @@ module Animation
 @docs State, subscription, Msg, render
 
 # Creating an animation
-@docs  interrupt, queue, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, spring, easing, speed
+@docs interrupt, queue, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interp, spring, easing, speed
 
 # Animatable Properties
-@docs opacity, display, inline, inlineBlock, flex, inlineFlex, block, none, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow
+@docs Prop, opacity, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
 
 # Transforms
 @docs scale, scale3d, rotate, rotate3d, translate, translate3d
@@ -130,16 +134,13 @@ module Animation
 @docs fill, stroke, strokeWidth, x, y, cx, cy, radius, radiusX, radiusY, points
 
 # Constructing an Svg Path
-@docs path, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To
-
+@docs path, PathStep, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To
 
 # Units
 @docs px, percent, em, rem, turn, deg, grad, rad
 
 # Advanced
 @docs custom, exactly
-
-
 
 -}
 
@@ -149,7 +150,6 @@ import Svg.Attributes
 import Color exposing (Color)
 import Time exposing (Time, second)
 import String
-import Task
 import AnimationFrame
 import List.Extra
 import Animation.Model exposing (..)
@@ -165,7 +165,25 @@ type alias Msg =
     Tick
 
 
+{-| -}
+type alias Prop =
+    Animation.Model.Property
 
+
+{-| -}
+type alias Interp =
+    Animation.Model.Interpolation
+
+
+{-| -}
+type alias PathStep =
+    Animation.Model.PathCommand
+
+
+
+--{-| -}
+--type alias Step =
+--    Animation.Model.StepCommand Never
 ---------------------------
 -- Setting Defaults
 --------------------------
@@ -331,7 +349,7 @@ loop steps =
     Loop steps
 
 
-initialState : Style -> Animation msg
+initialState : List Property -> Animation msg
 initialState current =
     Animation
         { steps = []

@@ -22,6 +22,15 @@ type Action
     | Animate Animation.Msg
 
 
+type alias Palette =
+    { orange : Color.Color
+    , green : Color.Color
+    , lavender : Color.Color
+    , blue : Color.Color
+    }
+
+
+palette : Palette
 palette =
     { orange = rgb 240 173 0
     , green = rgb 127 209 59
@@ -30,6 +39,7 @@ palette =
     }
 
 
+polygons : List (List Animation.Property)
 polygons =
     [ [ Animation.points
             [ ( 161.649, 152.782 )
@@ -155,15 +165,16 @@ init =
     )
 
 
+main : Program Never
 main =
     Html.App.program
         { init = init
         , view = view
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions =
+            (\model ->
+                Animation.subscription
+                    Animate
+                    model.styles
+            )
         }
-
-
-subscriptions model =
-    Animation.subscription Animate
-        model.styles

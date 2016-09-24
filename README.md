@@ -78,7 +78,7 @@ case msgs of
 
 Here's generally how we compose animations.
 
- * Choose `Animation.queue` or `Animation.interrupt`, both of which take a list of steps and your animation model.
+ * Choose `Animation.queue` or `Animation.interrupt`, both of which take a list of steps and your animation model.  This describes what the strategy should be if the thing you're trying to animate is already in the process of being animated.  You either want to interrupt what its doing and do this new animation.  Or you want to queue up this new animation to run after the current animation is finished.  90% of the time you want `Animation.interrupt`
  * Steps can be
     * `Animation.to` - Animate to a target style
     * `Animation.set` - Set a animation to a style immediately.

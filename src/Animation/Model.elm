@@ -52,10 +52,6 @@ type Interpolation
     | AtSpeed { perSecond : Float }
 
 
-type alias Style =
-    List Property
-
-
 {-| For each 'value' of a property, we track position, velocity, interpolation, and target.
 -}
 type Property
@@ -751,12 +747,12 @@ Order matters (mostly for transformation stacking)
 
 -}
 startTowards : Bool -> List Property -> List Property -> List Property
-startTowards overrideInterp current target =
+startTowards overrideInterpolation current target =
     List.filterMap
         (\propPair ->
             case propPair of
                 ( cur, Just to ) ->
-                    Just <| setTarget overrideInterp cur to
+                    Just <| setTarget overrideInterpolation cur to
 
                 ( prop, Nothing ) ->
                     Just prop
@@ -765,12 +761,12 @@ startTowards overrideInterp current target =
 
 
 setTarget : Bool -> Property -> Property -> Property
-setTarget overrideInterp current newTarget =
+setTarget overrideInterpolation current newTarget =
     let
         setMotionTarget motion targetMotion =
             let
                 newMotion =
-                    if overrideInterp then
+                    if overrideInterpolation then
                         { motion
                             | interpolationOverride = Just targetMotion.interpolation
                         }
@@ -1273,14 +1269,6 @@ zipPropertiesGreedy initialProps newTargetProps =
         List.reverse props
 
 
-wrapAngle =
-    2 * pi
-
-
-negativeWrapAngle =
-    -1 * wrapAngle
-
-
 {-| Move one step in our interpolation strategy.
 -}
 step : Time -> List Property -> List Property
@@ -1487,10 +1475,16 @@ stepPath dt cmd =
                 Close
 
 
+{-|
+-}
+tolerance : Float
 tolerance =
     0.01
 
 
+{-|
+-}
+vTolerance : Float
 vTolerance =
     0.1
 

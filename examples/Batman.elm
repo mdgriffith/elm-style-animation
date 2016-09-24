@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import Time exposing (second)
 import Html.App
 import Html exposing (h1, div, Html)
 import Html.Attributes as Attr
@@ -22,6 +21,11 @@ type Action
     | Animate Animation.Msg
 
 
+type alias BatSignal =
+    List (Animation.PathStep)
+
+
+startLogo : BatSignal
 startLogo =
     [ Animation.moveTo 212 220
     , Animation.curve2To
@@ -98,6 +102,7 @@ startLogo =
     ]
 
 
+batmanLogos : List BatSignal
 batmanLogos =
     [ [ Animation.moveTo 256 213
       , Animation.curve2To
@@ -462,6 +467,7 @@ init =
     )
 
 
+main : Program Never
 main =
     Html.App.program
         { init = init

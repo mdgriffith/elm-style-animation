@@ -10242,8 +10242,6 @@ var _user$project$Animation_Model$matchPoints = F2(
 	});
 var _user$project$Animation_Model$vTolerance = 0.1;
 var _user$project$Animation_Model$tolerance = 1.0e-2;
-var _user$project$Animation_Model$wrapAngle = 2 * _elm_lang$core$Basics$pi;
-var _user$project$Animation_Model$negativeWrapAngle = -1 * _user$project$Animation_Model$wrapAngle;
 var _user$project$Animation_Model$isCmdDone = function (cmd) {
 	var motionDone = function (motion) {
 		return _elm_lang$core$Native_Utils.eq(motion.velocity, 0) && _elm_lang$core$Native_Utils.eq(motion.position, motion.target);
@@ -11424,10 +11422,10 @@ var _user$project$Animation_Model$setPathTarget = F2(
 		}
 	});
 var _user$project$Animation_Model$setTarget = F3(
-	function (overrideInterp, current, newTarget) {
+	function (overrideInterpolation, current, newTarget) {
 		var setMotionTarget = F2(
 			function (motion, targetMotion) {
-				var newMotion = overrideInterp ? _elm_lang$core$Native_Utils.update(
+				var newMotion = overrideInterpolation ? _elm_lang$core$Native_Utils.update(
 					motion,
 					{
 						interpolationOverride: _elm_lang$core$Maybe$Just(targetMotion.interpolation)
@@ -11587,14 +11585,14 @@ var _user$project$Animation_Model$setTarget = F3(
 		}
 	});
 var _user$project$Animation_Model$startTowards = F3(
-	function (overrideInterp, current, target) {
+	function (overrideInterpolation, current, target) {
 		return A2(
 			_elm_lang$core$List$filterMap,
 			function (propPair) {
 				var _p135 = propPair;
 				if (_p135._1.ctor === 'Just') {
 					return _elm_lang$core$Maybe$Just(
-						A3(_user$project$Animation_Model$setTarget, overrideInterp, _p135._0, _p135._1._0));
+						A3(_user$project$Animation_Model$setTarget, overrideInterpolation, _p135._0, _p135._1._0));
 				} else {
 					return _elm_lang$core$Maybe$Just(_p135._0);
 				}
@@ -12217,163 +12215,151 @@ var _user$project$Animation$pathCmdValue = function (cmd) {
 				'V ',
 				_elm_lang$core$Basics$toString(_p2._0.position));
 		case 'Curve':
-			var _p5 = _p2._0.point;
+			var _p3 = _p2._0.point;
+			var p1x = _p3._0;
+			var p1y = _p3._1;
 			var _p4 = _p2._0.control2;
-			var _p3 = _p2._0.control1;
+			var c2x = _p4._0;
+			var c2y = _p4._1;
+			var _p5 = _p2._0.control1;
+			var c1x = _p5._0;
+			var c1y = _p5._1;
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
 				'c ',
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Basics$fst(_p3)),
+					_elm_lang$core$Basics$toString(c1x.position),
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						' ',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(
-								_elm_lang$core$Basics$fst(_p3)),
+							_elm_lang$core$Basics$toString(c1y.position),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(
-										_elm_lang$core$Basics$fst(_p4)),
+									_elm_lang$core$Basics$toString(c2x.position),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										' ',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Basics$fst(_p4)),
+											_elm_lang$core$Basics$toString(c2y.position),
 											A2(
 												_elm_lang$core$Basics_ops['++'],
 												', ',
 												A2(
 													_elm_lang$core$Basics_ops['++'],
-													_elm_lang$core$Basics$toString(
-														_elm_lang$core$Basics$fst(_p5)),
+													_elm_lang$core$Basics$toString(p1x.position),
 													A2(
 														_elm_lang$core$Basics_ops['++'],
 														' ',
-														A2(
-															_elm_lang$core$Basics_ops['++'],
-															_elm_lang$core$Basics$toString(
-																_elm_lang$core$Basics$fst(_p5)),
-															' '))))))))))));
+														_elm_lang$core$Basics$toString(p1y.position))))))))))));
 		case 'CurveTo':
-			var _p8 = _p2._0.point;
+			var _p6 = _p2._0.point;
+			var p1x = _p6._0;
+			var p1y = _p6._1;
 			var _p7 = _p2._0.control2;
-			var _p6 = _p2._0.control1;
+			var c2x = _p7._0;
+			var c2y = _p7._1;
+			var _p8 = _p2._0.control1;
+			var c1x = _p8._0;
+			var c1y = _p8._1;
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
 				'C ',
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Basics$fst(_p6)),
+					_elm_lang$core$Basics$toString(c1x.position),
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						' ',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(
-								_elm_lang$core$Basics$fst(_p6)),
+							_elm_lang$core$Basics$toString(c1y.position),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(
-										_elm_lang$core$Basics$fst(_p7)),
+									_elm_lang$core$Basics$toString(c2x.position),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										' ',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Basics$fst(_p7)),
+											_elm_lang$core$Basics$toString(c2y.position),
 											A2(
 												_elm_lang$core$Basics_ops['++'],
 												', ',
 												A2(
 													_elm_lang$core$Basics_ops['++'],
-													_elm_lang$core$Basics$toString(
-														_elm_lang$core$Basics$fst(_p8)),
+													_elm_lang$core$Basics$toString(p1x.position),
 													A2(
 														_elm_lang$core$Basics_ops['++'],
 														' ',
-														A2(
-															_elm_lang$core$Basics_ops['++'],
-															_elm_lang$core$Basics$toString(
-																_elm_lang$core$Basics$fst(_p8)),
-															' '))))))))))));
+														_elm_lang$core$Basics$toString(p1y.position))))))))))));
 		case 'Quadratic':
-			var _p10 = _p2._0.point;
-			var _p9 = _p2._0.control;
+			var _p9 = _p2._0.point;
+			var p1x = _p9._0;
+			var p1y = _p9._1;
+			var _p10 = _p2._0.control;
+			var c1x = _p10._0;
+			var c1y = _p10._1;
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
 				'q ',
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Basics$fst(_p9)),
+					_elm_lang$core$Basics$toString(c1x.position),
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						' ',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(
-								_elm_lang$core$Basics$fst(_p9)),
+							_elm_lang$core$Basics$toString(c1y.position),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(
-										_elm_lang$core$Basics$fst(_p10)),
+									_elm_lang$core$Basics$toString(p1x.position),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										' ',
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Basics$fst(_p10)),
-											' '))))))));
+										_elm_lang$core$Basics$toString(p1y.position))))))));
 		case 'QuadraticTo':
-			var _p12 = _p2._0.point;
-			var _p11 = _p2._0.control;
+			var _p11 = _p2._0.point;
+			var p1x = _p11._0;
+			var p1y = _p11._1;
+			var _p12 = _p2._0.control;
+			var c1x = _p12._0;
+			var c1y = _p12._1;
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
 				'Q ',
 				A2(
 					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(
-						_elm_lang$core$Basics$fst(_p11)),
+					_elm_lang$core$Basics$toString(c1x.position),
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						' ',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(
-								_elm_lang$core$Basics$fst(_p11)),
+							_elm_lang$core$Basics$toString(c1y.position),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(
-										_elm_lang$core$Basics$fst(_p12)),
+									_elm_lang$core$Basics$toString(p1x.position),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										' ',
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(
-												_elm_lang$core$Basics$fst(_p12)),
-											' '))))))));
+										_elm_lang$core$Basics$toString(p1y.position))))))));
 		case 'SmoothQuadratic':
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
@@ -12860,74 +12846,109 @@ var _user$project$Animation$isFilter = function (prop) {
 		_elm_lang$core$Native_List.fromArray(
 			['filter-url', 'blur', 'brightness', 'contrast', 'grayscale', 'hue-rotate', 'invert', 'saturate', 'sepia']));
 };
+var _user$project$Animation$render3dRotation = function (prop) {
+	var _p29 = prop;
+	if (_p29.ctor === 'Property3') {
+		var _p32 = _p29._3;
+		var _p31 = _p29._2;
+		var _p30 = _p29._1;
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			'rotateX(',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(_p30.position),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_p30.unit,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						') rotateY(',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(_p31.position),
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_p31.unit,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									') rotateZ(',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										_elm_lang$core$Basics$toString(_p32.position),
+										A2(_elm_lang$core$Basics_ops['++'], _p32.unit, ')')))))))));
+	} else {
+		return '';
+	}
+};
 var _user$project$Animation$isTransformation = function (prop) {
 	return A2(
 		_elm_lang$core$List$member,
 		_user$project$Animation_Model$propertyName(prop),
 		_elm_lang$core$Native_List.fromArray(
-			['rotate', 'rotate3d', 'transform', 'transform3d', 'scale', 'scale3d']));
+			['rotate', 'rotateX', 'rotateY', 'rotateZ', 'rotate3d', 'translate', 'translate3d', 'scale', 'scale3d']));
 };
 var _user$project$Animation$renderAttrs = function (prop) {
-	var _p29 = prop;
-	switch (_p29.ctor) {
+	var _p33 = prop;
+	switch (_p33.ctor) {
 		case 'Points':
 			return _elm_lang$core$Maybe$Just(
 				_elm_lang$svg$Svg_Attributes$points(
 					A2(
 						_user$project$Animation$propertyValue,
-						_user$project$Animation_Model$Points(_p29._0),
+						_user$project$Animation_Model$Points(_p33._0),
 						' ')));
 		case 'Path':
 			return _elm_lang$core$Maybe$Just(
 				_elm_lang$svg$Svg_Attributes$d(
 					A2(
 						_user$project$Animation$propertyValue,
-						_user$project$Animation_Model$Path(_p29._0),
+						_user$project$Animation_Model$Path(_p33._0),
 						' ')));
 		default:
 			return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Animation$render = function (_p30) {
-	var _p31 = _p30;
-	var _p32 = A2(_elm_lang$core$List$partition, _user$project$Animation$isAttr, _p31._0.style);
-	var attrProps = _p32._0;
-	var styleProps = _p32._1;
-	var _p33 = A3(
+var _user$project$Animation$render = function (_p34) {
+	var _p35 = _p34;
+	var _p36 = A2(_elm_lang$core$List$partition, _user$project$Animation$isAttr, _p35._0.style);
+	var attrProps = _p36._0;
+	var styleProps = _p36._1;
+	var _p37 = A3(
 		_elm_lang$core$List$foldl,
 		F2(
-			function (prop, _p34) {
-				var _p35 = _p34;
-				var _p38 = _p35._1;
-				var _p37 = _p35._0;
-				var _p36 = _p35._2;
+			function (prop, _p38) {
+				var _p39 = _p38;
+				var _p42 = _p39._1;
+				var _p41 = _p39._0;
+				var _p40 = _p39._2;
 				return _user$project$Animation$isTransformation(prop) ? {
 					ctor: '_Tuple3',
-					_0: _p37,
+					_0: _p41,
 					_1: A2(
 						_elm_lang$core$Basics_ops['++'],
-						_p38,
+						_p42,
 						_elm_lang$core$Native_List.fromArray(
 							[prop])),
-					_2: _p36
+					_2: _p40
 				} : (_user$project$Animation$isFilter(prop) ? {
 					ctor: '_Tuple3',
-					_0: _p37,
-					_1: _p38,
+					_0: _p41,
+					_1: _p42,
 					_2: A2(
 						_elm_lang$core$Basics_ops['++'],
-						_p36,
+						_p40,
 						_elm_lang$core$Native_List.fromArray(
 							[prop]))
 				} : {
 					ctor: '_Tuple3',
 					_0: A2(
 						_elm_lang$core$Basics_ops['++'],
-						_p37,
+						_p41,
 						_elm_lang$core$Native_List.fromArray(
 							[prop])),
-					_1: _p38,
-					_2: _p36
+					_1: _p42,
+					_2: _p40
 				});
 			}),
 		{
@@ -12940,9 +12961,9 @@ var _user$project$Animation$render = function (_p30) {
 				[])
 		},
 		styleProps);
-	var style = _p33._0;
-	var transforms = _p33._1;
-	var filters = _p33._2;
+	var style = _p37._0;
+	var transforms = _p37._1;
+	var filters = _p37._2;
 	var renderedStyle = A2(
 		_elm_lang$core$List$map,
 		function (prop) {
@@ -12959,11 +12980,15 @@ var _user$project$Animation$render = function (_p30) {
 			{
 			ctor: '_Tuple2',
 			_0: 'transform',
-			_1: _elm_lang$core$String$concat(
+			_1: A2(
+				_elm_lang$core$String$join,
+				' ',
 				A2(
 					_elm_lang$core$List$map,
 					function (prop) {
-						return A2(
+						return _elm_lang$core$Native_Utils.eq(
+							_user$project$Animation_Model$propertyName(prop),
+							'rotate3d') ? _user$project$Animation$render3dRotation(prop) : A2(
 							_elm_lang$core$Basics_ops['++'],
 							_user$project$Animation_Model$propertyName(prop),
 							A2(
@@ -13024,15 +13049,15 @@ var _user$project$Animation$render = function (_p30) {
 var _user$project$Animation$alignStartingPoint = function (points) {
 	var sums = A2(
 		_elm_lang$core$List$map,
-		function (_p39) {
-			var _p40 = _p39;
-			return _p40._0 + _p40._1;
+		function (_p43) {
+			var _p44 = _p43;
+			return _p44._0 + _p44._1;
 		},
 		points);
 	var maybeMin = _elm_lang$core$List$minimum(sums);
 	var indexOfLowestPoint = function () {
-		var _p41 = maybeMin;
-		if (_p41.ctor === 'Nothing') {
+		var _p45 = maybeMin;
+		if (_p45.ctor === 'Nothing') {
 			return _elm_lang$core$Maybe$Nothing;
 		} else {
 			return _elm_lang$core$List$head(
@@ -13043,20 +13068,20 @@ var _user$project$Animation$alignStartingPoint = function (points) {
 						_elm_lang$core$List$indexedMap,
 						F2(
 							function (i, val) {
-								return _elm_lang$core$Native_Utils.eq(val, _p41._0) ? _elm_lang$core$Maybe$Just(i) : _elm_lang$core$Maybe$Nothing;
+								return _elm_lang$core$Native_Utils.eq(val, _p45._0) ? _elm_lang$core$Maybe$Just(i) : _elm_lang$core$Maybe$Nothing;
 							}),
 						sums)));
 		}
 	}();
-	var _p42 = indexOfLowestPoint;
-	if (_p42.ctor === 'Nothing') {
+	var _p46 = indexOfLowestPoint;
+	if (_p46.ctor === 'Nothing') {
 		return points;
 	} else {
-		var _p43 = _p42._0;
+		var _p47 = _p46._0;
 		return A2(
 			_elm_lang$core$Basics_ops['++'],
-			A2(_elm_lang$core$List$drop, _p43, points),
-			A2(_elm_lang$core$List$take, _p43, points));
+			A2(_elm_lang$core$List$drop, _p47, points),
+			A2(_elm_lang$core$List$take, _p47, points));
 	}
 };
 var _user$project$Animation$close = _user$project$Animation_Model$Close;
@@ -13099,46 +13124,46 @@ var _user$project$Animation$strokeWidth = function (x) {
 	return A3(_user$project$Animation$length, 'stroke-width', x, '');
 };
 var _user$project$Animation$length2 = F3(
-	function (name, _p45, _p44) {
-		var _p46 = _p45;
-		var _p47 = _p44;
+	function (name, _p49, _p48) {
+		var _p50 = _p49;
+		var _p51 = _p48;
 		return A3(
 			_user$project$Animation_Model$Property2,
 			name,
-			A2(_user$project$Animation$initMotion, _p46._0, _p46._1),
-			A2(_user$project$Animation$initMotion, _p47._0, _p47._1));
+			A2(_user$project$Animation$initMotion, _p50._0, _p50._1),
+			A2(_user$project$Animation$initMotion, _p51._0, _p51._1));
 	});
 var _user$project$Animation$length3 = F4(
-	function (name, _p50, _p49, _p48) {
-		var _p51 = _p50;
-		var _p52 = _p49;
-		var _p53 = _p48;
+	function (name, _p54, _p53, _p52) {
+		var _p55 = _p54;
+		var _p56 = _p53;
+		var _p57 = _p52;
 		return A4(
 			_user$project$Animation_Model$Property3,
 			name,
-			A2(_user$project$Animation$initMotion, _p51._0, _p51._1),
-			A2(_user$project$Animation$initMotion, _p52._0, _p52._1),
-			A2(_user$project$Animation$initMotion, _p53._0, _p53._1));
+			A2(_user$project$Animation$initMotion, _p55._0, _p55._1),
+			A2(_user$project$Animation$initMotion, _p56._0, _p56._1),
+			A2(_user$project$Animation$initMotion, _p57._0, _p57._1));
 	});
 var _user$project$Animation$rotate3d = F3(
-	function (_p56, _p55, _p54) {
-		var _p57 = _p56;
-		var _p58 = _p55;
-		var _p59 = _p54;
+	function (_p60, _p59, _p58) {
+		var _p61 = _p60;
+		var _p62 = _p59;
+		var _p63 = _p58;
 		return A4(
 			_user$project$Animation$length3,
 			'rotate3d',
-			{ctor: '_Tuple2', _0: _p57._0, _1: 'rad'},
-			{ctor: '_Tuple2', _0: _p58._0, _1: 'rad'},
-			{ctor: '_Tuple2', _0: _p59._0, _1: 'rad'});
+			{ctor: '_Tuple2', _0: _p61._0, _1: 'rad'},
+			{ctor: '_Tuple2', _0: _p62._0, _1: 'rad'},
+			{ctor: '_Tuple2', _0: _p63._0, _1: 'rad'});
 	});
 var _user$project$Animation$colorProp = F2(
 	function (name, color) {
-		var _p60 = _elm_lang$core$Color$toRgb(color);
-		var red = _p60.red;
-		var green = _p60.green;
-		var blue = _p60.blue;
-		var alpha = _p60.alpha;
+		var _p64 = _elm_lang$core$Color$toRgb(color);
+		var red = _p64.red;
+		var green = _p64.green;
+		var blue = _p64.blue;
+		var alpha = _p64.alpha;
 		return A5(
 			_user$project$Animation_Model$ColorProperty,
 			name,
@@ -13235,19 +13260,19 @@ var _user$project$Animation$scale3d = F3(
 			A2(_user$project$Animation$initMotion, y, ''),
 			A2(_user$project$Animation$initMotion, z, ''));
 	});
-var _user$project$Animation$rotate = function (_p61) {
-	var _p62 = _p61;
+var _user$project$Animation$rotate = function (_p65) {
+	var _p66 = _p65;
 	return A2(
 		_user$project$Animation_Model$AngleProperty,
 		'rotate',
-		A2(_user$project$Animation$initMotion, _p62._0, 'rad'));
+		A2(_user$project$Animation$initMotion, _p66._0, 'rad'));
 };
 var _user$project$Animation$textShadow = function (shade) {
-	var _p63 = _elm_lang$core$Color$toRgb(shade.color);
-	var red = _p63.red;
-	var green = _p63.green;
-	var blue = _p63.blue;
-	var alpha = _p63.alpha;
+	var _p67 = _elm_lang$core$Color$toRgb(shade.color);
+	var red = _p67.red;
+	var green = _p67.green;
+	var blue = _p67.blue;
+	var alpha = _p67.alpha;
 	return A3(
 		_user$project$Animation_Model$ShadowProperty,
 		'text-shadow',
@@ -13273,11 +13298,11 @@ var _user$project$Animation$textShadow = function (shade) {
 		});
 };
 var _user$project$Animation$shadow = function (shade) {
-	var _p64 = _elm_lang$core$Color$toRgb(shade.color);
-	var red = _p64.red;
-	var green = _p64.green;
-	var blue = _p64.blue;
-	var alpha = _p64.alpha;
+	var _p68 = _elm_lang$core$Color$toRgb(shade.color);
+	var red = _p68.red;
+	var green = _p68.green;
+	var blue = _p68.blue;
+	var alpha = _p68.alpha;
 	return A3(
 		_user$project$Animation_Model$ShadowProperty,
 		'box-shadow',
@@ -13303,11 +13328,11 @@ var _user$project$Animation$shadow = function (shade) {
 		});
 };
 var _user$project$Animation$insetShadow = function (shade) {
-	var _p65 = _elm_lang$core$Color$toRgb(shade.color);
-	var red = _p65.red;
-	var green = _p65.green;
-	var blue = _p65.blue;
-	var alpha = _p65.alpha;
+	var _p69 = _elm_lang$core$Color$toRgb(shade.color);
+	var red = _p69.red;
+	var green = _p69.green;
+	var blue = _p69.blue;
+	var alpha = _p69.alpha;
 	return A3(
 		_user$project$Animation_Model$ShadowProperty,
 		'box-shadow',
@@ -13376,56 +13401,25 @@ var _user$project$Animation$verticalTo = function (x) {
 	return _user$project$Animation_Model$VerticalTo(
 		A2(_user$project$Animation$initMotion, x, ''));
 };
-var _user$project$Animation$curve2 = function (_p66) {
-	var _p67 = _p66;
-	var _p70 = _p67.point;
-	var _p69 = _p67.control2;
-	var _p68 = _p67.control1;
+var _user$project$Animation$curve2 = function (_p70) {
+	var _p71 = _p70;
+	var _p74 = _p71.point;
+	var _p73 = _p71.control2;
+	var _p72 = _p71.control1;
 	return _user$project$Animation_Model$Curve(
 		{
 			control1: {
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$fst(_p68),
+					_elm_lang$core$Basics$fst(_p72),
 					''),
 				_1: A2(
 					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$snd(_p68),
+					_elm_lang$core$Basics$snd(_p72),
 					'')
 			},
 			control2: {
-				ctor: '_Tuple2',
-				_0: A2(
-					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$fst(_p69),
-					''),
-				_1: A2(
-					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$snd(_p69),
-					'')
-			},
-			point: {
-				ctor: '_Tuple2',
-				_0: A2(
-					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$fst(_p70),
-					''),
-				_1: A2(
-					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$snd(_p70),
-					'')
-			}
-		});
-};
-var _user$project$Animation$curve2To = function (_p71) {
-	var _p72 = _p71;
-	var _p75 = _p72.point;
-	var _p74 = _p72.control2;
-	var _p73 = _p72.control1;
-	return _user$project$Animation_Model$CurveTo(
-		{
-			control1: {
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Animation$initMotion,
@@ -13436,7 +13430,7 @@ var _user$project$Animation$curve2To = function (_p71) {
 					_elm_lang$core$Basics$snd(_p73),
 					'')
 			},
-			control2: {
+			point: {
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Animation$initMotion,
@@ -13446,27 +13440,28 @@ var _user$project$Animation$curve2To = function (_p71) {
 					_user$project$Animation$initMotion,
 					_elm_lang$core$Basics$snd(_p74),
 					'')
-			},
-			point: {
-				ctor: '_Tuple2',
-				_0: A2(
-					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$fst(_p75),
-					''),
-				_1: A2(
-					_user$project$Animation$initMotion,
-					_elm_lang$core$Basics$snd(_p75),
-					'')
 			}
 		});
 };
-var _user$project$Animation$curve = function (_p76) {
-	var _p77 = _p76;
-	var _p79 = _p77.point;
-	var _p78 = _p77.control;
-	return _user$project$Animation_Model$Quadratic(
+var _user$project$Animation$curve2To = function (_p75) {
+	var _p76 = _p75;
+	var _p79 = _p76.point;
+	var _p78 = _p76.control2;
+	var _p77 = _p76.control1;
+	return _user$project$Animation_Model$CurveTo(
 		{
-			control: {
+			control1: {
+				ctor: '_Tuple2',
+				_0: A2(
+					_user$project$Animation$initMotion,
+					_elm_lang$core$Basics$fst(_p77),
+					''),
+				_1: A2(
+					_user$project$Animation$initMotion,
+					_elm_lang$core$Basics$snd(_p77),
+					'')
+			},
+			control2: {
 				ctor: '_Tuple2',
 				_0: A2(
 					_user$project$Animation$initMotion,
@@ -13490,11 +13485,11 @@ var _user$project$Animation$curve = function (_p76) {
 			}
 		});
 };
-var _user$project$Animation$curveTo = function (_p80) {
+var _user$project$Animation$curve = function (_p80) {
 	var _p81 = _p80;
 	var _p83 = _p81.point;
 	var _p82 = _p81.control;
-	return _user$project$Animation_Model$QuadraticTo(
+	return _user$project$Animation_Model$Quadratic(
 		{
 			control: {
 				ctor: '_Tuple2',
@@ -13520,6 +13515,36 @@ var _user$project$Animation$curveTo = function (_p80) {
 			}
 		});
 };
+var _user$project$Animation$curveTo = function (_p84) {
+	var _p85 = _p84;
+	var _p87 = _p85.point;
+	var _p86 = _p85.control;
+	return _user$project$Animation_Model$QuadraticTo(
+		{
+			control: {
+				ctor: '_Tuple2',
+				_0: A2(
+					_user$project$Animation$initMotion,
+					_elm_lang$core$Basics$fst(_p86),
+					''),
+				_1: A2(
+					_user$project$Animation$initMotion,
+					_elm_lang$core$Basics$snd(_p86),
+					'')
+			},
+			point: {
+				ctor: '_Tuple2',
+				_0: A2(
+					_user$project$Animation$initMotion,
+					_elm_lang$core$Basics$fst(_p87),
+					''),
+				_1: A2(
+					_user$project$Animation$initMotion,
+					_elm_lang$core$Basics$snd(_p87),
+					'')
+			}
+		});
+};
 var _user$project$Animation$arc = function (arc) {
 	return arc.clockwise ? _user$project$Animation_Model$ClockwiseArc(
 		{
@@ -13537,30 +13562,30 @@ var _user$project$Animation$arc = function (arc) {
 			endAngle: A2(_user$project$Animation$initMotion, arc.endAngle, '')
 		});
 };
-var _user$project$Animation$hueRotate = function (_p84) {
-	var _p85 = _p84;
+var _user$project$Animation$hueRotate = function (_p88) {
+	var _p89 = _p88;
 	return A2(
 		_user$project$Animation_Model$AngleProperty,
 		'hue-rotate',
-		A2(_user$project$Animation$initMotion, _p85._0, 'rad'));
+		A2(_user$project$Animation$initMotion, _p89._0, 'rad'));
 };
 var _user$project$Animation$points = function (pnts) {
 	return _user$project$Animation_Model$Points(
 		A2(
 			_elm_lang$core$List$map,
-			function (_p86) {
-				var _p87 = _p86;
+			function (_p90) {
+				var _p91 = _p90;
 				return {
 					ctor: '_Tuple2',
-					_0: A2(_user$project$Animation$initMotion, _p87._0, ''),
-					_1: A2(_user$project$Animation$initMotion, _p87._1, '')
+					_0: A2(_user$project$Animation$initMotion, _p91._0, ''),
+					_1: A2(_user$project$Animation$initMotion, _p91._1, '')
 				};
 			},
 			_user$project$Animation$alignStartingPoint(pnts)));
 };
 var _user$project$Animation$lengthUnitName = function (unit) {
-	var _p88 = unit;
-	switch (_p88.ctor) {
+	var _p92 = unit;
+	switch (_p92.ctor) {
 		case 'NoUnit':
 			return '';
 		case 'Px':
@@ -13595,287 +13620,269 @@ var _user$project$Animation$lengthUnitName = function (unit) {
 			return 'pc';
 	}
 };
-var _user$project$Animation$height = function (_p89) {
-	var _p90 = _p89;
-	return A3(
-		_user$project$Animation$length,
-		'height',
-		_p90._0,
-		_user$project$Animation$lengthUnitName(_p90._1));
-};
-var _user$project$Animation$width = function (_p91) {
-	var _p92 = _p91;
-	return A3(
-		_user$project$Animation$length,
-		'width',
-		_p92._0,
-		_user$project$Animation$lengthUnitName(_p92._1));
-};
-var _user$project$Animation$left = function (_p93) {
+var _user$project$Animation$height = function (_p93) {
 	var _p94 = _p93;
 	return A3(
 		_user$project$Animation$length,
-		'left',
+		'height',
 		_p94._0,
 		_user$project$Animation$lengthUnitName(_p94._1));
 };
-var _user$project$Animation$top = function (_p95) {
+var _user$project$Animation$width = function (_p95) {
 	var _p96 = _p95;
 	return A3(
 		_user$project$Animation$length,
-		'top',
+		'width',
 		_p96._0,
 		_user$project$Animation$lengthUnitName(_p96._1));
 };
-var _user$project$Animation$right = function (_p97) {
+var _user$project$Animation$left = function (_p97) {
 	var _p98 = _p97;
 	return A3(
 		_user$project$Animation$length,
-		'right',
+		'left',
 		_p98._0,
 		_user$project$Animation$lengthUnitName(_p98._1));
 };
-var _user$project$Animation$bottom = function (_p99) {
+var _user$project$Animation$top = function (_p99) {
 	var _p100 = _p99;
 	return A3(
 		_user$project$Animation$length,
-		'bottom',
+		'top',
 		_p100._0,
 		_user$project$Animation$lengthUnitName(_p100._1));
 };
-var _user$project$Animation$maxHeight = function (_p101) {
+var _user$project$Animation$right = function (_p101) {
 	var _p102 = _p101;
 	return A3(
 		_user$project$Animation$length,
-		'max-height',
+		'right',
 		_p102._0,
 		_user$project$Animation$lengthUnitName(_p102._1));
 };
-var _user$project$Animation$maxWidth = function (_p103) {
+var _user$project$Animation$bottom = function (_p103) {
 	var _p104 = _p103;
 	return A3(
 		_user$project$Animation$length,
-		'max-width',
+		'bottom',
 		_p104._0,
 		_user$project$Animation$lengthUnitName(_p104._1));
 };
-var _user$project$Animation$minHeight = function (_p105) {
+var _user$project$Animation$maxHeight = function (_p105) {
 	var _p106 = _p105;
 	return A3(
 		_user$project$Animation$length,
-		'min-height',
+		'max-height',
 		_p106._0,
 		_user$project$Animation$lengthUnitName(_p106._1));
 };
-var _user$project$Animation$minWidth = function (_p107) {
+var _user$project$Animation$maxWidth = function (_p107) {
 	var _p108 = _p107;
 	return A3(
 		_user$project$Animation$length,
-		'min-width',
+		'max-width',
 		_p108._0,
 		_user$project$Animation$lengthUnitName(_p108._1));
 };
-var _user$project$Animation$padding = function (_p109) {
+var _user$project$Animation$minHeight = function (_p109) {
 	var _p110 = _p109;
 	return A3(
 		_user$project$Animation$length,
-		'padding',
+		'min-height',
 		_p110._0,
 		_user$project$Animation$lengthUnitName(_p110._1));
 };
-var _user$project$Animation$paddingLeft = function (_p111) {
+var _user$project$Animation$minWidth = function (_p111) {
 	var _p112 = _p111;
 	return A3(
 		_user$project$Animation$length,
-		'padding-left',
+		'min-width',
 		_p112._0,
 		_user$project$Animation$lengthUnitName(_p112._1));
 };
-var _user$project$Animation$paddingRight = function (_p113) {
+var _user$project$Animation$padding = function (_p113) {
 	var _p114 = _p113;
 	return A3(
 		_user$project$Animation$length,
-		'padding-right',
+		'padding',
 		_p114._0,
 		_user$project$Animation$lengthUnitName(_p114._1));
 };
-var _user$project$Animation$paddingTop = function (_p115) {
+var _user$project$Animation$paddingLeft = function (_p115) {
 	var _p116 = _p115;
 	return A3(
 		_user$project$Animation$length,
-		'padding-top',
+		'padding-left',
 		_p116._0,
 		_user$project$Animation$lengthUnitName(_p116._1));
 };
-var _user$project$Animation$paddingBottom = function (_p117) {
+var _user$project$Animation$paddingRight = function (_p117) {
 	var _p118 = _p117;
 	return A3(
 		_user$project$Animation$length,
-		'padding-bottom',
+		'padding-right',
 		_p118._0,
 		_user$project$Animation$lengthUnitName(_p118._1));
 };
-var _user$project$Animation$margin = function (_p119) {
+var _user$project$Animation$paddingTop = function (_p119) {
 	var _p120 = _p119;
 	return A3(
 		_user$project$Animation$length,
-		'margin',
+		'padding-top',
 		_p120._0,
 		_user$project$Animation$lengthUnitName(_p120._1));
 };
-var _user$project$Animation$marginLeft = function (_p121) {
+var _user$project$Animation$paddingBottom = function (_p121) {
 	var _p122 = _p121;
 	return A3(
 		_user$project$Animation$length,
-		'margin-left',
+		'padding-bottom',
 		_p122._0,
 		_user$project$Animation$lengthUnitName(_p122._1));
 };
-var _user$project$Animation$marginRight = function (_p123) {
+var _user$project$Animation$margin = function (_p123) {
 	var _p124 = _p123;
 	return A3(
 		_user$project$Animation$length,
-		'margin-right',
+		'margin',
 		_p124._0,
 		_user$project$Animation$lengthUnitName(_p124._1));
 };
-var _user$project$Animation$marginTop = function (_p125) {
+var _user$project$Animation$marginLeft = function (_p125) {
 	var _p126 = _p125;
 	return A3(
 		_user$project$Animation$length,
-		'margin-top',
+		'margin-left',
 		_p126._0,
 		_user$project$Animation$lengthUnitName(_p126._1));
 };
-var _user$project$Animation$marginBottom = function (_p127) {
+var _user$project$Animation$marginRight = function (_p127) {
 	var _p128 = _p127;
 	return A3(
 		_user$project$Animation$length,
-		'margin-bottom',
+		'margin-right',
 		_p128._0,
 		_user$project$Animation$lengthUnitName(_p128._1));
 };
-var _user$project$Animation$borderWidth = function (_p129) {
+var _user$project$Animation$marginTop = function (_p129) {
 	var _p130 = _p129;
 	return A3(
 		_user$project$Animation$length,
-		'border-width',
+		'margin-top',
 		_p130._0,
 		_user$project$Animation$lengthUnitName(_p130._1));
 };
-var _user$project$Animation$borderLeftWidth = function (_p131) {
+var _user$project$Animation$marginBottom = function (_p131) {
 	var _p132 = _p131;
 	return A3(
 		_user$project$Animation$length,
-		'border-left-width',
+		'margin-bottom',
 		_p132._0,
 		_user$project$Animation$lengthUnitName(_p132._1));
 };
-var _user$project$Animation$borderRightWidth = function (_p133) {
+var _user$project$Animation$borderWidth = function (_p133) {
 	var _p134 = _p133;
 	return A3(
 		_user$project$Animation$length,
-		'border-right-width',
+		'border-width',
 		_p134._0,
 		_user$project$Animation$lengthUnitName(_p134._1));
 };
-var _user$project$Animation$borderTopWidth = function (_p135) {
+var _user$project$Animation$borderLeftWidth = function (_p135) {
 	var _p136 = _p135;
 	return A3(
 		_user$project$Animation$length,
-		'border-top-width',
+		'border-left-width',
 		_p136._0,
 		_user$project$Animation$lengthUnitName(_p136._1));
 };
-var _user$project$Animation$borderBottomWidth = function (_p137) {
+var _user$project$Animation$borderRightWidth = function (_p137) {
 	var _p138 = _p137;
 	return A3(
 		_user$project$Animation$length,
-		'border-bottom-width',
+		'border-right-width',
 		_p138._0,
 		_user$project$Animation$lengthUnitName(_p138._1));
 };
-var _user$project$Animation$borderRadius = function (_p139) {
+var _user$project$Animation$borderTopWidth = function (_p139) {
 	var _p140 = _p139;
 	return A3(
 		_user$project$Animation$length,
-		'border-radius',
+		'border-top-width',
 		_p140._0,
 		_user$project$Animation$lengthUnitName(_p140._1));
 };
-var _user$project$Animation$borderTopLeftRadius = function (_p141) {
+var _user$project$Animation$borderBottomWidth = function (_p141) {
 	var _p142 = _p141;
 	return A3(
 		_user$project$Animation$length,
-		'border-top-left-radius',
+		'border-bottom-width',
 		_p142._0,
 		_user$project$Animation$lengthUnitName(_p142._1));
 };
-var _user$project$Animation$borderTopRightRadius = function (_p143) {
+var _user$project$Animation$borderRadius = function (_p143) {
 	var _p144 = _p143;
 	return A3(
 		_user$project$Animation$length,
-		'border-top-right-radius',
+		'border-radius',
 		_p144._0,
 		_user$project$Animation$lengthUnitName(_p144._1));
 };
-var _user$project$Animation$borderBottomLeftRadius = function (_p145) {
+var _user$project$Animation$borderTopLeftRadius = function (_p145) {
 	var _p146 = _p145;
 	return A3(
 		_user$project$Animation$length,
-		'border-bottom-left-radius',
+		'border-top-left-radius',
 		_p146._0,
 		_user$project$Animation$lengthUnitName(_p146._1));
 };
-var _user$project$Animation$borderBottomRightRadius = function (_p147) {
+var _user$project$Animation$borderTopRightRadius = function (_p147) {
 	var _p148 = _p147;
 	return A3(
 		_user$project$Animation$length,
-		'border-bottom-right-radius',
+		'border-top-right-radius',
 		_p148._0,
 		_user$project$Animation$lengthUnitName(_p148._1));
 };
-var _user$project$Animation$letterSpacing = function (_p149) {
+var _user$project$Animation$borderBottomLeftRadius = function (_p149) {
 	var _p150 = _p149;
 	return A3(
 		_user$project$Animation$length,
-		'letter-spacing',
+		'border-bottom-left-radius',
 		_p150._0,
 		_user$project$Animation$lengthUnitName(_p150._1));
 };
-var _user$project$Animation$lineHeight = function (_p151) {
+var _user$project$Animation$borderBottomRightRadius = function (_p151) {
 	var _p152 = _p151;
 	return A3(
 		_user$project$Animation$length,
-		'line-height',
+		'border-bottom-right-radius',
 		_p152._0,
 		_user$project$Animation$lengthUnitName(_p152._1));
 };
+var _user$project$Animation$letterSpacing = function (_p153) {
+	var _p154 = _p153;
+	return A3(
+		_user$project$Animation$length,
+		'letter-spacing',
+		_p154._0,
+		_user$project$Animation$lengthUnitName(_p154._1));
+};
+var _user$project$Animation$lineHeight = function (_p155) {
+	var _p156 = _p155;
+	return A3(
+		_user$project$Animation$length,
+		'line-height',
+		_p156._0,
+		_user$project$Animation$lengthUnitName(_p156._1));
+};
 var _user$project$Animation$backgroundPosition = F2(
-	function (_p154, _p153) {
-		var _p155 = _p154;
-		var _p156 = _p153;
-		return A3(
-			_user$project$Animation$length2,
-			'background-position',
-			{
-				ctor: '_Tuple2',
-				_0: _p155._0,
-				_1: _user$project$Animation$lengthUnitName(_p155._1)
-			},
-			{
-				ctor: '_Tuple2',
-				_0: _p156._0,
-				_1: _user$project$Animation$lengthUnitName(_p156._1)
-			});
-	});
-var _user$project$Animation$translate = F2(
 	function (_p158, _p157) {
 		var _p159 = _p158;
 		var _p160 = _p157;
 		return A3(
 			_user$project$Animation$length2,
-			'translate',
+			'background-position',
 			{
 				ctor: '_Tuple2',
 				_0: _p159._0,
@@ -13887,187 +13894,205 @@ var _user$project$Animation$translate = F2(
 				_1: _user$project$Animation$lengthUnitName(_p160._1)
 			});
 	});
+var _user$project$Animation$translate = F2(
+	function (_p162, _p161) {
+		var _p163 = _p162;
+		var _p164 = _p161;
+		return A3(
+			_user$project$Animation$length2,
+			'translate',
+			{
+				ctor: '_Tuple2',
+				_0: _p163._0,
+				_1: _user$project$Animation$lengthUnitName(_p163._1)
+			},
+			{
+				ctor: '_Tuple2',
+				_0: _p164._0,
+				_1: _user$project$Animation$lengthUnitName(_p164._1)
+			});
+	});
 var _user$project$Animation$translate3d = F3(
-	function (_p163, _p162, _p161) {
-		var _p164 = _p163;
-		var _p165 = _p162;
-		var _p166 = _p161;
+	function (_p167, _p166, _p165) {
+		var _p168 = _p167;
+		var _p169 = _p166;
+		var _p170 = _p165;
 		return A4(
 			_user$project$Animation$length3,
 			'translate3d',
 			{
 				ctor: '_Tuple2',
-				_0: _p164._0,
-				_1: _user$project$Animation$lengthUnitName(_p164._1)
+				_0: _p168._0,
+				_1: _user$project$Animation$lengthUnitName(_p168._1)
 			},
 			{
 				ctor: '_Tuple2',
-				_0: _p165._0,
-				_1: _user$project$Animation$lengthUnitName(_p165._1)
+				_0: _p169._0,
+				_1: _user$project$Animation$lengthUnitName(_p169._1)
 			},
 			{
 				ctor: '_Tuple2',
-				_0: _p166._0,
-				_1: _user$project$Animation$lengthUnitName(_p166._1)
+				_0: _p170._0,
+				_1: _user$project$Animation$lengthUnitName(_p170._1)
 			});
 	});
-var _user$project$Animation$blur = function (_p167) {
-	var _p168 = _p167;
+var _user$project$Animation$blur = function (_p171) {
+	var _p172 = _p171;
 	return A3(
 		_user$project$Animation$length,
 		'blur',
-		_p168._0,
-		_user$project$Animation$lengthUnitName(_p168._1));
+		_p172._0,
+		_user$project$Animation$lengthUnitName(_p172._1));
 };
 var _user$project$Animation$update = F2(
 	function (tick, animation) {
 		return _elm_lang$core$Basics$fst(
 			A2(_user$project$Animation_Model$updateAnimation, tick, animation));
 	});
-var _user$project$Animation$debug = function (_p169) {
-	var _p170 = _p169;
-	var _p180 = _p170._0;
-	var time = _p180.timing.current;
+var _user$project$Animation$debug = function (_p173) {
+	var _p174 = _p173;
+	var _p184 = _p174._0;
+	var time = _p184.timing.current;
 	var getValueTuple = function (prop) {
-		var _p171 = prop;
-		switch (_p171.ctor) {
+		var _p175 = prop;
+		switch (_p175.ctor) {
 			case 'ExactProperty':
 				return _elm_lang$core$Native_List.fromArray(
 					[]);
 			case 'ColorProperty':
-				var _p172 = _p171._0;
+				var _p176 = _p175._0;
 				return _elm_lang$core$Native_List.fromArray(
 					[
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p172, '-red'),
-						_1: _p171._1,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p176, '-red'),
+						_1: _p175._1,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p172, '-green'),
-						_1: _p171._2,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p176, '-green'),
+						_1: _p175._2,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p172, '-blue'),
-						_1: _p171._3,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p176, '-blue'),
+						_1: _p175._3,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p172, '-alpha'),
-						_1: _p171._4,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p176, '-alpha'),
+						_1: _p175._4,
 						_2: time
 					}
 					]);
 			case 'ShadowProperty':
-				var _p174 = _p171._2;
-				var _p173 = _p171._0;
-				var name = _p171._1 ? A2(_elm_lang$core$Basics_ops['++'], _p173, '-inset') : _p173;
+				var _p178 = _p175._2;
+				var _p177 = _p175._0;
+				var name = _p175._1 ? A2(_elm_lang$core$Basics_ops['++'], _p177, '-inset') : _p177;
 				return _elm_lang$core$Native_List.fromArray(
 					[
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-offsetX'),
-						_1: _p174.offsetX,
+						_1: _p178.offsetX,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-offsetY'),
-						_1: _p174.offsetY,
+						_1: _p178.offsetY,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-size'),
-						_1: _p174.size,
+						_1: _p178.size,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-blur'),
-						_1: _p174.blur,
+						_1: _p178.blur,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-red'),
-						_1: _p174.red,
+						_1: _p178.red,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-green'),
-						_1: _p174.green,
+						_1: _p178.green,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-blue'),
-						_1: _p174.blue,
+						_1: _p178.blue,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
 						_0: A2(_elm_lang$core$Basics_ops['++'], name, '-alpha'),
-						_1: _p174.alpha,
+						_1: _p178.alpha,
 						_2: time
 					}
 					]);
 			case 'Property':
 				return _elm_lang$core$Native_List.fromArray(
 					[
-						{ctor: '_Tuple3', _0: _p171._0, _1: _p171._1, _2: time}
+						{ctor: '_Tuple3', _0: _p175._0, _1: _p175._1, _2: time}
 					]);
 			case 'Property2':
-				var _p175 = _p171._0;
+				var _p179 = _p175._0;
 				return _elm_lang$core$Native_List.fromArray(
 					[
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p175, '-x'),
-						_1: _p171._1,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p179, '-x'),
+						_1: _p175._1,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p175, '-y'),
-						_1: _p171._2,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p179, '-y'),
+						_1: _p175._2,
 						_2: time
 					}
 					]);
 			case 'Property3':
-				var _p177 = _p171._0;
-				var _p176 = _p171._2;
+				var _p181 = _p175._0;
+				var _p180 = _p175._2;
 				return _elm_lang$core$Native_List.fromArray(
 					[
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p177, '-x'),
-						_1: _p171._1,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p181, '-x'),
+						_1: _p175._1,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p177, '-y'),
-						_1: _p176,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p181, '-y'),
+						_1: _p180,
 						_2: time
 					},
 						{
 						ctor: '_Tuple3',
-						_0: A2(_elm_lang$core$Basics_ops['++'], _p177, '-z'),
-						_1: _p176,
+						_0: A2(_elm_lang$core$Basics_ops['++'], _p181, '-z'),
+						_1: _p180,
 						_2: time
 					}
 					]);
 			case 'AngleProperty':
 				return _elm_lang$core$Native_List.fromArray(
 					[
-						{ctor: '_Tuple3', _0: _p171._0, _1: _p171._1, _2: time}
+						{ctor: '_Tuple3', _0: _p175._0, _1: _p175._1, _2: time}
 					]);
 			case 'Points':
 				var name = 'points';
@@ -14075,8 +14100,8 @@ var _user$project$Animation$debug = function (_p169) {
 					A2(
 						_elm_lang$core$List$indexedMap,
 						F2(
-							function (i, _p178) {
-								var _p179 = _p178;
+							function (i, _p182) {
+								var _p183 = _p182;
 								return _elm_lang$core$Native_List.fromArray(
 									[
 										{
@@ -14085,7 +14110,7 @@ var _user$project$Animation$debug = function (_p169) {
 											_elm_lang$core$Basics_ops['++'],
 											_elm_lang$core$Basics$toString(i),
 											A2(_elm_lang$core$Basics_ops['++'], name, '-x')),
-										_1: _p179._0,
+										_1: _p183._0,
 										_2: time
 									},
 										{
@@ -14094,22 +14119,22 @@ var _user$project$Animation$debug = function (_p169) {
 											_elm_lang$core$Basics_ops['++'],
 											_elm_lang$core$Basics$toString(i),
 											A2(_elm_lang$core$Basics_ops['++'], name, '-y')),
-										_1: _p179._1,
+										_1: _p183._1,
 										_2: time
 									}
 									]);
 							}),
-						_p171._0));
+						_p175._0));
 			default:
 				return _elm_lang$core$Native_List.fromArray(
 					[]);
 		}
 	};
-	return A2(_elm_lang$core$List$concatMap, getValueTuple, _p180.style);
+	return A2(_elm_lang$core$List$concatMap, getValueTuple, _p184.style);
 };
-var _user$project$Animation$isRunning = function (_p181) {
-	var _p182 = _p181;
-	return _p182._0.running;
+var _user$project$Animation$isRunning = function (_p185) {
+	var _p186 = _p185;
+	return _p186._0.running;
 };
 var _user$project$Animation$subscription = F2(
 	function (msg, states) {
@@ -14119,8 +14144,8 @@ var _user$project$Animation$subscription = F2(
 			_elm_lang$animation_frame$AnimationFrame$times(_user$project$Animation_Model$Tick)) : _elm_lang$core$Platform_Sub$none;
 	});
 var _user$project$Animation$extractInitialWait = function (steps) {
-	var _p183 = _elm_lang$core$List$head(steps);
-	if (_p183.ctor === 'Nothing') {
+	var _p187 = _elm_lang$core$List$head(steps);
+	if (_p187.ctor === 'Nothing') {
 		return {
 			ctor: '_Tuple2',
 			_0: 0,
@@ -14128,51 +14153,51 @@ var _user$project$Animation$extractInitialWait = function (steps) {
 				[])
 		};
 	} else {
-		var _p184 = _p183._0;
-		if (_p184.ctor === 'Wait') {
-			var _p185 = _user$project$Animation$extractInitialWait(
+		var _p188 = _p187._0;
+		if (_p188.ctor === 'Wait') {
+			var _p189 = _user$project$Animation$extractInitialWait(
 				A2(_elm_lang$core$List$drop, 1, steps));
-			var additionalTime = _p185._0;
-			var remainingSteps = _p185._1;
-			return {ctor: '_Tuple2', _0: _p184._0 + additionalTime, _1: remainingSteps};
+			var additionalTime = _p189._0;
+			var remainingSteps = _p189._1;
+			return {ctor: '_Tuple2', _0: _p188._0 + additionalTime, _1: remainingSteps};
 		} else {
 			return {ctor: '_Tuple2', _0: 0, _1: steps};
 		}
 	}
 };
 var _user$project$Animation$interrupt = F2(
-	function (steps, _p186) {
-		var _p187 = _p186;
-		var _p188 = _p187._0;
+	function (steps, _p190) {
+		var _p191 = _p190;
+		var _p192 = _p191._0;
 		return _user$project$Animation_Model$Animation(
 			_elm_lang$core$Native_Utils.update(
-				_p188,
+				_p192,
 				{
 					interruption: A2(
 						_elm_lang$core$List_ops['::'],
 						_user$project$Animation$extractInitialWait(steps),
-						_p188.interruption),
+						_p192.interruption),
 					running: true
 				}));
 	});
 var _user$project$Animation$queue = F2(
-	function (steps, _p189) {
-		var _p190 = _p189;
-		var _p191 = _p190._0;
+	function (steps, _p193) {
+		var _p194 = _p193;
+		var _p195 = _p194._0;
 		return _user$project$Animation_Model$Animation(
 			_elm_lang$core$Native_Utils.update(
-				_p191,
+				_p195,
 				{
-					steps: A2(_elm_lang$core$Basics_ops['++'], _p191.steps, steps),
+					steps: A2(_elm_lang$core$Basics_ops['++'], _p195.steps, steps),
 					running: true
 				}));
 	});
 var _user$project$Animation$warnForDoubleListedProperties = function (props) {
-	var _p192 = A2(
+	var _p196 = A2(
 		_elm_lang$core$List$map,
 		function (propGroup) {
-			var _p193 = _elm_lang$core$List$head(propGroup);
-			if (_p193.ctor === 'Nothing') {
+			var _p197 = _elm_lang$core$List$head(propGroup);
+			if (_p197.ctor === 'Nothing') {
 				return '';
 			} else {
 				return (_elm_lang$core$Native_Utils.cmp(
@@ -14183,7 +14208,7 @@ var _user$project$Animation$warnForDoubleListedProperties = function (props) {
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'The \"',
-						A2(_elm_lang$core$Basics_ops['++'], _p193._0, '\" css property is listed more than once.  Only the last instance will be used.'))) : '';
+						A2(_elm_lang$core$Basics_ops['++'], _p197._0, '\" css property is listed more than once.  Only the last instance will be used.'))) : '';
 			}
 		},
 		A2(
@@ -14196,7 +14221,13 @@ var _user$project$Animation$warnForDoubleListedProperties = function (props) {
 				A2(
 					_elm_lang$core$List$map,
 					_user$project$Animation_Model$propertyName,
-					A2(_elm_lang$core$List$filter, _user$project$Animation$isTransformation, props)))));
+					A2(
+						_elm_lang$core$List$filter,
+						function (prop) {
+							return _elm_lang$core$Basics$not(
+								_user$project$Animation$isTransformation(prop));
+						},
+						props)))));
 	return props;
 };
 var _user$project$Animation$initialState = function (current) {
@@ -14225,21 +14256,21 @@ var _user$project$Animation$styleWith = F2(
 				_user$project$Animation$warnForDoubleListedProperties(props)));
 	});
 var _user$project$Animation$styleWithEach = function (props) {
-	var _p194 = _user$project$Animation$warnForDoubleListedProperties(
+	var _p198 = _user$project$Animation$warnForDoubleListedProperties(
 		A2(_elm_lang$core$List$map, _elm_lang$core$Basics$snd, props));
 	return _user$project$Animation$initialState(
 		A2(
 			_elm_lang$core$List$map,
-			function (_p195) {
-				var _p196 = _p195;
+			function (_p199) {
+				var _p200 = _p199;
 				return A2(
 					_user$project$Animation_Model$mapToMotion,
 					function (m) {
 						return _elm_lang$core$Native_Utils.update(
 							m,
-							{interpolation: _p196._0});
+							{interpolation: _p200._0});
 					},
-					_p196._1);
+					_p200._1);
 			},
 			props));
 };
@@ -14257,16 +14288,16 @@ var _user$project$Animation$toWithEach = function (interpProps) {
 	return _user$project$Animation_Model$ToWith(
 		A2(
 			_elm_lang$core$List$map,
-			function (_p197) {
-				var _p198 = _p197;
+			function (_p201) {
+				var _p202 = _p201;
 				return A2(
 					_user$project$Animation_Model$mapToMotion,
 					function (m) {
 						return _elm_lang$core$Native_Utils.update(
 							m,
-							{interpolation: _p198._0});
+							{interpolation: _p202._0});
 					},
-					_p198._1);
+					_p202._1);
 			},
 			interpProps));
 };
@@ -14299,8 +14330,8 @@ var _user$project$Animation$defaultInterpolationByProperty = function (prop) {
 	};
 	var spring = _user$project$Animation_Model$Spring(
 		{stiffness: 170, damping: 26});
-	var _p199 = prop;
-	switch (_p199.ctor) {
+	var _p203 = prop;
+	switch (_p203.ctor) {
 		case 'ExactProperty':
 			return spring;
 		case 'ColorProperty':
@@ -14340,10 +14371,10 @@ var _user$project$Animation$style = function (props) {
 			_user$project$Animation$setDefaultInterpolation,
 			_user$project$Animation$warnForDoubleListedProperties(props)));
 };
-var _user$project$Animation$easing = function (_p200) {
-	var _p201 = _p200;
+var _user$project$Animation$easing = function (_p204) {
+	var _p205 = _p204;
 	return _user$project$Animation_Model$Easing(
-		{progress: 1, duration: _p201.duration, start: 0, ease: _p201.ease});
+		{progress: 1, duration: _p205.duration, start: 0, ease: _p205.ease});
 };
 var _user$project$Animation$spring = function (settings) {
 	return _user$project$Animation_Model$Spring(settings);
@@ -14458,202 +14489,81 @@ var _user$project$Animation$Inline = {ctor: 'Inline'};
 var _user$project$Animation$inline = _user$project$Animation$Inline;
 var _user$project$Animation$None = {ctor: 'None'};
 var _user$project$Animation$none = _user$project$Animation$None;
-var _user$project$Main$greyedOut = A2(
-	_elm_lang$core$List$map,
-	_user$project$Animation$style,
-	_elm_lang$core$Native_List.fromArray(
+var _user$project$Main$styles = {
+	open: _elm_lang$core$Native_List.fromArray(
 		[
-			_elm_lang$core$Native_List.fromArray(
-			[
-				_user$project$Animation$points(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 161.649, _1: 152.782},
-						{ctor: '_Tuple2', _0: 231.514, _1: 82.916},
-						{ctor: '_Tuple2', _0: 91.783, _1: 82.916}
-					])),
-				_user$project$Animation$fill(
-				A3(_elm_lang$core$Color$rgb, 230, 230, 230))
-			]),
-			_elm_lang$core$Native_List.fromArray(
-			[
-				_user$project$Animation$points(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 8.867, _1: 0},
-						{ctor: '_Tuple2', _0: 79.241, _1: 70.375},
-						{ctor: '_Tuple2', _0: 232.213, _1: 70.375},
-						{ctor: '_Tuple2', _0: 161.838, _1: 0}
-					])),
-				_user$project$Animation$fill(
-				A3(_elm_lang$core$Color$rgb, 230, 230, 230))
-			]),
-			_elm_lang$core$Native_List.fromArray(
-			[
-				_user$project$Animation$points(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 323.298, _1: 143.724},
-						{ctor: '_Tuple2', _0: 323.298, _1: 0},
-						{ctor: '_Tuple2', _0: 179.573, _1: 0}
-					])),
-				_user$project$Animation$fill(
-				A3(_elm_lang$core$Color$rgb, 230, 230, 230))
-			]),
-			_elm_lang$core$Native_List.fromArray(
-			[
-				_user$project$Animation$points(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 152.781, _1: 161.649},
-						{ctor: '_Tuple2', _0: 0, _1: 8.868},
-						{ctor: '_Tuple2', _0: 0, _1: 314.432}
-					])),
-				_user$project$Animation$fill(
-				A3(_elm_lang$core$Color$rgb, 230, 230, 230))
-			]),
-			_elm_lang$core$Native_List.fromArray(
-			[
-				_user$project$Animation$points(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 255.522, _1: 246.655},
-						{ctor: '_Tuple2', _0: 323.298, _1: 314.432},
-						{ctor: '_Tuple2', _0: 323.298, _1: 178.879}
-					])),
-				_user$project$Animation$fill(
-				A3(_elm_lang$core$Color$rgb, 230, 230, 230))
-			]),
-			_elm_lang$core$Native_List.fromArray(
-			[
-				_user$project$Animation$points(
-				_elm_lang$core$Native_List.fromArray(
-					[
-						{ctor: '_Tuple2', _0: 161.649, _1: 170.517},
-						{ctor: '_Tuple2', _0: 8.869, _1: 323.298},
-						{ctor: '_Tuple2', _0: 314.43, _1: 323.298}
-					])),
-				_user$project$Animation$fill(
-				A3(_elm_lang$core$Color$rgb, 230, 230, 230))
-			])
-		]));
-var _user$project$Main$palette = {
-	orange: A3(_elm_lang$core$Color$rgb, 240, 173, 0),
-	green: A3(_elm_lang$core$Color$rgb, 127, 209, 59),
-	lavender: A3(_elm_lang$core$Color$rgb, 90, 99, 120),
-	blue: A3(_elm_lang$core$Color$rgb, 96, 181, 204)
-};
-var _user$project$Main$polygons = _elm_lang$core$Native_List.fromArray(
-	[
-		_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Animation$points(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 161.649, _1: 152.782},
-					{ctor: '_Tuple2', _0: 231.514, _1: 82.916},
-					{ctor: '_Tuple2', _0: 91.783, _1: 82.916}
-				])),
-			_user$project$Animation$fill(_user$project$Main$palette.orange)
+			_user$project$Animation$left(
+			_user$project$Animation$px(0.0)),
+			_user$project$Animation$opacity(1.0)
 		]),
-		_elm_lang$core$Native_List.fromArray(
+	closed: _elm_lang$core$Native_List.fromArray(
 		[
-			_user$project$Animation$points(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 8.867, _1: 0},
-					{ctor: '_Tuple2', _0: 79.241, _1: 70.375},
-					{ctor: '_Tuple2', _0: 232.213, _1: 70.375},
-					{ctor: '_Tuple2', _0: 161.838, _1: 0}
-				])),
-			_user$project$Animation$fill(_user$project$Main$palette.green)
-		]),
-		_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Animation$points(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 323.298, _1: 143.724},
-					{ctor: '_Tuple2', _0: 323.298, _1: 0},
-					{ctor: '_Tuple2', _0: 179.573, _1: 0}
-				])),
-			_user$project$Animation$fill(_user$project$Main$palette.blue)
-		]),
-		_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Animation$points(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 152.781, _1: 161.649},
-					{ctor: '_Tuple2', _0: 0, _1: 8.868},
-					{ctor: '_Tuple2', _0: 0, _1: 314.432}
-				])),
-			_user$project$Animation$fill(_user$project$Main$palette.lavender)
-		]),
-		_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Animation$points(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 255.522, _1: 246.655},
-					{ctor: '_Tuple2', _0: 323.298, _1: 314.432},
-					{ctor: '_Tuple2', _0: 323.298, _1: 178.879}
-				])),
-			_user$project$Animation$fill(_user$project$Main$palette.orange)
-		]),
-		_elm_lang$core$Native_List.fromArray(
-		[
-			_user$project$Animation$points(
-			_elm_lang$core$Native_List.fromArray(
-				[
-					{ctor: '_Tuple2', _0: 161.649, _1: 170.517},
-					{ctor: '_Tuple2', _0: 8.869, _1: 323.298},
-					{ctor: '_Tuple2', _0: 314.43, _1: 323.298}
-				])),
-			_user$project$Animation$fill(_user$project$Main$palette.blue)
+			_user$project$Animation$left(
+			_user$project$Animation$px(-200.0)),
+			_user$project$Animation$opacity(0)
 		])
-	]);
+};
 var _user$project$Main$update = F2(
 	function (action, model) {
 		var _p0 = action;
-		if (_p0.ctor === 'SwitchTo') {
-			var newPolygon = _elm_lang$core$List$head(
-				A2(_elm_lang$core$List$drop, _p0._0, _user$project$Main$polygons));
-			var _p1 = newPolygon;
-			if (_p1.ctor === 'Just') {
+		switch (_p0.ctor) {
+			case 'Show':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							shape: A2(
+							style: A2(
 								_user$project$Animation$interrupt,
 								_elm_lang$core$Native_List.fromArray(
 									[
-										_user$project$Animation$to(_p1._0)
+										_user$project$Animation$to(_user$project$Main$styles.open)
 									]),
-								model.shape)
+								model.style)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
-			} else {
-				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			}
-		} else {
-			return {
-				ctor: '_Tuple2',
-				_0: _elm_lang$core$Native_Utils.update(
-					model,
-					{
-						shape: A2(_user$project$Animation$update, _p0._0, model.shape)
-					}),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
+			case 'Hide':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							style: A2(
+								_user$project$Animation$interrupt,
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_user$project$Animation$to(_user$project$Main$styles.closed)
+									]),
+								model.style)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							style: A2(_user$project$Animation$update, _p0._0, model.style)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
-var _user$project$Main$Model = F2(
+var _user$project$Main$init = {
+	ctor: '_Tuple2',
+	_0: {
+		style: _user$project$Animation$style(_user$project$Main$styles.closed)
+	},
+	_1: _elm_lang$core$Platform_Cmd$none
+};
+var _user$project$Main$Model = function (a) {
+	return {style: a};
+};
+var _user$project$Main$Styles = F2(
 	function (a, b) {
-		return {shape: a, index: b};
+		return {open: a, closed: b};
 	});
 var _user$project$Main$Animate = function (a) {
 	return {ctor: 'Animate', _0: a};
@@ -14663,23 +14573,26 @@ var _user$project$Main$subscriptions = function (model) {
 		_user$project$Animation$subscription,
 		_user$project$Main$Animate,
 		_elm_lang$core$Native_List.fromArray(
-			[model.shape]));
+			[model.style]));
 };
-var _user$project$Main$SwitchTo = function (a) {
-	return {ctor: 'SwitchTo', _0: a};
-};
+var _user$project$Main$Hide = {ctor: 'Hide'};
+var _user$project$Main$Show = {ctor: 'Show'};
 var _user$project$Main$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		_elm_lang$core$Native_List.fromArray(
 			[
+				_elm_lang$html$Html_Events$onMouseEnter(_user$project$Main$Show),
+				_elm_lang$html$Html_Events$onMouseLeave(_user$project$Main$Hide),
 				_elm_lang$html$Html_Attributes$style(
 				_elm_lang$core$Native_List.fromArray(
 					[
-						{ctor: '_Tuple2', _0: 'margin', _1: '200px auto'},
-						{ctor: '_Tuple2', _0: 'width', _1: '500px'},
-						{ctor: '_Tuple2', _0: 'height', _1: '500px'},
-						{ctor: '_Tuple2', _0: 'cursor', _1: 'pointer'}
+						{ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
+						{ctor: '_Tuple2', _0: 'left', _1: '0px'},
+						{ctor: '_Tuple2', _0: 'top', _1: '0px'},
+						{ctor: '_Tuple2', _0: 'width', _1: '350px'},
+						{ctor: '_Tuple2', _0: 'height', _1: '100%'},
+						{ctor: '_Tuple2', _0: 'border', _1: '2px dashed #AAA'}
 					]))
 			]),
 		_elm_lang$core$Native_List.fromArray(
@@ -14687,92 +14600,77 @@ var _user$project$Main$view = function (model) {
 				A2(
 				_elm_lang$html$Html$h1,
 				_elm_lang$core$Native_List.fromArray(
-					[]),
-				_elm_lang$core$Native_List.fromArray(
 					[
-						_elm_lang$svg$Svg$text('Click to morph!')
-					])),
-				A2(
-				_elm_lang$svg$Svg$svg,
-				_elm_lang$core$Native_List.fromArray(
-					[
-						_elm_lang$svg$Svg_Attributes$version('1.1'),
-						_elm_lang$svg$Svg_Attributes$x('0'),
-						_elm_lang$svg$Svg_Attributes$y('0'),
-						_elm_lang$svg$Svg_Attributes$viewBox('0 0 323.141 322.95')
+						_elm_lang$html$Html_Attributes$style(
+						_elm_lang$core$Native_List.fromArray(
+							[
+								{ctor: '_Tuple2', _0: 'padding', _1: '25px'}
+							]))
 					]),
 				_elm_lang$core$Native_List.fromArray(
 					[
+						_elm_lang$html$Html$text('Hover here to see menu!')
+					])),
+				A2(
+				_elm_lang$html$Html$div,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$Animation$render(model.style),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$html$Html_Attributes$style(
+							_elm_lang$core$Native_List.fromArray(
+								[
+									{ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
+									{ctor: '_Tuple2', _0: 'top', _1: '-2px'},
+									{ctor: '_Tuple2', _0: 'margin-left', _1: '-2px'},
+									{ctor: '_Tuple2', _0: 'padding', _1: '25px'},
+									{ctor: '_Tuple2', _0: 'width', _1: '300px'},
+									{ctor: '_Tuple2', _0: 'height', _1: '100%'},
+									{ctor: '_Tuple2', _0: 'background-color', _1: 'rgb(58,40,69)'},
+									{ctor: '_Tuple2', _0: 'color', _1: 'white'},
+									{ctor: '_Tuple2', _0: 'border', _1: '2px solid rgb(58,40,69)'}
+								]))
+						])),
+				_elm_lang$core$Native_List.fromArray(
+					[
 						A2(
-						_elm_lang$svg$Svg$rect,
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_elm_lang$svg$Svg_Attributes$fill('rgb(230,230,230)'),
-								_elm_lang$svg$Svg_Attributes$x('192.99'),
-								_elm_lang$svg$Svg_Attributes$y('107.392'),
-								_elm_lang$svg$Svg_Attributes$width('107.676'),
-								_elm_lang$svg$Svg_Attributes$height('108.167'),
-								_elm_lang$svg$Svg_Attributes$transform('matrix(0.7071 0.7071 -0.7071 0.7071 186.4727 -127.2386)')
-							]),
-						_elm_lang$core$Native_List.fromArray(
-							[])),
-						A2(
-						_elm_lang$svg$Svg$g,
+						_elm_lang$html$Html$h1,
 						_elm_lang$core$Native_List.fromArray(
 							[]),
-						A2(
-							_elm_lang$core$List$indexedMap,
-							F2(
-								function (i, poly) {
-									return A2(
-										_elm_lang$svg$Svg$polygon,
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_user$project$Animation$render(poly),
-											_elm_lang$core$Native_List.fromArray(
-												[
-													_elm_lang$html$Html_Events$onClick(
-													_user$project$Main$SwitchTo(i))
-												])),
-										_elm_lang$core$Native_List.fromArray(
-											[]));
-								}),
-							_user$project$Main$greyedOut)),
-						A2(
-						_elm_lang$svg$Svg$polygon,
-						_user$project$Animation$render(model.shape),
 						_elm_lang$core$Native_List.fromArray(
-							[]))
+							[
+								_elm_lang$html$Html$text('Hidden Menu')
+							])),
+						A2(
+						_elm_lang$html$Html$ul,
+						_elm_lang$core$Native_List.fromArray(
+							[]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$li,
+								_elm_lang$core$Native_List.fromArray(
+									[]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html$text('Some things')
+									])),
+								A2(
+								_elm_lang$html$Html$li,
+								_elm_lang$core$Native_List.fromArray(
+									[]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										_elm_lang$html$Html$text('in a list')
+									]))
+							]))
 					]))
 			]));
 };
 var _user$project$Main$main = {
 	main: _elm_lang$html$Html_App$program(
-		{
-			init: {
-				ctor: '_Tuple2',
-				_0: {
-					shape: _user$project$Animation$style(
-						_elm_lang$core$Native_List.fromArray(
-							[
-								_user$project$Animation$points(
-								_elm_lang$core$Native_List.fromArray(
-									[
-										{ctor: '_Tuple2', _0: 8.867, _1: 0},
-										{ctor: '_Tuple2', _0: 79.241, _1: 70.375},
-										{ctor: '_Tuple2', _0: 232.213, _1: 70.375},
-										{ctor: '_Tuple2', _0: 161.838, _1: 0}
-									])),
-								_user$project$Animation$fill(_user$project$Main$palette.green)
-							])),
-					index: 1
-				},
-				_1: _elm_lang$core$Platform_Cmd$none
-			},
-			view: _user$project$Main$view,
-			update: _user$project$Main$update,
-			subscriptions: _user$project$Main$subscriptions
-		})
+		{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, subscriptions: _user$project$Main$subscriptions})
 };
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};

@@ -1,13 +1,10 @@
 module Main exposing (..)
 
-import Time exposing (second, Time)
 import Html.App
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Color exposing (black, rgb)
 import Animation exposing (turn, px)
 
 
@@ -76,6 +73,7 @@ view model =
         ]
 
 
+main : Program Never
 main =
     Html.App.program
         { init =
@@ -116,10 +114,12 @@ main =
         }
 
 
+(=>) : a -> b -> ( a, b )
 (=>) =
     (,)
 
 
+gearsStyle : Html.Attribute Msg
 gearsStyle =
     Html.Attributes.style <|
         [ "fill" => "#DDD"
@@ -128,6 +128,7 @@ gearsStyle =
         ]
 
 
+viewPlanetary : Model -> Html Msg
 viewPlanetary gears =
     Svg.svg
         [ version "1.1"
@@ -186,10 +187,12 @@ viewPlanetary gears =
         ]
 
 
+factor : Float
 factor =
     0.3
 
 
+beginInitialRotate : Model -> Model
 beginInitialRotate gears =
     let
         annulus =

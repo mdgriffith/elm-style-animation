@@ -4,13 +4,8 @@ import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Html.Lazy
 import Animation exposing (px, turn)
 import Color exposing (rgb, rgba)
-import Time exposing (Time, second)
-import Ease
-import Svg
-import Svg.Attributes
 
 
 type alias Model =
@@ -292,6 +287,7 @@ subscriptions model =
         List.map .style model.widgets
 
 
+main : Program Never
 main =
     Html.program
         { init = init
