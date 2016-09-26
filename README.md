@@ -13,19 +13,19 @@ import Animation exposing (px)
 
 init : Model
 init =
-    { style = 
-        Animation.style 
+    { style =
+        Animation.style
             [ Animation.left (px 0.0)
             , Animation.opacity 1.0
             ]
     }
 ```
 
-__Subscribe to Animation's subscription.__  This will animate using AnimationFrame when something is running, and stop giving updates when there is no animation. 
+__Subscribe to Animation's subscription.__  This will animate using AnimationFrame when something is running, and stop giving updates when there is no animation.
 ```elm
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Animation.subscription [model.style] Animate
+    Animation.subscription Animate [model.style]
 
 ```
 
@@ -34,13 +34,13 @@ __Set up an update `Msg`__ in your update function.
 ```elm
     Animate animMsg ->
         { model
-            | animation = Animation.update animMsg model.style
+            | style = Animation.update animMsg model.style
         }
-                
+
 ```
 
 
-__Render our animation__ at the necessary element in your view.  Not all animated properties are style properties(such as the svg.d property and polygon.points property), so `Animation.render` actaully returns a list of `Html.Attributes`.  Fortunately, you can add your own style because  `Html.Attributes.style` stacks!
+__Render our animation__ at the necessary element in your view.  Not all animated properties are style properties(such as the svg.d property and polygon.points property), so `Animation.render` actually returns a list of `Html.Attributes`.  Fortunately, you can add your own style because  `Html.Attributes.style` stacks!
 ```elm
     div
         (Animation.render model.style
@@ -59,12 +59,12 @@ __Render our animation__ at the necessary element in your view.  Not all animate
 __Start an animation__ in your update statement.
 
 ```elm
-case msgs of
+case msg of
     Show ->
-        let 
-            newStyle = 
+        let
+            newStyle =
                 Animation.interrupt
-                    [ Animation.to 
+                    [ Animation.to
                         [ Animation.left (px 0.0)
                         , Animation.opacity 1.0
                         ]
@@ -108,10 +108,10 @@ You need to update this new animation state using `Animation.Messenger.update`, 
 
 
 ```elm
-case msgs of
+case msg of
     Animate animMsg ->
-        let 
-            (newStyle, cmds) = 
+        let
+            (newStyle, cmds) =
                 Animation.Messenger.update
                     animMsg
                     model.style
@@ -133,8 +133,8 @@ Behind the curtain elm-style-animation mostly uses springs to animate values fro
 Use `Animation.styleWith` or `Animation.styleWithEach` to set your initial style instead of `Animation.style`.  
 
 ```elm
-Animation.styleWith 
-    (Animation.spring 
+Animation.styleWith
+    (Animation.spring
         { stiffness = 400
         , damping = 23 }
     )
@@ -146,27 +146,21 @@ Animation.styleWith
 This will set the spring used for these properties.  Alternatively `Animation.styleWithEach` is a way to set a custom interpolation for each individual property.
 
 
-### Set a temporary spring/duration + easing 
+### Set a temporary spring/duration + easing
 
 You can also use `Animation.toWith` and `Animation.toWithEach`.  These can be substituted for `Animation.to` and allow you to specify a spring or duration+easing that lasts for exactly one step.  After that step, whatever default spring or duration/easing there is (either the auto default or via being specified in `Animation.styleWith`) is then used.
 
 ```elm
 Animation.interrupt
-    [ Animation.toWith 
-        (Animation.easing 
+    [ Animation.toWith
+        (Animation.easing
             { duration = 2*second
             , ease = (\x -> x^2)
             }
-        ) 
+        )
         [ Animation.left (px 0.0)
         , Animation.opacity 1.0
         ]
     ]
     model.style
 ```
-
-
-
-
-
-
