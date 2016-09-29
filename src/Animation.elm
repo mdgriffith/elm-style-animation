@@ -69,9 +69,11 @@ module Animation
         , rotate3d
         , translate
         , translate3d
+          --, viewBox
         , fill
         , stroke
         , strokeWidth
+        , stopColor
         , x
         , y
         , cx
@@ -110,6 +112,7 @@ module Animation
         , grad
         , rad
         , custom
+        , customColor
         , exactly
         )
 
@@ -131,7 +134,7 @@ module Animation
 @docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia
 
 # Animatable Svg Properties
-@docs fill, stroke, strokeWidth, x, y, cx, cy, radius, radiusX, radiusY, points
+@docs fill, stroke, strokeWidth, stopColor, x, y, cx, cy, radius, radiusX, radiusY, points
 
 # Constructing an Svg Path
 @docs path, PathStep, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To
@@ -140,7 +143,7 @@ module Animation
 @docs px, percent, em, rem, turn, deg, grad, rad
 
 # Advanced
-@docs custom, exactly
+@docs custom, customColor, exactly
 
 -}
 
@@ -157,12 +160,12 @@ import Animation.Model exposing (..)
 
 {-| -}
 type alias State =
-    Animation Never
+    Animation.Model.Animation Never
 
 
 {-| -}
 type alias Msg =
-    Tick
+    Animation.Model.Tick
 
 
 {-| -}
@@ -191,6 +194,8 @@ type alias PathStep =
 
 {-| Specify a custom Spring to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
 
+This should be your preferred interpolation to use.
+
 -}
 spring : { stiffness : Float, damping : Float } -> Interpolation
 spring settings =
@@ -211,6 +216,8 @@ easing { duration, ease } =
 
 
 {-| Specify a speed to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
+
+Generally be sure you don't want `Animation.spring` or `Animation.easing` instead as they are more powerful.
 
 -}
 speed : { perSecond : Float } -> Interpolation
@@ -266,13 +273,15 @@ defaultInterpolationByProperty prop =
             Property2 _ _ _ ->
                 spring
 
-            Property3 _ _ _ _ ->
-                spring
+            Property3 name _ _ _ ->
+                if name == "rotate3d" then
+                    speed { perSecond = pi }
+                else
+                    spring
 
             AngleProperty _ _ ->
                 speed { perSecond = pi }
 
-            --linear (2 * second)
             Points _ ->
                 spring
 
@@ -809,8 +818,8 @@ length3 name ( x, len ) ( x2, len2 ) ( x3, len3 ) =
 When rendering we convert them back to ints because CSS does not recognize rgb as floats.
 
 -}
-colorProp : String -> Color -> Property
-colorProp name color =
+customColor : String -> Color -> Property
+customColor name color =
     let
         { red, green, blue, alpha } =
             Color.toRgb color
@@ -822,7 +831,7 @@ colorProp name color =
             (initMotion alpha "")
 
 
-{-| Advanced: Animate a custom property by providing it's name, a float value, and the units it should have.
+{-| Animate a custom property by providing it's name, a float value, and the units it should have.
 
 -}
 custom : String -> Float -> String -> Property
@@ -830,7 +839,9 @@ custom name value unit =
     Property name (initMotion value unit)
 
 
-{-| Set a non-numerical to an exact value.  For example
+{-| Set a non-numerical to an exact value.  This is generally only used with `Animation.set`.
+
+For example
 
 ```
 Animation.set
@@ -1112,19 +1123,19 @@ backgroundPosition (Length x len1) (Length y len2) =
 {-| -}
 color : Color -> Property
 color c =
-    colorProp "color" c
+    customColor "color" c
 
 
 {-| -}
 backgroundColor : Color -> Property
 backgroundColor c =
-    colorProp "background-color" c
+    customColor "background-color" c
 
 
 {-| -}
 borderColor : Color -> Property
 borderColor c =
-    colorProp "border-color" c
+    customColor "border-color" c
 
 
 {-| -}
@@ -1560,16 +1571,27 @@ points pnts =
             (alignStartingPoint pnts)
 
 
+
+--{-| -}
+--viewBox :
+
+
 {-| -}
 fill : Color -> Property
 fill color =
-    colorProp "fill" color
+    customColor "fill" color
+
+
+{-| -}
+stopColor : Color -> Property
+stopColor color =
+    customColor "stop-color" color
 
 
 {-| -}
 stroke : Color -> Property
 stroke color =
-    colorProp "stroke" color
+    customColor "stroke" color
 
 
 {-| -}
