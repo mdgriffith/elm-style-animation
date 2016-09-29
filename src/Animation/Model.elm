@@ -61,6 +61,7 @@ type Property
     | Property String Motion
     | Property2 String Motion Motion
     | Property3 String Motion Motion Motion
+    | Property4 String Motion Motion Motion Motion
     | AngleProperty String Motion
     | Points (List ( Motion, Motion ))
     | Path (List PathCommand)
@@ -158,6 +159,9 @@ propertyName prop =
         Property3 name _ _ _ ->
             name
 
+        Property4 name _ _ _ _ ->
+            name
+
         AngleProperty name _ ->
             name
 
@@ -234,6 +238,13 @@ mapToMotion fn prop =
                 (fn m1)
                 (fn m2)
                 (fn m3)
+
+        Property4 name m1 m2 m3 m4 ->
+            Property4 name
+                (fn m1)
+                (fn m2)
+                (fn m3)
+                (fn m4)
 
         AngleProperty name m1 ->
             AngleProperty name
@@ -638,6 +649,9 @@ isDone property =
             Property3 _ m1 m2 m3 ->
                 List.all motionDone [ m1, m2, m3 ]
 
+            Property4 _ m1 m2 m3 m4 ->
+                List.all motionDone [ m1, m2, m3, m4 ]
+
             AngleProperty _ m1 ->
                 motionDone m1
 
@@ -872,6 +886,18 @@ setTarget overrideInterpolation current newTarget =
                             (setMotionTarget m1 t1)
                             (setMotionTarget m2 t2)
                             (setMotionTarget m3 t3)
+
+                    _ ->
+                        current
+
+            Property4 name m1 m2 m3 m4 ->
+                case newTarget of
+                    Property4 _ t1 t2 t3 t4 ->
+                        Property4 name
+                            (setMotionTarget m1 t1)
+                            (setMotionTarget m2 t2)
+                            (setMotionTarget m3 t3)
+                            (setMotionTarget m4 t4)
 
                     _ ->
                         current
@@ -1292,6 +1318,13 @@ step dt props =
                         (stepInterpolation dt motion1)
                         (stepInterpolation dt motion2)
                         (stepInterpolation dt motion3)
+
+                Property4 name motion1 motion2 motion3 motion4 ->
+                    Property4 name
+                        (stepInterpolation dt motion1)
+                        (stepInterpolation dt motion2)
+                        (stepInterpolation dt motion3)
+                        (stepInterpolation dt motion4)
 
                 AngleProperty name motion ->
                     AngleProperty name (stepInterpolation dt motion)

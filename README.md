@@ -14,7 +14,7 @@ import Animation exposing (px)
 init : Model
 init =
     { style = 
-        Animation.style 
+        Animation.style
             [ Animation.left (px 0.0)
             , Animation.opacity 1.0
             ]
@@ -25,7 +25,7 @@ __Subscribe to Animation's subscription.__  This will animate using AnimationFra
 ```elm
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Animation.subscription [model.style] Animate
+    Animation.subscription Animate [ model.style ]
 
 ```
 
@@ -34,9 +34,8 @@ __Set up an update `Msg`__ in your update function.
 ```elm
     Animate animMsg ->
         { model
-            | animation = Animation.update animMsg model.style
+            | style = Animation.update animMsg model.style
         }
-                
 ```
 
 
@@ -54,12 +53,10 @@ __Render our animation__ at the necessary element in your view.  Not all animate
 ```
 
 
-
-
 __Start an animation__ in your update statement.
 
 ```elm
-case msgs of
+case msg of
     Show ->
         let 
             newStyle = 
@@ -122,6 +119,21 @@ case msgs of
               cmds
             )
 ```
+
+## Animating Properties that aren't directly supported.
+
+You can construct custom properties if you don't find them in the library using `Animation.custom`.  These will be rendered in the style property.
+
+```elm
+Animation.to
+    [ Animation.custom "my-custom-prop" 5 "px"
+    ]
+
+```
+
+There is also `customColor` for color based properties.
+
+
 
 ## Setting Custom Interpolation
 

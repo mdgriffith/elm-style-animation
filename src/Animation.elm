@@ -69,7 +69,7 @@ module Animation
         , rotate3d
         , translate
         , translate3d
-          --, viewBox
+        , viewBox
         , fill
         , stroke
         , strokeWidth
@@ -275,6 +275,9 @@ defaultInterpolationByProperty prop =
                     speed { perSecond = pi }
                 else
                     spring
+
+            Animation.Model.Property4 _ _ _ _ _ ->
+                spring
 
             AngleProperty _ _ ->
                 speed { perSecond = pi }
@@ -529,18 +532,25 @@ debug (Animation model) =
                         , ( name ++ "-alpha", shadow.alpha, time )
                         ]
 
-                Animation.Model.Property name m1 ->
+                Property name m1 ->
                     [ ( name, m1, time ) ]
 
-                Animation.Model.Property2 name m1 m2 ->
+                Property2 name m1 m2 ->
                     [ ( name ++ "-x", m1, time )
                     , ( name ++ "-y", m2, time )
                     ]
 
-                Animation.Model.Property3 name m1 m2 m3 ->
+                Property3 name m1 m2 m3 ->
                     [ ( name ++ "-x", m1, time )
                     , ( name ++ "-y", m2, time )
-                    , ( name ++ "-z", m2, time )
+                    , ( name ++ "-z", m3, time )
+                    ]
+
+                Property4 name m1 m2 m3 m4 ->
+                    [ ( name ++ "-w", m1, time )
+                    , ( name ++ "-x", m2, time )
+                    , ( name ++ "-y", m3, time )
+                    , ( name ++ "-z", m4, time )
                     ]
 
                 AngleProperty name m1 ->
@@ -809,6 +819,15 @@ length3 name ( x, len ) ( x2, len2 ) ( x3, len3 ) =
         (initMotion x len)
         (initMotion x2 len2)
         (initMotion x3 len3)
+
+
+length4 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
+length4 name ( x, len ) ( x2, len2 ) ( x3, len3 ) ( x4, len4 ) =
+    Animation.Model.Property4 name
+        (initMotion x len)
+        (initMotion x2 len2)
+        (initMotion x3 len3)
+        (initMotion x4 len4)
 
 
 {-| We convert the rgb channels to a float because that allows us to use the motion type without parametricity.
@@ -1568,21 +1587,16 @@ points pnts =
             (alignStartingPoint pnts)
 
 
-
---{-| -}
---viewBox :
+{-| -}
+viewBox : Float -> Float -> Float -> Float -> Animation.Model.Property
+viewBox w x y z =
+    length4 "viewBox" ( w, "" ) ( x, "" ) ( y, "" ) ( z, "" )
 
 
 {-| -}
 fill : Color -> Animation.Model.Property
 fill color =
     customColor "fill" color
-
-
-{-| -}
-stopColor : Color -> Animation.Model.Property
-stopColor color =
-    customColor "stop-color" color
 
 
 {-| -}
@@ -1595,6 +1609,20 @@ stroke color =
 strokeWidth : Float -> Animation.Model.Property
 strokeWidth x =
     length "stroke-width" x ""
+
+
+{-| Used for svg gradients
+-}
+stopColor : Color -> Animation.Model.Property
+stopColor color =
+    customColor "stop-color" color
+
+
+{-| Used for svg gradients.  Accepts a number between 0 and 1.
+-}
+offset : Float -> Animation.Model.Property
+offset value =
+    custom "offset" value ""
 
 
 {-| Given two lists of coordinates, rotate the list so that the lowest coordinate is first.
@@ -1731,10 +1759,16 @@ renderAttrs : Animation.Model.Property -> Maybe (Html.Attribute msg)
 renderAttrs prop =
     case prop of
         Points pts ->
-            Just <| Svg.Attributes.points <| propertyValue (Points pts) " "
+            Just <| Svg.Attributes.points <| propertyValue prop " "
 
         Path cmds ->
-            Just <| Svg.Attributes.d <| propertyValue (Path cmds) " "
+            Just <| Svg.Attributes.d <| propertyValue prop " "
+
+        Property4 name m1 m2 m3 m4 ->
+            if name == "viewBox" then
+                Just <| Svg.Attributes.viewBox <| propertyValue prop " "
+            else
+                Nothing
 
         _ ->
             Nothing
@@ -1844,6 +1878,9 @@ isAttr prop =
         Path _ ->
             True
 
+        Property4 name _ _ _ _ ->
+            name == "viewBox"
+
         _ ->
             False
 
@@ -1918,18 +1955,31 @@ propertyValue prop delim =
                 ++ toString shadow.alpha.position
                 ++ ")"
 
-        Animation.Model.Property _ x ->
+        Property _ x ->
             toString x.position ++ x.unit
 
-        Animation.Model.Property2 _ x y ->
+        Property2 _ x y ->
             toString x.position
                 ++ x.unit
                 ++ delim
                 ++ toString y.position
                 ++ y.unit
 
-        Animation.Model.Property3 _ x y z ->
+        Property3 _ x y z ->
             toString x.position
+                ++ x.unit
+                ++ delim
+                ++ toString y.position
+                ++ y.unit
+                ++ delim
+                ++ toString z.position
+                ++ z.unit
+
+        Property4 _ w x y z ->
+            toString w.position
+                ++ w.unit
+                ++ delim
+                ++ toString x.position
                 ++ x.unit
                 ++ delim
                 ++ toString y.position

@@ -19,8 +19,8 @@ type Msg
 
 
 type alias Styles =
-    { open : List Animation.Prop
-    , closed : List Animation.Prop
+    { open : List Animation.Property
+    , closed : List Animation.Property
     }
 
 
