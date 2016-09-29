@@ -74,6 +74,7 @@ module Animation
         , stroke
         , strokeWidth
         , stopColor
+        , offset
         , x
         , y
         , cx
@@ -112,6 +113,7 @@ module Animation
         , grad
         , rad
         , custom
+        , custom2
         , customColor
         , exactly
         )
@@ -134,7 +136,7 @@ module Animation
 @docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia
 
 # Animatable Svg Properties
-@docs fill, stroke, strokeWidth, stopColor, x, y, cx, cy, radius, radiusX, radiusY, points
+@docs viewBox, fill, stroke, strokeWidth, stopColor, offset, x, y, cx, cy, radius, radiusX, radiusY, points
 
 # Constructing an Svg Path
 @docs path, PathStep, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To
@@ -143,7 +145,7 @@ module Animation
 @docs px, percent, em, rem, turn, deg, grad, rad
 
 # Advanced
-@docs custom, customColor, exactly
+@docs custom, custom2, customColor, exactly
 
 -}
 
@@ -849,10 +851,20 @@ customColor name color =
 
 {-| Animate a custom property by providing it's name, a float value, and the units it should have.
 
+
 -}
 custom : String -> Float -> String -> Animation.Model.Property
 custom name value unit =
     Animation.Model.Property name (initMotion value unit)
+
+
+{-| Animate a custom property with two values by providing it's name, and a pair of tuples with (value, unit).
+
+
+-}
+custom2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
+custom2 name value unit =
+    length2 name value unit
 
 
 {-| Set a non-numerical to an exact value.  This is generally only used with `Animation.set`.
