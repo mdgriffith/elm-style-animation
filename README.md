@@ -97,7 +97,7 @@ Here's generally how we compose animations.
 
 You can send messages importing `Animation.Messenger`
 
-Change your `Animation.State` to `Animation.Messenger MyMsgType`.
+Change your `Animation.State` to `Animation.Messenger.State MyMsgType`.
 
 You can now use `Animation.Messenger.send MyCustomMessage` as a step in composing your animation.
 
@@ -107,8 +107,8 @@ You need to update this new animation state using `Animation.Messenger.update`, 
 ```elm
 case msg of
     Animate animMsg ->
-        let 
-            (newStyle, cmds) = 
+        let
+            (newStyle, cmds) =
                 Animation.Messenger.update
                     animMsg
                     model.style
@@ -145,8 +145,8 @@ Behind the curtain elm-style-animation mostly uses springs to animate values fro
 Use `Animation.styleWith` or `Animation.styleWithEach` to set your initial style instead of `Animation.style`.  
 
 ```elm
-Animation.styleWith 
-    (Animation.spring 
+Animation.styleWith
+    (Animation.spring
         { stiffness = 400
         , damping = 23 }
     )
@@ -158,14 +158,14 @@ Animation.styleWith
 This will set the spring used for these properties.  Alternatively `Animation.styleWithEach` is a way to set a custom interpolation for each individual property.
 
 
-### Set a temporary spring/duration + easing 
+### Set a temporary spring/duration + easing
 
 You can also use `Animation.toWith` and `Animation.toWithEach`.  These can be substituted for `Animation.to` and allow you to specify a spring or duration+easing that lasts for exactly one step.  After that step, whatever default spring or duration/easing there is (either the auto default or via being specified in `Animation.styleWith`) is then used.
 
 ```elm
 Animation.interrupt
-    [ Animation.toWith 
-        (Animation.easing 
+    [ Animation.toWith
+        (Animation.easing
             { duration = 2*second
             , ease = (\x -> x^2)
             }
@@ -176,9 +176,3 @@ Animation.interrupt
     ]
     model.style
 ```
-
-
-
-
-
-
