@@ -7,6 +7,7 @@ module Animation
         , subscription
         , State
         , Msg
+        , Step
         , to
         , toWith
         , toWithEach
@@ -124,7 +125,7 @@ module Animation
 @docs State, subscription, Msg, render
 
 # Creating an animation
-@docs interrupt, queue, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interpolation, spring, easing, speed
+@docs interrupt, queue, Step, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interpolation, spring, easing, speed
 
 # Animatable Properties
 @docs Property, opacity, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
@@ -185,6 +186,11 @@ type alias PathStep =
     Animation.Model.PathCommand
 
 
+{-| -}
+type alias Step =
+    Animation.Model.Step Never
+
+
 
 ---------------------------
 -- Setting Defaults
@@ -216,7 +222,9 @@ easing { duration, ease } =
 
 {-| Specify a speed to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
 
-Generally be sure you don't want `Animation.spring` or `Animation.easing` instead as they are more powerful.
+Generally you don't want this.  It's used in the special case of the default interpolation for rotation.
+
+Use `Animation.spring` or `Animation.easing` instead as they are more powerful.
 
 -}
 speed : { perSecond : Float } -> Animation.Model.Interpolation
@@ -298,7 +306,7 @@ defaultInterpolationByProperty prop =
 
 
 {-| -}
-wait : Time -> Step msg
+wait : Time -> Animation.Model.Step msg
 wait till =
     Wait till
 
@@ -306,7 +314,7 @@ wait till =
 {-| Animate to a set of target values, using the default interpolation.
 
 -}
-to : List Animation.Model.Property -> Step msg
+to : List Animation.Model.Property -> Animation.Model.Step msg
 to props =
     To props
 
@@ -314,7 +322,7 @@ to props =
 {-| Animate to a set of target values. Use a temporary interpolation instead of the default.
 The interpolation will revert back to default after this step.
 -}
-toWith : Animation.Model.Interpolation -> List Animation.Model.Property -> Step msg
+toWith : Animation.Model.Interpolation -> List Animation.Model.Property -> Animation.Model.Step msg
 toWith interp props =
     ToWith <|
         List.map
@@ -325,7 +333,7 @@ toWith interp props =
 {-| Animate to a set of target values. Use a temporary interpolation for each property instead of the default.
 The interpolation will revert back to default after this step.
 -}
-toWithEach : List ( Animation.Model.Interpolation, Animation.Model.Property ) -> Step msg
+toWithEach : List ( Animation.Model.Interpolation, Animation.Model.Property ) -> Animation.Model.Step msg
 toWithEach interpProps =
     ToWith <|
         List.map
@@ -341,21 +349,21 @@ toWithEach interpProps =
 
 {-| Immediately set properties to a value.
 -}
-set : List Animation.Model.Property -> Step msg
+set : List Animation.Model.Property -> Animation.Model.Step msg
 set props =
     Set props
 
 
 {-| Repeat a number of steps `n` times.
 -}
-repeat : Int -> List (Step msg) -> Step msg
+repeat : Int -> List (Animation.Model.Step msg) -> Animation.Model.Step msg
 repeat n steps =
     Repeat n steps
 
 
 {-| Repeat a number of steps until interrupted.
 -}
-loop : List (Step msg) -> Step msg
+loop : List (Animation.Model.Step msg) -> Animation.Model.Step msg
 loop steps =
     Loop steps
 
@@ -432,7 +440,7 @@ styleWithEach props =
 {-| Add an animation to the queue, execiting once the current animation finishes
 
 -}
-queue : List (Step msg) -> Animation msg -> Animation msg
+queue : List (Animation.Model.Step msg) -> Animation msg -> Animation msg
 queue steps (Animation model) =
     Animation
         { model
@@ -444,7 +452,7 @@ queue steps (Animation model) =
 {-| Interrupt any running animations with the following animation.
 
 -}
-interrupt : List (Step msg) -> Animation msg -> Animation msg
+interrupt : List (Animation.Model.Step msg) -> Animation msg -> Animation msg
 interrupt steps (Animation model) =
     Animation
         { model
@@ -459,7 +467,7 @@ This is used because the wait at the start of an interruption works differently 
 
 
 -}
-extractInitialWait : List (Step msg) -> ( Time, List (Step msg) )
+extractInitialWait : List (Animation.Model.Step msg) -> ( Time, List (Animation.Model.Step msg) )
 extractInitialWait steps =
     case List.head steps of
         Nothing ->
