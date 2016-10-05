@@ -1784,6 +1784,35 @@ renderAttrs prop =
         Path cmds ->
             Just <| Svg.Attributes.d <| propertyValue prop " "
 
+        Property name m1 ->
+            case name of
+                "x" ->
+                    Just <| Svg.Attributes.x <| propertyValue prop " "
+
+                "y" ->
+                    Just <| Svg.Attributes.y <| propertyValue prop " "
+
+                "cx" ->
+                    Just <| Svg.Attributes.cx <| propertyValue prop " "
+
+                "cy" ->
+                    Just <| Svg.Attributes.cy <| propertyValue prop " "
+
+                "rx" ->
+                    Just <| Svg.Attributes.rx <| propertyValue prop " "
+
+                "ry" ->
+                    Just <| Svg.Attributes.ry <| propertyValue prop " "
+
+                "r" ->
+                    Just <| Svg.Attributes.r <| propertyValue prop " "
+
+                "offset" ->
+                    Just <| Svg.Attributes.offset <| propertyValue prop " "
+
+                _ ->
+                    Nothing
+
         Property4 name m1 m2 m3 m4 ->
             if name == "viewBox" then
                 Just <| Svg.Attributes.viewBox <| propertyValue prop " "
@@ -1897,6 +1926,16 @@ isAttr prop =
 
         Path _ ->
             True
+
+        Property name _ ->
+            (name == "cx")
+                || (name == "cy")
+                || (name == "x")
+                || (name == "y")
+                || (name == "rx")
+                || (name == "ry")
+                || (name == "r")
+                || (name == "offset")
 
         Property4 name _ _ _ _ ->
             name == "viewBox"
