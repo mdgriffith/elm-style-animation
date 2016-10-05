@@ -1222,7 +1222,9 @@ type alias Shadow =
     }
 
 
-{-| -}
+{-| Text shadows will ignore the shadow's `size` value.   This is just one of the bizarre quirks of CSS.
+This library will render the text shadow twice, once with the size property and once without, in case the CSS ever catches up.
+-}
 textShadow : Shadow -> Animation.Model.Property
 textShadow shade =
     let
@@ -1986,7 +1988,7 @@ propertyValue prop delim =
                 ++ toString a.position
                 ++ ")"
 
-        ShadowProperty _ inset shadow ->
+        ShadowProperty name inset shadow ->
             (if inset then
                 "inset "
              else
@@ -2001,9 +2003,13 @@ propertyValue prop delim =
                 ++ toString shadow.blur.position
                 ++ "px"
                 ++ " "
-                ++ toString shadow.size.position
-                ++ "px"
-                ++ " "
+                ++ (if name == "text-shadow" then
+                        ""
+                    else
+                        toString shadow.size.position
+                            ++ "px"
+                            ++ " "
+                   )
                 ++ "rgba("
                 ++ toString (round shadow.red.position)
                 ++ ", "
