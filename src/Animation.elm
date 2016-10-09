@@ -152,7 +152,7 @@ module Animation
 @docs px, percent, em, rem, turn, deg, grad, rad
 
 # Advanced
-@docs custom, custom2, customColor, attr, attr2, attr3, attr4, exactly
+@docs exactly, custom, custom2, customColor, attr, attr2, attr3, attr4, attrColor
 
 -}
 
