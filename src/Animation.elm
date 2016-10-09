@@ -1597,6 +1597,27 @@ sepia x =
     custom "sepia" x "%"
 
 
+{-| -}
+dropShadow : Shadow -> Animation.Model.Property
+dropShadow shade =
+    let
+        { red, green, blue, alpha } =
+            Color.toRgb shade.color
+    in
+        ShadowProperty
+            "drop-shadow"
+            False
+            { offsetX = initMotion shade.offsetX "px"
+            , offsetY = initMotion shade.offsetY "px"
+            , size = initMotion shade.size "px"
+            , blur = initMotion shade.blur "px"
+            , red = initMotion (toFloat red) "px"
+            , green = initMotion (toFloat green) "px"
+            , blue = initMotion (toFloat blue) "px"
+            , alpha = initMotion alpha "px"
+            }
+
+
 {-| Used with the svg polygon element
 -}
 points : List ( Float, Float ) -> Animation.Model.Property
@@ -1871,6 +1892,7 @@ isFilter prop =
         , "invert"
         , "saturate"
         , "sepia"
+        , "drop-shadow"
         ]
 
 
