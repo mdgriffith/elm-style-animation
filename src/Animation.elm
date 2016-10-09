@@ -105,6 +105,7 @@ module Animation
         , invert
         , saturate
         , sepia
+        , dropShadow
         , px
         , percent
         , em
@@ -116,6 +117,11 @@ module Animation
         , custom
         , custom2
         , customColor
+        , attr
+        , attr2
+        , attr3
+        , attr4
+        , attrColor
         , exactly
         )
 
@@ -134,7 +140,7 @@ module Animation
 @docs scale, scale3d, rotate, rotate3d, translate, translate3d
 
 # Animatable CSS Filters
-@docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia
+@docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia, dropShadow
 
 # Animatable Svg Properties
 @docs viewBox, fill, stroke, strokeWidth, stopColor, offset, x, y, cx, cy, radius, radiusX, radiusY, points
@@ -146,7 +152,7 @@ module Animation
 @docs px, percent, em, rem, turn, deg, grad, rad
 
 # Advanced
-@docs custom, custom2, customColor, exactly
+@docs custom, custom2, customColor, attr, attr2, attr3, attr4, exactly
 
 -}
 
@@ -1263,7 +1269,6 @@ type alias Shadow =
 
 
 {-| Text shadows will ignore the shadow's `size` value.   This is just one of the bizarre quirks of CSS.
-This library will render the text shadow twice, once with the size property and once without, in case the CSS ever catches up.
 -}
 textShadow : Shadow -> Animation.Model.Property
 textShadow shade =
@@ -1637,7 +1642,8 @@ sepia x =
     custom "sepia" x "%"
 
 
-{-| -}
+{-| Drop shadows will ignore the shadow's `size` value.   This is just one of the bizarre quirks of CSS.
+-}
 dropShadow : Shadow -> Animation.Model.Property
 dropShadow shade =
     let
@@ -2069,7 +2075,7 @@ propertyValue prop delim =
                 ++ toString shadow.blur.position
                 ++ "px"
                 ++ " "
-                ++ (if name == "text-shadow" then
+                ++ (if name == "text-shadow" || name == "drop-shadow" then
                         ""
                     else
                         toString shadow.size.position
