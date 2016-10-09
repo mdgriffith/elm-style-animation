@@ -85,15 +85,21 @@ Here's generally how we compose animations.
 
 
 # Examples
- * Gears - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Gears.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Gears.elm)
- * Menu - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/FlowerMenu/) - [Code](https://github.com/mdgriffith/elm-animation-flower-menu)
 
- * Logo - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Logo.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
+ * Simple FadeIn/FadeOut - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SimpleFadeIn.elm)
+
+ * Menu Slide in - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/FlowerMenu/) - [Code](https://github.com/mdgriffith/elm-animation-flower-menu)
+
+ * Rotating Gears - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Gears.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Gears.elm)
+
+ * Logo (Svg polygon morphing) - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Logo.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Logo.elm)
  * Showcase - [Demo](https://mdgriffith.github.io/elm-style-animation/3.0.0/Showcase.html) - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/Showcase.elm)
 
 # Advanced!
 
 ## Sending Messages
+
+ * Send Messages Example - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SimpleSendMsg.elm)
 
 You can send messages importing `Animation.Messenger`
 
