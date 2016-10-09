@@ -840,9 +840,67 @@ length4 name ( x, len ) ( x2, len2 ) ( x3, len3 ) ( x4, len4 ) =
         (initMotion x4 len4)
 
 
-{-| We convert the rgb channels to a float because that allows us to use the motion type without parametricity.
-When rendering we convert them back to ints because CSS does not recognize rgb as floats.
+{-| Animate a custom attribute by providing it's name, a float value, and the units it should have.
 
+
+-}
+attr : String -> Float -> String -> Animation.Model.Property
+attr name value unit =
+    Animation.Model.Property ("attr:" ++ name) (initMotion value unit)
+
+
+{-|
+
+-}
+attr2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
+attr2 name value1 value2 =
+    length2 ("attr:" ++ name) value1 value2
+
+
+{-|
+-}
+attr3 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
+attr3 name value1 value2 value3 =
+    length3 ("attr:" ++ name) value1 value2 value3
+
+
+{-|
+-}
+attr4 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
+attr4 name value1 value2 value3 value4 =
+    length4 ("attr:" ++ name) value1 value2 value3 value4
+
+
+{-|
+-}
+attrColor : String -> Color -> Animation.Model.Property
+attrColor name color =
+    let
+        { red, green, blue, alpha } =
+            Color.toRgb color
+    in
+        ColorProperty ("attr:" ++ name)
+            (initMotion (toFloat red) "")
+            (initMotion (toFloat green) "")
+            (initMotion (toFloat blue) "")
+            (initMotion alpha "")
+
+
+{-| Animate a custom _style_ property by providing it's name, a float value, and the units it should have.
+-}
+custom : String -> Float -> String -> Animation.Model.Property
+custom name value unit =
+    Animation.Model.Property name (initMotion value unit)
+
+
+{-|
+-}
+custom2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
+custom2 name value unit =
+    length2 name value unit
+
+
+{-|
 -}
 customColor : String -> Color -> Animation.Model.Property
 customColor name color =
@@ -855,24 +913,6 @@ customColor name color =
             (initMotion (toFloat green) "")
             (initMotion (toFloat blue) "")
             (initMotion alpha "")
-
-
-{-| Animate a custom property by providing it's name, a float value, and the units it should have.
-
-
--}
-custom : String -> Float -> String -> Animation.Model.Property
-custom name value unit =
-    Animation.Model.Property name (initMotion value unit)
-
-
-{-| Animate a custom property with two values by providing it's name, and a pair of tuples with (value, unit).
-
-
--}
-custom2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
-custom2 name value unit =
-    length2 name value unit
 
 
 {-| Set a non-numerical to an exact value.  This is generally only used with `Animation.set`.
@@ -1800,50 +1840,53 @@ render (Animation model) =
 
 renderAttrs : Animation.Model.Property -> Maybe (Html.Attribute msg)
 renderAttrs prop =
-    case prop of
-        Points pts ->
-            Just <| Svg.Attributes.points <| propertyValue prop " "
+    if String.startsWith "attr:" (propertyName prop) then
+        Just <| Html.Attributes.attribute (String.dropLeft 5 <| propertyName prop) (propertyValue prop " ")
+    else
+        case prop of
+            Points pts ->
+                Just <| Svg.Attributes.points <| propertyValue prop " "
 
-        Path cmds ->
-            Just <| Svg.Attributes.d <| propertyValue prop " "
+            Path cmds ->
+                Just <| Svg.Attributes.d <| propertyValue prop " "
 
-        Property name m1 ->
-            case name of
-                "x" ->
-                    Just <| Svg.Attributes.x <| propertyValue prop " "
+            Property name m1 ->
+                case name of
+                    "x" ->
+                        Just <| Svg.Attributes.x <| propertyValue prop " "
 
-                "y" ->
-                    Just <| Svg.Attributes.y <| propertyValue prop " "
+                    "y" ->
+                        Just <| Svg.Attributes.y <| propertyValue prop " "
 
-                "cx" ->
-                    Just <| Svg.Attributes.cx <| propertyValue prop " "
+                    "cx" ->
+                        Just <| Svg.Attributes.cx <| propertyValue prop " "
 
-                "cy" ->
-                    Just <| Svg.Attributes.cy <| propertyValue prop " "
+                    "cy" ->
+                        Just <| Svg.Attributes.cy <| propertyValue prop " "
 
-                "rx" ->
-                    Just <| Svg.Attributes.rx <| propertyValue prop " "
+                    "rx" ->
+                        Just <| Svg.Attributes.rx <| propertyValue prop " "
 
-                "ry" ->
-                    Just <| Svg.Attributes.ry <| propertyValue prop " "
+                    "ry" ->
+                        Just <| Svg.Attributes.ry <| propertyValue prop " "
 
-                "r" ->
-                    Just <| Svg.Attributes.r <| propertyValue prop " "
+                    "r" ->
+                        Just <| Svg.Attributes.r <| propertyValue prop " "
 
-                "offset" ->
-                    Just <| Svg.Attributes.offset <| propertyValue prop " "
+                    "offset" ->
+                        Just <| Svg.Attributes.offset <| propertyValue prop " "
 
-                _ ->
+                    _ ->
+                        Nothing
+
+            Property4 name m1 m2 m3 m4 ->
+                if name == "viewBox" then
+                    Just <| Svg.Attributes.viewBox <| propertyValue prop " "
+                else
                     Nothing
 
-        Property4 name m1 m2 m3 m4 ->
-            if name == "viewBox" then
-                Just <| Svg.Attributes.viewBox <| propertyValue prop " "
-            else
+            _ ->
                 Nothing
-
-        _ ->
-            Nothing
 
 
 isTransformation : Animation.Model.Property -> Bool
@@ -1944,28 +1987,29 @@ prefix stylePair =
 -}
 isAttr : Animation.Model.Property -> Bool
 isAttr prop =
-    case prop of
-        Points _ ->
-            True
+    String.startsWith "attr:" (propertyName prop)
+        || case prop of
+            Points _ ->
+                True
 
-        Path _ ->
-            True
+            Path _ ->
+                True
 
-        Property name _ ->
-            (name == "cx")
-                || (name == "cy")
-                || (name == "x")
-                || (name == "y")
-                || (name == "rx")
-                || (name == "ry")
-                || (name == "r")
-                || (name == "offset")
+            Property name _ ->
+                (name == "cx")
+                    || (name == "cy")
+                    || (name == "x")
+                    || (name == "y")
+                    || (name == "rx")
+                    || (name == "ry")
+                    || (name == "r")
+                    || (name == "offset")
 
-        Property4 name _ _ _ _ ->
-            name == "viewBox"
+            Property4 name _ _ _ _ ->
+                name == "viewBox"
 
-        _ ->
-            False
+            _ ->
+                False
 
 
 displayModeName : DisplayMode -> String
