@@ -1,7 +1,6 @@
 module Main exposing (..)
 
 import Time exposing (second)
-import Html.App
 import Html exposing (h1, div, Html)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
@@ -17,7 +16,7 @@ type alias Model =
     }
 
 
-type Action
+type Msg
     = EverybodySwitch
     | Animate Animation.Msg
 
@@ -87,7 +86,7 @@ polygons =
     ]
 
 
-update : Action -> Model -> ( Model, Cmd Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         EverybodySwitch ->
@@ -112,7 +111,7 @@ update action model =
                                     ]
                                     style
                             )
-                            [0..List.length model.styles]
+                            (List.range 0 (List.length model.styles))
                             model.styles
                             newStyles
                   }
@@ -127,7 +126,7 @@ update action model =
             )
 
 
-view : Model -> Html Action
+view : Model -> Html Msg
 view model =
     div
         [ onClick EverybodySwitch
@@ -156,7 +155,7 @@ view model =
         ]
 
 
-init : ( Model, Cmd Action )
+init : ( Model, Cmd Msg )
 init =
     ( { styles = List.map Animation.style polygons
       , index = 1
@@ -165,9 +164,9 @@ init =
     )
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
-    Html.App.program
+    Html.program
         { init = init
         , view = view
         , update = update

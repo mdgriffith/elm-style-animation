@@ -1,10 +1,9 @@
 module Main exposing (..)
 
-import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Animation exposing (px, turn)
+import Animation exposing (px, turn, percent)
 import Color exposing (rgb, rgba)
 
 
@@ -74,10 +73,8 @@ update action model =
             ( onWidgetStyle model i <|
                 (Animation.interrupt
                     [ Animation.to
-                        [ Animation.rotate3d (turn 1) (turn 1) (turn 1)
+                        [ Animation.translate3d (percent 0) (percent 30) (px 10)
                         ]
-                    , Animation.set
-                        [ Animation.rotate3d (turn 0) (turn 0) (turn 0) ]
                     ]
                 )
             , Cmd.none
@@ -241,6 +238,7 @@ init =
                 , Animation.borderColor Color.white
                 , Animation.borderWidth (px 4)
                 , Animation.borderRadius (px 8)
+                , Animation.translate3d (percent 0) (percent 0) (px 0)
                 , Animation.shadow
                     { offsetX = 0
                     , offsetY = 1
@@ -287,7 +285,7 @@ subscriptions model =
         List.map .style model.widgets
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
     Html.program
         { init = init

@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import Html.App
 import Html exposing (h1, div, Html)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
@@ -16,13 +15,13 @@ type alias Model =
     }
 
 
-type Action
+type Msg
     = Morph
     | Animate Animation.Msg
 
 
 type alias BatSignal =
-    List (Animation.PathStep)
+    List Animation.PathStep
 
 
 startLogo : BatSignal
@@ -399,7 +398,7 @@ batmanLogos =
     ]
 
 
-update : Action -> Model -> ( Model, Cmd Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         Morph ->
@@ -436,7 +435,7 @@ update action model =
             )
 
 
-view : Model -> Html Action
+view : Model -> Html Msg
 view model =
     div
         [ onClick Morph
@@ -454,7 +453,7 @@ view model =
         ]
 
 
-init : ( Model, Cmd Action )
+init : ( Model, Cmd Msg )
 init =
     ( { style =
             Animation.style
@@ -467,9 +466,9 @@ init =
     )
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
-    Html.App.program
+    Html.program
         { init = init
         , view = view
         , update = update

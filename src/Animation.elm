@@ -95,6 +95,8 @@ module Animation
         , curveTo
         , curve2
         , curve2To
+        , arc
+        , Arc
         , filterUrl
         , blur
         , brightness
@@ -146,7 +148,7 @@ module Animation
 @docs viewBox, fill, stroke, strokeWidth, stopColor, offset, x, y, cx, cy, radius, radiusX, radiusY, points
 
 # Constructing an Svg Path
-@docs path, PathStep, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To
+@docs path, PathStep, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To, arc, Arc
 
 # Units
 @docs px, percent, em, rem, turn, deg, grad, rad
@@ -438,7 +440,7 @@ styleWithEach : List ( Animation.Model.Interpolation, Animation.Model.Property )
 styleWithEach props =
     let
         _ =
-            warnForDoubleListedProperties <| List.map snd props
+            warnForDoubleListedProperties <| List.map Tuple.second props
     in
         initialState <| List.map (\( interp, prop ) -> mapToMotion (\m -> { m | interpolation = interp }) prop) props
 
@@ -596,7 +598,7 @@ debug (Animation model) =
 -}
 update : Msg -> Animation msg -> Animation msg
 update tick animation =
-    fst <| updateAnimation tick animation
+    Tuple.first <| updateAnimation tick animation
 
 
 
@@ -1380,7 +1382,7 @@ radiusY ry =
 
 {-| To be used with the svg path element.  Renders as the d property.
 -}
-path : List (PathCommand) -> Animation.Model.Property
+path : List PathCommand -> Animation.Model.Property
 path commands =
     Path commands
 
@@ -1457,16 +1459,16 @@ curve2 : CubicCurve -> PathCommand
 curve2 { control1, control2, point } =
     Curve
         { control1 =
-            ( initMotion (fst control1) ""
-            , initMotion (snd control1) ""
+            ( initMotion (Tuple.first control1) ""
+            , initMotion (Tuple.second control1) ""
             )
         , control2 =
-            ( initMotion (fst control2) ""
-            , initMotion (snd control2) ""
+            ( initMotion (Tuple.first control2) ""
+            , initMotion (Tuple.second control2) ""
             )
         , point =
-            ( initMotion (fst point) ""
-            , initMotion (snd point) ""
+            ( initMotion (Tuple.first point) ""
+            , initMotion (Tuple.second point) ""
             )
         }
 
@@ -1479,16 +1481,16 @@ curve2To : CubicCurve -> PathCommand
 curve2To { control1, control2, point } =
     CurveTo
         { control1 =
-            ( initMotion (fst control1) ""
-            , initMotion (snd control1) ""
+            ( initMotion (Tuple.first control1) ""
+            , initMotion (Tuple.second control1) ""
             )
         , control2 =
-            ( initMotion (fst control2) ""
-            , initMotion (snd control2) ""
+            ( initMotion (Tuple.first control2) ""
+            , initMotion (Tuple.second control2) ""
             )
         , point =
-            ( initMotion (fst point) ""
-            , initMotion (snd point) ""
+            ( initMotion (Tuple.first point) ""
+            , initMotion (Tuple.second point) ""
             )
         }
 
@@ -1500,12 +1502,12 @@ curve : QuadraticCurve -> PathCommand
 curve { control, point } =
     Quadratic
         { control =
-            ( initMotion (fst control) ""
-            , initMotion (snd control) ""
+            ( initMotion (Tuple.first control) ""
+            , initMotion (Tuple.second control) ""
             )
         , point =
-            ( initMotion (fst point) ""
-            , initMotion (snd point) ""
+            ( initMotion (Tuple.first point) ""
+            , initMotion (Tuple.second point) ""
             )
         }
 
@@ -1517,16 +1519,17 @@ curveTo : QuadraticCurve -> PathCommand
 curveTo { control, point } =
     QuadraticTo
         { control =
-            ( initMotion (fst control) ""
-            , initMotion (snd control) ""
+            ( initMotion (Tuple.first control) ""
+            , initMotion (Tuple.second control) ""
             )
         , point =
-            ( initMotion (fst point) ""
-            , initMotion (snd point) ""
+            ( initMotion (Tuple.first point) ""
+            , initMotion (Tuple.second point) ""
             )
         }
 
 
+{-| -}
 type alias Arc =
     { x : Float
     , y : Float
@@ -1537,13 +1540,7 @@ type alias Arc =
     }
 
 
-{-| Create an simple arc by specifying
-    * x
-    * y
-    * radius
-    * startAngle - specified in degrees
-    * endAngle - specified in degrees
-    * clockwise - boolean
+{-|
 -}
 arc : Arc -> PathCommand
 arc arc =
@@ -1961,10 +1958,10 @@ prefix : ( String, String ) -> List ( String, String )
 prefix stylePair =
     let
         propName =
-            fst stylePair
+            Tuple.first stylePair
 
         propValue =
-            snd stylePair
+            Tuple.second stylePair
     in
         case propName of
             "transform" ->
