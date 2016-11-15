@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html.App
+import Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Svg exposing (..)
@@ -73,9 +73,9 @@ view model =
         ]
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
-    Html.App.program
+    Html.program
         { init =
             ( beginInitialRotate
                 { annulus =

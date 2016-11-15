@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -287,7 +286,7 @@ subscriptions model =
         List.map .style model.widgets
 
 
-main : Program Never
+main :  Program Never Model Msg
 main =
     Html.program
         { init = init
