@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html.App
+import Html
 import Html exposing (h1, div, Html)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
@@ -22,7 +22,7 @@ type Action
 
 
 type alias BatSignal =
-    List (Animation.PathStep)
+    List Animation.PathStep
 
 
 startLogo : BatSignal
@@ -467,9 +467,9 @@ init =
     )
 
 
-main : Program Never
+main : Program Never Model Action
 main =
-    Html.App.program
+    Html.program
         { init = init
         , view = view
         , update = update

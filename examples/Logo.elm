@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Time exposing (second)
-import Html.App
+import Html
 import Html exposing (h1, div, Html)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
@@ -112,7 +112,7 @@ update action model =
                                     ]
                                     style
                             )
-                            [0..List.length model.styles]
+                            (List.range 0 (List.length model.styles))
                             model.styles
                             newStyles
                   }
@@ -165,9 +165,10 @@ init =
     )
 
 
-main : Program Never
+main : Program Never Model Action
+
 main =
-    Html.App.program
+    Html.program
         { init = init
         , view = view
         , update = update

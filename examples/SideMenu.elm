@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html.App as Html
+import Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -122,7 +122,7 @@ init =
     )
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
     Html.program
         { init = init
