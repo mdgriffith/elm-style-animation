@@ -319,56 +319,56 @@ mapPathMotion fn cmd =
             Curve { control1, control2, point } ->
                 Curve
                     { control1 =
-                        ( fn (fst control1)
-                        , fn (snd control1)
+                        ( fn (Tuple.first control1)
+                        , fn (Tuple.second control1)
                         )
                     , control2 =
-                        ( fn (fst control2)
-                        , fn (snd control2)
+                        ( fn (Tuple.first control2)
+                        , fn (Tuple.second control2)
                         )
                     , point =
-                        ( fn (fst point)
-                        , fn (snd point)
+                        ( fn (Tuple.first point)
+                        , fn (Tuple.second point)
                         )
                     }
 
             CurveTo { control1, control2, point } ->
                 CurveTo
                     { control1 =
-                        ( fn (fst control1)
-                        , fn (snd control1)
+                        ( fn (Tuple.first control1)
+                        , fn (Tuple.second control1)
                         )
                     , control2 =
-                        ( fn (fst control2)
-                        , fn (snd control2)
+                        ( fn (Tuple.first control2)
+                        , fn (Tuple.second control2)
                         )
                     , point =
-                        ( fn (fst point)
-                        , fn (snd point)
+                        ( fn (Tuple.first point)
+                        , fn (Tuple.second point)
                         )
                     }
 
             Quadratic { control, point } ->
                 Quadratic
                     { control =
-                        ( fn (fst control)
-                        , fn (snd control)
+                        ( fn (Tuple.first control)
+                        , fn (Tuple.second control)
                         )
                     , point =
-                        ( fn (fst point)
-                        , fn (snd point)
+                        ( fn (Tuple.first point)
+                        , fn (Tuple.second point)
                         )
                     }
 
             QuadraticTo { control, point } ->
                 QuadraticTo
                     { control =
-                        ( fn (fst control)
-                        , fn (snd control)
+                        ( fn (Tuple.first control)
+                        , fn (Tuple.second control)
                         )
                     , point =
-                        ( fn (fst point)
-                        , fn (snd point)
+                        ( fn (Tuple.first point)
+                        , fn (Tuple.second point)
                         )
                     }
 
@@ -485,7 +485,7 @@ updateAnimation (Tick now) (Animation model) =
                 , steps = revisedSteps
                 , style = revisedStyle
             }
-        , Cmd.batch <| List.map (\m -> Task.perform identity identity (Task.succeed m)) sentMessages
+        , Cmd.batch <| List.map (\m -> Task.perform identity (Task.succeed m)) sentMessages
         )
 
 
@@ -694,32 +694,32 @@ isCmdDone cmd =
                 motionDone motion
 
             Curve { control1, control2, point } ->
-                (motionDone <| fst control1)
-                    && (motionDone <| snd control1)
-                    && (motionDone <| fst control2)
-                    && (motionDone <| snd control2)
-                    && (motionDone <| fst point)
-                    && (motionDone <| snd point)
+                (motionDone <| Tuple.first control1)
+                    && (motionDone <| Tuple.second control1)
+                    && (motionDone <| Tuple.first control2)
+                    && (motionDone <| Tuple.second control2)
+                    && (motionDone <| Tuple.first point)
+                    && (motionDone <| Tuple.second point)
 
             CurveTo { control1, control2, point } ->
-                (motionDone <| fst control1)
-                    && (motionDone <| snd control1)
-                    && (motionDone <| fst control2)
-                    && (motionDone <| snd control2)
-                    && (motionDone <| fst point)
-                    && (motionDone <| snd point)
+                (motionDone <| Tuple.first control1)
+                    && (motionDone <| Tuple.second control1)
+                    && (motionDone <| Tuple.first control2)
+                    && (motionDone <| Tuple.second control2)
+                    && (motionDone <| Tuple.first point)
+                    && (motionDone <| Tuple.second point)
 
             Quadratic { control, point } ->
-                (motionDone <| fst control)
-                    && (motionDone <| snd control)
-                    && (motionDone <| fst point)
-                    && (motionDone <| snd point)
+                (motionDone <| Tuple.first control)
+                    && (motionDone <| Tuple.second control)
+                    && (motionDone <| Tuple.first point)
+                    && (motionDone <| Tuple.second point)
 
             QuadraticTo { control, point } ->
-                (motionDone <| fst control)
-                    && (motionDone <| snd control)
-                    && (motionDone <| fst point)
-                    && (motionDone <| snd point)
+                (motionDone <| Tuple.first control)
+                    && (motionDone <| Tuple.second control)
+                    && (motionDone <| Tuple.first point)
+                    && (motionDone <| Tuple.second point)
 
             SmoothQuadratic coords ->
                 List.all (\( x, y ) -> motionDone x && motionDone y) coords
@@ -1043,16 +1043,16 @@ setPathTarget cmd targetCmd =
                     Curve targets ->
                         Curve
                             { control1 =
-                                ( setMotionTarget (fst points.control1) (fst targets.control1)
-                                , setMotionTarget (snd points.control1) (snd targets.control1)
+                                ( setMotionTarget (Tuple.first points.control1) (Tuple.first targets.control1)
+                                , setMotionTarget (Tuple.second points.control1) (Tuple.second targets.control1)
                                 )
                             , control2 =
-                                ( setMotionTarget (fst points.control2) (fst targets.control2)
-                                , setMotionTarget (snd points.control2) (snd targets.control2)
+                                ( setMotionTarget (Tuple.first points.control2) (Tuple.first targets.control2)
+                                , setMotionTarget (Tuple.second points.control2) (Tuple.second targets.control2)
                                 )
                             , point =
-                                ( setMotionTarget (fst points.point) (fst targets.point)
-                                , setMotionTarget (snd points.point) (snd targets.point)
+                                ( setMotionTarget (Tuple.first points.point) (Tuple.first targets.point)
+                                , setMotionTarget (Tuple.second points.point) (Tuple.second targets.point)
                                 )
                             }
 
@@ -1064,16 +1064,16 @@ setPathTarget cmd targetCmd =
                     CurveTo targets ->
                         CurveTo
                             { control1 =
-                                ( setMotionTarget (fst points.control1) (fst targets.control1)
-                                , setMotionTarget (snd points.control1) (snd targets.control1)
+                                ( setMotionTarget (Tuple.first points.control1) (Tuple.first targets.control1)
+                                , setMotionTarget (Tuple.second points.control1) (Tuple.second targets.control1)
                                 )
                             , control2 =
-                                ( setMotionTarget (fst points.control2) (fst targets.control2)
-                                , setMotionTarget (snd points.control2) (snd targets.control2)
+                                ( setMotionTarget (Tuple.first points.control2) (Tuple.first targets.control2)
+                                , setMotionTarget (Tuple.second points.control2) (Tuple.second targets.control2)
                                 )
                             , point =
-                                ( setMotionTarget (fst points.point) (fst targets.point)
-                                , setMotionTarget (snd points.point) (snd targets.point)
+                                ( setMotionTarget (Tuple.first points.point) (Tuple.first targets.point)
+                                , setMotionTarget (Tuple.second points.point) (Tuple.second targets.point)
                                 )
                             }
 
@@ -1085,12 +1085,12 @@ setPathTarget cmd targetCmd =
                     Quadratic targets ->
                         Quadratic
                             { control =
-                                ( setMotionTarget (fst points.control) (fst targets.control)
-                                , setMotionTarget (snd points.control) (snd targets.control)
+                                ( setMotionTarget (Tuple.first points.control) (Tuple.first targets.control)
+                                , setMotionTarget (Tuple.second points.control) (Tuple.second targets.control)
                                 )
                             , point =
-                                ( setMotionTarget (fst points.point) (fst targets.point)
-                                , setMotionTarget (snd points.point) (snd targets.point)
+                                ( setMotionTarget (Tuple.first points.point) (Tuple.first targets.point)
+                                , setMotionTarget (Tuple.second points.point) (Tuple.second targets.point)
                                 )
                             }
 
@@ -1102,12 +1102,12 @@ setPathTarget cmd targetCmd =
                     QuadraticTo targets ->
                         QuadraticTo
                             { control =
-                                ( setMotionTarget (fst points.control) (fst targets.control)
-                                , setMotionTarget (snd points.control) (snd targets.control)
+                                ( setMotionTarget (Tuple.first points.control) (Tuple.first targets.control)
+                                , setMotionTarget (Tuple.second points.control) (Tuple.second targets.control)
                                 )
                             , point =
-                                ( setMotionTarget (fst points.point) (fst targets.point)
-                                , setMotionTarget (snd points.point) (snd targets.point)
+                                ( setMotionTarget (Tuple.first points.point) (Tuple.first targets.point)
+                                , setMotionTarget (Tuple.second points.point) (Tuple.second targets.point)
                                 )
                             }
 
@@ -1419,56 +1419,56 @@ stepPath dt cmd =
             Curve { control1, control2, point } ->
                 Curve
                     { control1 =
-                        ( stepInterpolation dt (fst control1)
-                        , stepInterpolation dt (snd control1)
+                        ( stepInterpolation dt (Tuple.first control1)
+                        , stepInterpolation dt (Tuple.second control1)
                         )
                     , control2 =
-                        ( stepInterpolation dt (fst control2)
-                        , stepInterpolation dt (snd control2)
+                        ( stepInterpolation dt (Tuple.first control2)
+                        , stepInterpolation dt (Tuple.second control2)
                         )
                     , point =
-                        ( stepInterpolation dt (fst point)
-                        , stepInterpolation dt (snd point)
+                        ( stepInterpolation dt (Tuple.first point)
+                        , stepInterpolation dt (Tuple.second point)
                         )
                     }
 
             CurveTo { control1, control2, point } ->
                 CurveTo
                     { control1 =
-                        ( stepInterpolation dt (fst control1)
-                        , stepInterpolation dt (snd control1)
+                        ( stepInterpolation dt (Tuple.first control1)
+                        , stepInterpolation dt (Tuple.second control1)
                         )
                     , control2 =
-                        ( stepInterpolation dt (fst control2)
-                        , stepInterpolation dt (snd control2)
+                        ( stepInterpolation dt (Tuple.first control2)
+                        , stepInterpolation dt (Tuple.second control2)
                         )
                     , point =
-                        ( stepInterpolation dt (fst point)
-                        , stepInterpolation dt (snd point)
+                        ( stepInterpolation dt (Tuple.first point)
+                        , stepInterpolation dt (Tuple.second point)
                         )
                     }
 
             Quadratic { control, point } ->
                 Quadratic
                     { control =
-                        ( stepInterpolation dt (fst control)
-                        , stepInterpolation dt (snd control)
+                        ( stepInterpolation dt (Tuple.first control)
+                        , stepInterpolation dt (Tuple.second control)
                         )
                     , point =
-                        ( stepInterpolation dt (fst point)
-                        , stepInterpolation dt (snd point)
+                        ( stepInterpolation dt (Tuple.first point)
+                        , stepInterpolation dt (Tuple.second point)
                         )
                     }
 
             QuadraticTo { control, point } ->
                 QuadraticTo
                     { control =
-                        ( stepInterpolation dt (fst control)
-                        , stepInterpolation dt (snd control)
+                        ( stepInterpolation dt (Tuple.first control)
+                        , stepInterpolation dt (Tuple.second control)
                         )
                     , point =
-                        ( stepInterpolation dt (fst point)
-                        , stepInterpolation dt (snd point)
+                        ( stepInterpolation dt (Tuple.first point)
+                        , stepInterpolation dt (Tuple.second point)
                         )
                     }
 
