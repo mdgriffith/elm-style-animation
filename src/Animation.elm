@@ -88,6 +88,12 @@ module Animation
         , PathStep
         , move
         , moveTo
+        , line
+        , lineTo
+        , horizontal
+        , horizontalTo
+        , vertical
+        , verticalTo
         , close
         , CubicCurve
         , QuadraticCurve
@@ -148,7 +154,7 @@ module Animation
 @docs viewBox, fill, stroke, strokeWidth, stopColor, offset, x, y, cx, cy, radius, radiusX, radiusY, points
 
 # Constructing an Svg Path
-@docs path, PathStep, move, moveTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To, arc, Arc
+@docs path, PathStep, move, moveTo, line, lineTo, horizontal, horizontalTo, vertical, verticalTo,  close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To, arc, Arc
 
 # Units
 @docs px, percent, em, rem, turn, deg, grad, rad
