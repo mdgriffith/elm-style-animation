@@ -70,6 +70,7 @@ module Animation
         , scale3d
         , rotate
         , rotate3d
+        , transformOrigin
         , translate
         , translate3d
         , viewBox
@@ -147,7 +148,7 @@ module Animation
 @docs Property, opacity, Length, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
 
 # Transforms
-@docs scale, scale3d, Angle, rotate, rotate3d, translate, translate3d
+@docs scale, scale3d, Angle, rotate, rotate3d, translate, translate3d, transformOrigin
 
 # Animatable CSS Filters
 @docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia, dropShadow
@@ -160,7 +161,6 @@ module Animation
 
 # Units
 @docs px, percent, em, rem, turn, deg, grad, rad
-
 
 # Advanced
 @docs exactly, custom, custom2, customColor, attr, attr2, attr3, attr4, attrColor
@@ -1241,6 +1241,12 @@ translate (Length x len1) (Length y len2) =
 translate3d : Length -> Length -> Length -> Animation.Model.Property
 translate3d (Length x len1) (Length y len2) (Length z len3) =
     length3 "translate3d" ( x, lengthUnitName len1 ) ( y, lengthUnitName len2 ) ( z, lengthUnitName len3 )
+
+
+{-| -}
+transformOrigin : Length -> Length -> Length -> Animation.Model.Property
+transformOrigin (Length x len1) (Length y len2) (Length z len3) =
+    length3 "transform-origin" ( x, lengthUnitName len1 ) ( y, lengthUnitName len2 ) ( z, lengthUnitName len3 )
 
 
 {-| -}
