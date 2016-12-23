@@ -97,6 +97,10 @@ Here's generally how we compose animations.
 
 # Advanced!
 
+## Note!
+
+The compiler is going to refer to your animation model as `Animation.Model.Animation msg`.  `Animation.State` is just a synonym for that.
+
 ## Sending Messages
 
  * Send Messages Example - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SimpleSendMsg.elm)
