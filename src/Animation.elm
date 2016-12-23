@@ -178,7 +178,8 @@ import List.Extra
 import Animation.Model exposing (..)
 
 
-{-| -}
+{-| _Note_ - The compiler will refer to your `Animation.State` as `Animation.Model.Animation msg`
+-}
 type alias State =
     Animation.Model.Animation Never
 
