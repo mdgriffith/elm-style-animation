@@ -23,6 +23,8 @@ module Animation
         , easing
         , speed
         , Property
+        , Length
+        , Angle
         , opacity
         , display
         , inline
@@ -142,10 +144,10 @@ module Animation
 @docs interrupt, queue, Step, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interpolation, spring, easing, speed
 
 # Animatable Properties
-@docs Property, opacity, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
+@docs Property, opacity, Length, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
 
 # Transforms
-@docs scale, scale3d, rotate, rotate3d, translate, translate3d
+@docs scale, scale3d, Angle, rotate, rotate3d, translate, translate3d
 
 # Animatable CSS Filters
 @docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia, dropShadow
@@ -158,6 +160,7 @@ module Animation
 
 # Units
 @docs px, percent, em, rem, turn, deg, grad, rad
+
 
 # Advanced
 @docs exactly, custom, custom2, customColor, attr, attr2, attr3, attr4, attrColor
