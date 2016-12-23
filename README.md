@@ -101,13 +101,15 @@ Here's generally how we compose animations.
 
  * Send Messages Example - [Code](https://github.com/mdgriffith/elm-style-animation/blob/master/examples/SimpleSendMsg.elm)
 
-You can send messages importing `Animation.Messenger`
+First, import `Animation.Messenger`
 
 Change your `Animation.State` to `Animation.Messenger.State MyMsgType`.
 
 You can now use `Animation.Messenger.send MyCustomMessage` as a step in composing your animation.
 
-You need to update this new animation state using `Animation.Messenger.update`, which will return `(newAnimState, messagesSentinCmdForm)`.  So you need to change your animation update section to something like the following
+You need to update this new animation state using `Animation.Messenger.update`, which will return `(newAnimState, messagesSentinCmdForm)`.  So you need to change your animation update section to something like the following.
+
+
 
 
 ```elm
@@ -125,6 +127,11 @@ case msg of
               cmds
             )
 ```
+
+_Note!_ Make sure you're sending the cmds in the above code.  If you're note, then the animation will run, but the messages won't be sent.
+
+Also, if you're running this in a child component, make sure you're `Cmd.map`ing the child's commands back to the child or else the messages will be lost!
+
 
 ## Animating Properties that aren't directly supported.
 
