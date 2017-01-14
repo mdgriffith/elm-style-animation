@@ -227,6 +227,8 @@ spring settings =
 
 {-| Specify a custom Easing to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
 
+The [elm-community/easing-functions](https://github.com/elm-community/easing-functions) package has a bunch of useful easing functions!
+
 -}
 easing : { duration : Time, ease : Float -> Float } -> Animation.Model.Interpolation
 easing { duration, ease } =
