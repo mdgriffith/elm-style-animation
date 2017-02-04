@@ -89,6 +89,19 @@ type alias ShadowMotion =
     }
 
 
+{-| A Display value used for the display property.
+A display mode is not animated but can be set using Html.Animation.set
+-}
+type DisplayMode
+    = None
+    | Inline
+    | InlineBlock
+    | Block
+    | Flex
+    | InlineFlex
+    | ListItem
+
+
 {-| Describe a path.  To be used in conjunction with the 'd' property for styling svg.
 
 `To` versions of the commands are absolute, while others are relative.
@@ -1681,3 +1694,28 @@ matchPoints points1 points2 =
                     )
         else
             ( points1, points2 )
+
+
+displayModeName : DisplayMode -> String
+displayModeName mode =
+    case mode of
+        None ->
+            "none"
+
+        Inline ->
+            "inline"
+
+        InlineBlock ->
+            "inline-block"
+
+        Block ->
+            "block"
+
+        Flex ->
+            "flex"
+
+        InlineFlex ->
+            "inline-flex"
+
+        ListItem ->
+            "list-item"
