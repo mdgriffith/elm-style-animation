@@ -26,8 +26,9 @@ all =
                         |> Expect.equal [ "opacity" => "1" ]
             , test "Two Consecutive Animations" <|
                 \() ->
+                    -- Should take exactly 1200 milliseconds
                     animateOpacityTwoStep
-                        |> fastforward (1300 * millisecond)
+                        |> fastforward (1200 * millisecond)
                         |> Animation.Render.renderValues
                         |> Tuple.first
                         |> Expect.equal [ "opacity" => "1" ]

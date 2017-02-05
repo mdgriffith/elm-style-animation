@@ -1627,7 +1627,7 @@ stepInterpolation dtms motion =
                             - start
 
                     newPos =
-                        (eased * distance) + start
+                        (toFloat (truncate (((eased * distance) + start) * 10000))) / 10000
 
                     newVelocity =
                         if newProgress == 1 then
