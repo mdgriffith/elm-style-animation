@@ -170,7 +170,6 @@ module Animation
 import Html
 import Color exposing (Color)
 import Time exposing (Time, second)
-import String
 import AnimationFrame
 import Animation.Model exposing (..)
 import Animation.Render

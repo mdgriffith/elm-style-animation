@@ -256,6 +256,10 @@ init =
                   , action = RotateWidget 0
                   , style = initialWidgetStyle
                   }
+                , { label = "Rotate in All Kinds of Ways"
+                  , action = RotateAllAxis 1
+                  , style = initialWidgetStyle
+                  }
                 , { label = "Change Colors"
                   , action = ChangeColors 2
                   , style = initialWidgetStyle
