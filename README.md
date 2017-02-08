@@ -42,12 +42,14 @@ __Set up an update `Msg`__ in your update function.
 __Render our animation__ at the necessary element in your view.  Not all animated properties are style properties(such as the svg.d property and polygon.points property), so `Animation.render` actually returns a list of `Html.Attributes`.  Fortunately, you can add your own style because  `Html.Attributes.style` stacks!
 ```elm
     div
-        (Animation.render model.style
-            ++ [ style
+        (List.concat
+            [ Animation.render model.style
+            , [ style
                     [ ( "position", "absolute" )
                     , ( "border-style", "dotted" )
                     ]
                ]
+            ]
         )
         [ text "This is being Animated!" ]
 ```

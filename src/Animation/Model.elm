@@ -89,6 +89,19 @@ type alias ShadowMotion =
     }
 
 
+{-| A Display value used for the display property.
+A display mode is not animated but can be set using Html.Animation.set
+-}
+type DisplayMode
+    = None
+    | Inline
+    | InlineBlock
+    | Block
+    | Flex
+    | InlineFlex
+    | ListItem
+
+
 {-| Describe a path.  To be used in conjunction with the 'd' property for styling svg.
 
 `To` versions of the commands are absolute, while others are relative.
@@ -536,18 +549,30 @@ resolveSteps currentStyle steps dt =
                 To target ->
                     -- Add starting time to any properties with duration/easing
                     -- The boolean is to override interpolation or not
-                    resolveSteps
-                        (startTowards False currentStyle target)
-                        (Step :: List.drop 1 steps)
-                        dt
+                    if alreadyThere currentStyle target then
+                        ( currentStyle
+                        , []
+                        , List.drop 1 steps
+                        )
+                    else
+                        resolveSteps
+                            (startTowards False currentStyle target)
+                            (Step :: List.drop 1 steps)
+                            dt
 
                 ToWith target ->
-                    -- Add starting time to any properties with duration/easing
-                    -- The boolean is to override interpolation or not
-                    resolveSteps
-                        (startTowards True currentStyle target)
-                        (Step :: List.drop 1 steps)
-                        dt
+                    if alreadyThere currentStyle target then
+                        ( currentStyle
+                        , []
+                        , List.drop 1 steps
+                        )
+                    else
+                        -- Add starting time to any properties with duration/easing
+                        -- The boolean is to override interpolation or not
+                        resolveSteps
+                            (startTowards True currentStyle target)
+                            (Step :: List.drop 1 steps)
+                            dt
 
                 Set props ->
                     resolveSteps
@@ -587,6 +612,13 @@ resolveSteps currentStyle steps dt =
                             dt
 
 
+alreadyThere : List Property -> List Property -> Bool
+alreadyThere current target =
+    startTowards False current target
+        |> step 0
+        |> List.all isDone
+
+
 {-|
 -}
 replaceProps : List Property -> List Property -> List Property
@@ -610,15 +642,21 @@ isDone : Property -> Bool
 isDone property =
     let
         motionDone motion =
-            case motion.interpolation of
-                Spring _ ->
-                    motion.velocity == 0 && motion.position == motion.target
+            let
+                runningInterpolation =
+                    Maybe.withDefault
+                        motion.interpolation
+                        motion.interpolationOverride
+            in
+                case runningInterpolation of
+                    Spring _ ->
+                        motion.velocity == 0 && motion.position == motion.target
 
-                Easing eased ->
-                    eased.progress == 1
+                    Easing eased ->
+                        eased.progress == 1 || (eased.progress == 0 && motion.position == motion.target)
 
-                AtSpeed speed ->
-                    motion.position == motion.target
+                    AtSpeed speed ->
+                        motion.position == motion.target
     in
         case property of
             ExactProperty _ _ ->
@@ -931,7 +969,6 @@ setTarget overrideInterpolation current newTarget =
                     _ ->
                         current
 
-            --
             Path cmds ->
                 case newTarget of
                     Path targets ->
@@ -1614,7 +1651,7 @@ stepInterpolation dtms motion =
                             - start
 
                     newPos =
-                        (eased * distance) + start
+                        (toFloat (truncate (((eased * distance) + start) * 10000))) / 10000
 
                     newVelocity =
                         if newProgress == 1 then
@@ -1681,3 +1718,28 @@ matchPoints points1 points2 =
                     )
         else
             ( points1, points2 )
+
+
+displayModeName : DisplayMode -> String
+displayModeName mode =
+    case mode of
+        None ->
+            "none"
+
+        Inline ->
+            "inline"
+
+        InlineBlock ->
+            "inline-block"
+
+        Block ->
+            "block"
+
+        Flex ->
+            "flex"
+
+        InlineFlex ->
+            "inline-flex"
+
+        ListItem ->
+            "list-item"

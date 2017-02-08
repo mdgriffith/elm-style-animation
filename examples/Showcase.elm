@@ -73,7 +73,10 @@ update action model =
             ( onWidgetStyle model i <|
                 (Animation.interrupt
                     [ Animation.to
-                        [ Animation.translate3d (percent 0) (percent 30) (px 10)
+                        [ Animation.rotate3d (turn 1) (turn 1) (turn 1)
+                        ]
+                    , Animation.set
+                        [ Animation.rotate3d (turn 0) (turn 0) (turn 0)
                         ]
                     ]
                 )
@@ -251,10 +254,6 @@ init =
         ( { widgets =
                 [ { label = "Rotate"
                   , action = RotateWidget 0
-                  , style = initialWidgetStyle
-                  }
-                , { label = "Rotate in All Kinds of Ways"
-                  , action = RotateAllAxis 1
                   , style = initialWidgetStyle
                   }
                 , { label = "Change Colors"
