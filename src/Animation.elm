@@ -937,6 +937,44 @@ display mode =
     ExactProperty "display" (displayModeName mode)
 
 
+{-| A Display value used for the display property.
+A display mode is not animated but can be set using Html.Animation.set
+-}
+type DisplayMode
+    = None
+    | Inline
+    | InlineBlock
+    | Block
+    | Flex
+    | InlineFlex
+    | ListItem
+
+
+displayModeName : DisplayMode -> String
+displayModeName mode =
+    case mode of
+        None ->
+            "none"
+
+        Inline ->
+            "inline"
+
+        InlineBlock ->
+            "inline-block"
+
+        Block ->
+            "block"
+
+        Flex ->
+            "flex"
+
+        InlineFlex ->
+            "inline-flex"
+
+        ListItem ->
+            "list-item"
+
+
 {-| -}
 none : DisplayMode
 none =
