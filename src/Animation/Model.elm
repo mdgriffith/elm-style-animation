@@ -549,18 +549,30 @@ resolveSteps currentStyle steps dt =
                 To target ->
                     -- Add starting time to any properties with duration/easing
                     -- The boolean is to override interpolation or not
-                    resolveSteps
-                        (startTowards False currentStyle target)
-                        (Step :: List.drop 1 steps)
-                        dt
+                    if alreadyThere currentStyle target then
+                        ( currentStyle
+                        , []
+                        , List.drop 1 steps
+                        )
+                    else
+                        resolveSteps
+                            (startTowards False currentStyle target)
+                            (Step :: List.drop 1 steps)
+                            dt
 
                 ToWith target ->
-                    -- Add starting time to any properties with duration/easing
-                    -- The boolean is to override interpolation or not
-                    resolveSteps
-                        (startTowards True currentStyle target)
-                        (Step :: List.drop 1 steps)
-                        dt
+                    if alreadyThere currentStyle target then
+                        ( currentStyle
+                        , []
+                        , List.drop 1 steps
+                        )
+                    else
+                        -- Add starting time to any properties with duration/easing
+                        -- The boolean is to override interpolation or not
+                        resolveSteps
+                            (startTowards True currentStyle target)
+                            (Step :: List.drop 1 steps)
+                            dt
 
                 Set props ->
                     resolveSteps
@@ -600,6 +612,13 @@ resolveSteps currentStyle steps dt =
                             dt
 
 
+alreadyThere : List Property -> List Property -> Bool
+alreadyThere current target =
+    startTowards False current target
+        |> step 0
+        |> List.all isDone
+
+
 {-|
 -}
 replaceProps : List Property -> List Property -> List Property
@@ -623,15 +642,21 @@ isDone : Property -> Bool
 isDone property =
     let
         motionDone motion =
-            case motion.interpolation of
-                Spring _ ->
-                    motion.velocity == 0 && motion.position == motion.target
+            let
+                runningInterpolation =
+                    Maybe.withDefault
+                        motion.interpolation
+                        motion.interpolationOverride
+            in
+                case runningInterpolation of
+                    Spring _ ->
+                        motion.velocity == 0 && motion.position == motion.target
 
-                Easing eased ->
-                    eased.progress == 1
+                    Easing eased ->
+                        eased.progress == 1 || (eased.progress == 0 && motion.position == motion.target)
 
-                AtSpeed speed ->
-                    motion.position == motion.target
+                    AtSpeed speed ->
+                        motion.position == motion.target
     in
         case property of
             ExactProperty _ _ ->
@@ -944,7 +969,6 @@ setTarget overrideInterpolation current newTarget =
                     _ ->
                         current
 
-            --
             Path cmds ->
                 case newTarget of
                     Path targets ->
