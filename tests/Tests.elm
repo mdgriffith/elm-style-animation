@@ -16,10 +16,10 @@ import Ease
 all : Test
 all =
     describe "Animation Test Suite"
-        [ describe "Value Expectations"
+        [ describe "Easing Based Animations"
             [ test "Opacity 0 -> 1" <|
                 \() ->
-                    animateOpacity
+                    easeOpacity
                         |> fastforward (600 * millisecond)
                         |> Animation.Render.renderValues
                         |> Tuple.first
@@ -27,8 +27,26 @@ all =
             , test "Two Consecutive Animations" <|
                 \() ->
                     -- Should take exactly 1200 milliseconds
-                    animateOpacityTwoStep
+                    easeOpacityTwoStep
                         |> fastforward (1200 * millisecond)
+                        |> Animation.Render.renderValues
+                        |> Tuple.first
+                        |> Expect.equal [ "opacity" => "1" ]
+            ]
+        , describe "Spring Based Animation"
+            [ test "Opacity 0 -> 1" <|
+                \() ->
+                    -- Standard spring takes ~ 560 milliseconds to finish.
+                    springOpacity
+                        |> fastforward (560 * millisecond)
+                        |> Animation.Render.renderValues
+                        |> Tuple.first
+                        |> Expect.equal [ "opacity" => "1" ]
+            , test "Two Consecutive Animations" <|
+                \() ->
+                    -- Why is this two step animation not 2* as long as the first?
+                    springOpacityTwoStep
+                        |> fastforward (1045 * millisecond)
                         |> Animation.Render.renderValues
                         |> Tuple.first
                         |> Expect.equal [ "opacity" => "1" ]
@@ -36,7 +54,7 @@ all =
         ]
 
 
-animateOpacityTwoStep =
+easeOpacityTwoStep =
     Animation.interrupt
         [ Animation.toWith
             (Animation.easing
@@ -56,7 +74,7 @@ animateOpacityTwoStep =
         (Animation.style [ Animation.opacity 1.0 ])
 
 
-animateOpacity =
+easeOpacity =
     Animation.interrupt
         [ Animation.toWith
             (Animation.easing
@@ -67,6 +85,24 @@ animateOpacity =
             [ Animation.opacity 1.0 ]
         ]
         (Animation.style [ Animation.opacity 0.0 ])
+
+
+springOpacity =
+    Animation.interrupt
+        [ Animation.to
+            [ Animation.opacity 1.0 ]
+        ]
+        (Animation.style [ Animation.opacity 0.0 ])
+
+
+springOpacityTwoStep =
+    Animation.interrupt
+        [ Animation.to
+            [ Animation.opacity 0.3 ]
+        , Animation.to
+            [ Animation.opacity 1.0 ]
+        ]
+        (Animation.style [ Animation.opacity 1.0 ])
 
 
 fastforward duration animation =
