@@ -7,7 +7,6 @@ module Animation.Render exposing (..)
 import Html
 import Html.Attributes
 import Svg.Attributes
-import List.Extra
 import Animation.Model exposing (..)
 
 
@@ -608,7 +607,7 @@ warnForDoubleListedProperties props =
             List.filter (\prop -> not <| isTransformation prop) props
                 |> List.map propertyName
                 |> List.sort
-                |> List.Extra.groupWhile (==)
+                |> groupWhile (==)
                 |> List.map
                     (\propGroup ->
                         case List.head propGroup of
@@ -623,3 +622,74 @@ warnForDoubleListedProperties props =
                     )
     in
         props
+
+
+{-| The following functions are copied from elm-community/list-extra.
+
+They were copied because there were version number issues
+when the version this library was using and the version
+the user was using got out of sync.
+
+
+Group elements together, using a custom equality test.
+    groupWhile (\x y -> first x == first y) [(0,'a'),(0,'b'),(1,'c'),(1,'d')] == [[(0,'a'),(0,'b')],[(1,'c'),(1,'d')]]
+The equality test should be an equivalent relationship, i.e. it should have the properties of reflexivity, symmetry, and transitivity. For non-equivalent relations it gives non-intuitive behavior:
+    groupWhile (<) [1,2,3,2,4,1,3,2,1] == [[1,2,3,2,4],[1,3,2],[1]]
+For grouping elements with a comparison test, which must only hold the property of transitivity, see `groupWhileTransitively`.
+-}
+groupWhile : (a -> a -> Bool) -> List a -> List (List a)
+groupWhile eq xs_ =
+    case xs_ of
+        [] ->
+            []
+
+        x :: xs ->
+            let
+                ( ys, zs ) =
+                    span (eq x) xs
+            in
+                (x :: ys) :: groupWhile eq zs
+
+
+{-| Take a predicate and a list, return a tuple. The first part of the tuple is the longest prefix of that list, for each element of which the predicate holds. The second part of the tuple is the remainder of the list. `span p xs` is equivalent to `(takeWhile p xs, dropWhile p xs)`.
+    span ((>) 3) [1,2,3,4,1,2,3,4] == ([1,2],[3,4,1,2,3,4])
+    span ((>) 5) [1,2,3] == ([1,2,3],[])
+    span ((>) 0) [1,2,3] == ([],[1,2,3])
+-}
+span : (a -> Bool) -> List a -> ( List a, List a )
+span p xs =
+    ( takeWhile p xs, dropWhile p xs )
+
+
+{-| Take elements in order as long as the predicate evaluates to `True`
+-}
+takeWhile : (a -> Bool) -> List a -> List a
+takeWhile predicate =
+    let
+        takeWhileMemo memo list =
+            case list of
+                [] ->
+                    List.reverse memo
+
+                x :: xs ->
+                    if (predicate x) then
+                        takeWhileMemo (x :: memo) xs
+                    else
+                        List.reverse memo
+    in
+        takeWhileMemo []
+
+
+{-| Drop elements in order as long as the predicate evaluates to `True`
+-}
+dropWhile : (a -> Bool) -> List a -> List a
+dropWhile predicate list =
+    case list of
+        [] ->
+            []
+
+        x :: xs ->
+            if (predicate x) then
+                dropWhile predicate xs
+            else
+                list
