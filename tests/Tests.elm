@@ -20,7 +20,7 @@ all =
             [ test "Opacity 0 -> 1" <|
                 \() ->
                     easeOpacity
-                        |> fastforward (600 * millisecond)
+                        |> fastforward (500 * millisecond)
                         |> Animation.Render.renderValues
                         |> Tuple.first
                         |> Expect.equal [ "opacity" => "1" ]
@@ -28,7 +28,21 @@ all =
                 \() ->
                     -- Should take exactly 1200 milliseconds
                     easeOpacityTwoStep
-                        |> fastforward (1200 * millisecond)
+                        |> fastforward (1000 * millisecond)
+                        |> Animation.Render.renderValues
+                        |> Tuple.first
+                        |> Expect.equal [ "opacity" => "1" ]
+            , test "Steps After Repeat" <|
+                \() ->
+                    toRepeatTo
+                        |> fastforward (4128 * millisecond)
+                        |> Animation.Render.renderValues
+                        |> Tuple.first
+                        |> Expect.equal [ "opacity" => "0" ]
+            , test "Repeat Zero" <|
+                \() ->
+                    repeatZero
+                        |> fastforward (500 * millisecond)
                         |> Animation.Render.renderValues
                         |> Tuple.first
                         |> Expect.equal [ "opacity" => "1" ]
@@ -54,37 +68,53 @@ all =
         ]
 
 
+standardEasing =
+    Animation.easing
+        { duration = 500
+        , ease = identity
+        }
+
+
+repeatZero =
+    Animation.interrupt
+        [ Animation.repeat 0
+            [ Animation.to
+                [ Animation.opacity 0.0 ]
+            ]
+        ]
+        (Animation.styleWith standardEasing [ Animation.opacity 1.0 ])
+
+
+toRepeatTo =
+    Animation.interrupt
+        [ Animation.repeat 3
+            [ Animation.to
+                [ Animation.opacity 1.0 ]
+            , Animation.to
+                [ Animation.opacity 0.5 ]
+            ]
+        , Animation.to
+            [ Animation.opacity 0.0 ]
+        ]
+        (Animation.styleWith standardEasing [ Animation.opacity 1.0 ])
+
+
 easeOpacityTwoStep =
     Animation.interrupt
-        [ Animation.toWith
-            (Animation.easing
-                { duration = 600
-                , ease = identity
-                }
-            )
+        [ Animation.to
             [ Animation.opacity 0.3 ]
-        , Animation.toWith
-            (Animation.easing
-                { duration = 600
-                , ease = identity
-                }
-            )
+        , Animation.to
             [ Animation.opacity 1.0 ]
         ]
-        (Animation.style [ Animation.opacity 1.0 ])
+        (Animation.styleWith standardEasing [ Animation.opacity 1.0 ])
 
 
 easeOpacity =
     Animation.interrupt
-        [ Animation.toWith
-            (Animation.easing
-                { duration = 600
-                , ease = identity
-                }
-            )
+        [ Animation.to
             [ Animation.opacity 1.0 ]
         ]
-        (Animation.style [ Animation.opacity 0.0 ])
+        (Animation.styleWith standardEasing [ Animation.opacity 0.0 ])
 
 
 springOpacity =

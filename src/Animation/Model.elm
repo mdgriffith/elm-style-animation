@@ -583,19 +583,19 @@ resolveSteps currentStyle steps dt =
                             , steps
                             )
 
-                Loop steps ->
+                Loop substeps ->
                     resolveSteps
                         currentStyle
-                        (steps ++ [ Loop steps ])
+                        (substeps ++ [ Loop substeps ])
                         dt
 
-                Repeat n steps ->
-                    if n == 0 then
-                        ( currentStyle, [], List.drop 1 steps )
+                Repeat n substeps ->
+                    if n <= 0 then
+                        resolveSteps currentStyle (List.drop 1 steps) dt
                     else
                         resolveSteps
                             currentStyle
-                            (steps ++ [ Repeat (n - 1) steps ])
+                            (substeps ++ [ Repeat (n - 1) substeps ] ++ List.drop 1 steps)
                             dt
 
 
