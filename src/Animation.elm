@@ -1,6 +1,7 @@
 module Animation
     exposing
         ( render
+        , renderPairs
         , interrupt
         , queue
         , wait
@@ -139,7 +140,7 @@ module Animation
 {-| A library for animations.
 
 # Setting up an animation
-@docs State, subscription, Msg, render
+@docs State, subscription, Msg, render, renderPairs
 
 # Creating an animation
 @docs interrupt, queue, Step, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interpolation, spring, easing, speed
@@ -1780,3 +1781,19 @@ Combine "filter" based properties into a single css property.
 render : Animation msgA -> List (Html.Attribute msgB)
 render =
     Animation.Render.render
+
+
+{-| Render style properties into the style attribute.
+
+Combine "transform" based properties into a single css property.
+
+Combine "filter" based properties into a single css property.
+
+*Note* this method will _not_ render svg properties like `Animation.points`.
+
+-}
+renderPairs : Animation msgA -> List ( String, String )
+renderPairs anim =
+    anim
+        |> Animation.Render.renderValues
+        |> Tuple.first
