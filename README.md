@@ -134,7 +134,7 @@ case msg of
             )
 ```
 
-_Note!_ Make sure you're sending the cmds in the above code.  If you're note, then the animation will run, but the messages won't be sent.
+_Note!_ Make sure you're sending the cmds in the above code.  If you're not, then the animation will run, but the messages won't be sent.
 
 Also, if you're running this in a child component, make sure you're `Cmd.map`ing the child's commands back to the child or else the messages will be lost!
 

@@ -447,7 +447,7 @@ updateAnimation (Tick now) (Animation model) =
         timing =
             refreshTiming now model.timing
 
-        -- Resolve potential interrutions
+        -- Resolve potential interruptions
         ( readyInterruption, queuedInterruptions ) =
             List.map
                 (\( wait, steps ) ->
