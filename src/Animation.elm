@@ -40,6 +40,10 @@ module Animation
         , bottom
         , width
         , height
+        , maxHeight
+        , maxWidth
+        , minHeight
+        , minWidth
         , padding
         , paddingLeft
         , paddingRight
@@ -145,7 +149,7 @@ module Animation
 @docs interrupt, queue, Step, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interpolation, spring, easing, speed
 
 # Animatable Properties
-@docs Property, opacity, Length, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
+@docs Property, opacity, Length, top, left, right, bottom, width, height, maxHeight, maxWidth, minHeight, minWidth, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
 
 # Transforms
 @docs scale, scale3d, Angle, rotate, rotate3d, translate, translate3d, transformOrigin
