@@ -119,8 +119,19 @@ module Animation
         , dropShadow
         , px
         , percent
-        , em
         , rem
+        , em
+        , ex
+        , ch
+        , vh
+        , vw
+        , vmin
+        , vmax
+        , mm
+        , cm
+        , inches
+        , pt
+        , pc   
         , turn
         , deg
         , grad
@@ -160,7 +171,7 @@ module Animation
 @docs path, PathStep, move, moveTo, line, lineTo, horizontal, horizontalTo, vertical, verticalTo,  close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To, arc, Arc
 
 # Units
-@docs px, percent, em, rem, turn, deg, grad, rad
+@docs px, percent, rem, em, ex, ch, vh, vw, vmin, vmax, mm, cm, inches, pt, pc turn, deg, grad, rad
 
 # Advanced
 @docs exactly, custom, custom2, customColor, attr, attr2, attr3, attr4, attrColor
