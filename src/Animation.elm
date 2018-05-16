@@ -272,7 +272,7 @@ defaultInterpolationByProperty prop =
                 }
 
         -- progress is set to 1 because it is changed to 0 when the animation actually starts
-        -- This is analagous to the spring starting at rest.
+        -- This is analogous to the spring starting at rest.
         linear duration =
             Easing
                 { progress = 1
@@ -430,7 +430,7 @@ styleWithEach props =
         initialState <| List.map (\( interp, prop ) -> mapToMotion (\m -> { m | interpolation = interp }) prop) props
 
 
-{-| Add an animation to the queue, execiting once the current animation finishes
+{-| Add an animation to the queue, executing once the current animation finishes
 
 -}
 queue : List (Animation.Model.Step msg) -> Animation msg -> Animation msg
@@ -833,7 +833,7 @@ length4 name ( x, len ) ( x2, len2 ) ( x3, len3 ) ( x4, len4 ) =
         (initMotion x4 len4)
 
 
-{-| Animate a custom attribute by providing it's name, a float value, and the units it should have.
+{-| Animate a custom attribute by providing its name, a float value, and the units it should have.
 
 
 -}
@@ -879,7 +879,7 @@ attrColor name color =
             (initMotion alpha "")
 
 
-{-| Animate a custom _style_ property by providing it's name, a float value, and the units it should have.
+{-| Animate a custom _style_ property by providing its name, a float value, and the units it should have.
 -}
 custom : String -> Float -> String -> Animation.Model.Property
 custom name value unit =
@@ -1620,7 +1620,7 @@ grayscale x =
     custom "grayscale" x "%"
 
 
-{-| Create a CSS grayscale filter, these stack with other filters.  This is a spelling adjusment.
+{-| Create a CSS grayscale filter, these stack with other filters.  This is a spelling adjustment.
 -}
 greyscale : Float -> Animation.Model.Property
 greyscale x =
@@ -1729,7 +1729,7 @@ offset value =
 
 {-| Given two lists of coordinates, rotate the list so that the lowest coordinate is first.
 
-This is to align polygon coordinates so that they can morph smoothely into each other.
+This is to align polygon coordinates so that they can morph smoothly into each other.
 -}
 alignStartingPoint : List ( Float, Float ) -> List ( Float, Float )
 alignStartingPoint points =
