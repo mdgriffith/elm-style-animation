@@ -1,12 +1,12 @@
 module Main exposing (..)
 
-import Html exposing (h1, div, Html)
+import Animation
+import Browser
+import Html exposing (Html, div, h1)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Animation
-import Color exposing (black, rgb)
 
 
 type alias Model =
@@ -412,20 +412,20 @@ update action model =
                 newPath =
                     Maybe.withDefault startLogo <|
                         List.head <|
-                            (List.drop wrappedIndex batmanLogos)
-                                ++ (List.take wrappedIndex batmanLogos)
+                            List.drop wrappedIndex batmanLogos
+                                ++ List.take wrappedIndex batmanLogos
             in
-                ( { model
-                    | index = wrappedIndex + 1
-                    , style =
-                        Animation.interrupt
-                            [ Animation.to
-                                [ Animation.path newPath ]
-                            ]
-                            model.style
-                  }
-                , Cmd.none
-                )
+            ( { model
+                | index = wrappedIndex + 1
+                , style =
+                    Animation.interrupt
+                        [ Animation.to
+                            [ Animation.path newPath ]
+                        ]
+                        model.style
+              }
+            , Cmd.none
+            )
 
         Animate time ->
             ( { model
@@ -439,7 +439,10 @@ view : Model -> Html Msg
 view model =
     div
         [ onClick Morph
-        , Attr.style [ ( "margin", "200px auto" ), ( "width", "1000px" ), ( "height", "1000px" ), ( "cursor", "pointer" ) ]
+        , Attr.style "margin" "200px auto"
+        , Attr.style "width" "1000px"
+        , Attr.style "height" "1000px"
+        , Attr.style "cursor" "pointer"
         ]
         [ h1 [] [ text "Click to morph!" ]
         , svg
@@ -457,7 +460,12 @@ init : ( Model, Cmd Msg )
 init =
     ( { style =
             Animation.style
-                [ Animation.fill black
+                [ Animation.fill
+                    { red = 0
+                    , blue = 0
+                    , green = 0
+                    , alpha = 1
+                    }
                 , Animation.path startLogo
                 ]
       , index = 2
@@ -466,11 +474,11 @@ init =
     )
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.embed
+        { init = always init
         , view = view
         , update = update
-        , subscriptions = (\model -> Animation.subscription Animate [ model.style ])
+        , subscriptions = \model -> Animation.subscription Animate [ model.style ]
         }

@@ -1,9 +1,10 @@
 module Main exposing (..)
 
+import Animation exposing (px)
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Animation exposing (px)
 
 
 type alias Model =
@@ -74,30 +75,26 @@ view model =
     div
         [ onMouseEnter Show
         , onMouseLeave Hide
-        , style
-            [ ( "position", "absolute" )
-            , ( "left", "0px" )
-            , ( "top", "0px" )
-            , ( "width", "350px" )
-            , ( "height", "100%" )
-            , ( "border", "2px dashed #AAA" )
-            ]
+        , style "position" "absolute"
+        , style "left" "0px"
+        , style "top" "0px"
+        , style "width" "350px"
+        , style "height" "100%"
+        , style "border" "2px dashed #AAA"
         ]
-        [ h1 [ style [ ( "padding", "25px" ) ] ]
+        [ h1 [ style "padding" "25px" ]
             [ text "Hover here to see menu!" ]
         , div
             (Animation.render model.style
-                ++ [ style
-                        [ ( "position", "absolute" )
-                        , ( "top", "-2px" )
-                        , ( "margin-left", "-2px" )
-                        , ( "padding", "25px" )
-                        , ( "width", "300px" )
-                        , ( "height", "100%" )
-                        , ( "background-color", "rgb(58,40,69)" )
-                        , ( "color", "white" )
-                        , ( "border", "2px solid rgb(58,40,69)" )
-                        ]
+                ++ [ style "position" "absolute"
+                   , style "top" "-2px"
+                   , style "margin-left" "-2px"
+                   , style "padding" "25px"
+                   , style "width" "300px"
+                   , style "height" "100%"
+                   , style "background-color" "rgb(58,40,69)"
+                   , style "color" "white"
+                   , style "border" "2px solid rgb(58,40,69)"
                    ]
             )
             [ h1 [] [ text "Hidden Menu" ]
@@ -121,10 +118,10 @@ init =
     )
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.embed
+        { init = always init
         , view = view
         , update = update
         , subscriptions = subscriptions

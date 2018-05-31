@@ -1,16 +1,17 @@
 module Main exposing (..)
 
+import Animation exposing (px)
+import Animation.Messenger
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Animation exposing (px)
-import Animation.Messenger
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.embed
+        { init = always init
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -68,18 +69,18 @@ update action model =
                 _ =
                     Debug.log "message sent" str
             in
-                ( model, Cmd.none )
+            ( model, Cmd.none )
 
         Animate animMsg ->
             let
                 ( newStyle, cmd ) =
                     Animation.Messenger.update animMsg model.style
             in
-                ( { model
-                    | style = newStyle
-                  }
-                , cmd
-                )
+            ( { model
+                | style = newStyle
+              }
+            , cmd
+            )
 
 
 view : Model -> Html Msg
@@ -87,16 +88,14 @@ view model =
     div
         (Animation.render model.style
             ++ [ onClick FadeInFadeOut
-               , style
-                    [ ( "position", "relative" )
-                    , ( "margin", "100px auto" )
-                    , ( "padding", "25px" )
-                    , ( "width", "200px" )
-                    , ( "height", "200px" )
-                    , ( "cursor", "pointer" )
-                    , ( "background-color", "#268bd2" )
-                    , ( "color", "white" )
-                    ]
+               , style "position" "relative"
+               , style "margin" "100px auto"
+               , style "padding" "25px"
+               , style "width" "200px"
+               , style "height" "200px"
+               , style "cursor" "pointer"
+               , style "background-color" "#268bd2"
+               , style "color" "white"
                ]
         )
         [ text "Click to Animate! (Check console for sent message)" ]
