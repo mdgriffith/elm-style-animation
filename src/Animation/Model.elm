@@ -1306,12 +1306,12 @@ zipPropertiesGreedy initialProps newTargetProps =
                 (List.repeat (List.length initialProps) 0)
 
         _ =
-            List.map
-                (\b ->
-                    Debug.log "elm-style-animation" <|
-                        (propertyName b ++ " has no initial value and therefore will not be animated.")
-                )
-                warnings
+            -- List.map
+            --     (\b ->
+            --         Debug.log "elm-style-animation" <|
+            --             (propertyName b ++ " has no initial value and therefore will not be animated.")
+            --     )
+            warnings
     in
     List.reverse props
 

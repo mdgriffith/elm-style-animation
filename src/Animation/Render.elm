@@ -617,7 +617,8 @@ warnForDoubleListedProperties props =
 
                             Just name ->
                                 if List.length propGroup > 1 then
-                                    Debug.log "elm-style-animation" ("The \"" ++ name ++ "\" css property is listed more than once.  Only the last instance will be used.")
+                                    ""
+                                    -- Debug.log "elm-style-animation" ("The \"" ++ name ++ "\" css property is listed more than once.  Only the last instance will be used.")
                                 else
                                     ""
                     )
