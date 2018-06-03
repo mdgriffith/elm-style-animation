@@ -1,13 +1,12 @@
 module Animation.Render exposing (..)
 
 {-| The actual internals of rendering
-
 -}
 
+import Animation.Model exposing (..)
 import Html
 import Html.Attributes
 import Svg.Attributes
-import Animation.Model exposing (..)
 
 
 renderValues : Animation msgA -> ( List ( String, String ), List Property )
@@ -18,21 +17,21 @@ renderValues (Animation model) =
 
         ( style, transforms, filters ) =
             List.foldl
-                (\prop ( style, transforms, filters ) ->
+                (\prop ( myStyle, myTransforms, myFilters ) ->
                     if isTransformation prop then
-                        ( style
-                        , transforms ++ [ prop ]
-                        , filters
+                        ( myStyle
+                        , myTransforms ++ [ prop ]
+                        , myFilters
                         )
                     else if isFilter prop then
-                        ( style
-                        , transforms
-                        , filters ++ [ prop ]
+                        ( myStyle
+                        , myTransforms
+                        , myFilters ++ [ prop ]
                         )
                     else
-                        ( style ++ [ prop ]
-                        , transforms
-                        , filters
+                        ( myStyle ++ [ prop ]
+                        , myTransforms
+                        , myFilters
                         )
                 )
                 ( [], [], [] )
@@ -52,7 +51,7 @@ renderValues (Animation model) =
                                 if propertyName prop == "rotate3d" then
                                     render3dRotation prop
                                 else
-                                    propertyName prop ++ "(" ++ (propertyValue prop ", ") ++ ")"
+                                    propertyName prop ++ "(" ++ propertyValue prop ", " ++ ")"
                             )
                             transforms
                   )
@@ -70,18 +69,18 @@ renderValues (Animation model) =
                                     name =
                                         propertyName prop
                                 in
-                                    if name == "filter-url" then
-                                        "url(\"" ++ (propertyValue prop ", ") ++ "\")"
-                                    else
-                                        propertyName prop ++ "(" ++ (propertyValue prop ", ") ++ ")"
+                                if name == "filter-url" then
+                                    "url(\"" ++ propertyValue prop ", " ++ "\")"
+                                else
+                                    propertyName prop ++ "(" ++ propertyValue prop ", " ++ ")"
                             )
                             filters
                   )
                 ]
     in
-        ( renderedTransforms ++ renderedFilters ++ renderedStyle
-        , attrProps
-        )
+    ( renderedTransforms ++ renderedFilters ++ renderedStyle
+    , attrProps
+    )
 
 
 render : Animation msgA -> List (Html.Attribute msgB)
@@ -91,13 +90,14 @@ render animation =
             renderValues animation
 
         styleAttr =
-            Html.Attributes.style <|
-                List.concatMap prefix style
+            style
+                |> List.concatMap prefix
+                |> List.map (\( prop, val ) -> Html.Attributes.style prop val)
 
         otherAttrs =
             List.filterMap renderAttrs attrProps
     in
-        styleAttr :: otherAttrs
+    styleAttr ++ otherAttrs
 
 
 renderAttrs : Animation.Model.Property -> Maybe (Html.Attribute msg)
@@ -171,13 +171,13 @@ render3dRotation prop =
     case prop of
         Animation.Model.Property3 _ x y z ->
             "rotateX("
-                ++ toString x.position
+                ++ String.fromFloat x.position
                 ++ x.unit
                 ++ ") rotateY("
-                ++ toString y.position
+                ++ String.fromFloat y.position
                 ++ y.unit
                 ++ ") rotateZ("
-                ++ toString z.position
+                ++ String.fromFloat z.position
                 ++ z.unit
                 ++ ")"
 
@@ -222,27 +222,27 @@ prefix stylePair =
         propValue =
             Tuple.second stylePair
     in
-        case propName of
-            "transform" ->
-                [ stylePair
-                , ( iePrefix ++ propName, propValue )
-                , ( webkitPrefix ++ propName, propValue )
-                ]
+    case propName of
+        "transform" ->
+            [ stylePair
+            , ( iePrefix ++ propName, propValue )
+            , ( webkitPrefix ++ propName, propValue )
+            ]
 
-            "transform-origin" ->
-                [ stylePair
-                , ( iePrefix ++ propName, propValue )
-                , ( webkitPrefix ++ propName, propValue )
-                ]
+        "transform-origin" ->
+            [ stylePair
+            , ( iePrefix ++ propName, propValue )
+            , ( webkitPrefix ++ propName, propValue )
+            ]
 
-            "filter" ->
-                [ stylePair
-                , ( iePrefix ++ propName, propValue )
-                , ( webkitPrefix ++ propName, propValue )
-                ]
+        "filter" ->
+            [ stylePair
+            , ( iePrefix ++ propName, propValue )
+            , ( webkitPrefix ++ propName, propValue )
+            ]
 
-            _ ->
-                [ stylePair ]
+        _ ->
+            [ stylePair ]
 
 
 {-| This property can only be represented as an html attribute
@@ -250,28 +250,29 @@ prefix stylePair =
 isAttr : Animation.Model.Property -> Bool
 isAttr prop =
     String.startsWith "attr:" (propertyName prop)
-        || case prop of
-            Points _ ->
-                True
+        || (case prop of
+                Points _ ->
+                    True
 
-            Path _ ->
-                True
+                Path _ ->
+                    True
 
-            Property name _ ->
-                (name == "cx")
-                    || (name == "cy")
-                    || (name == "x")
-                    || (name == "y")
-                    || (name == "rx")
-                    || (name == "ry")
-                    || (name == "r")
-                    || (name == "offset")
+                Property name _ ->
+                    (name == "cx")
+                        || (name == "cy")
+                        || (name == "x")
+                        || (name == "y")
+                        || (name == "rx")
+                        || (name == "ry")
+                        || (name == "r")
+                        || (name == "offset")
 
-            Property4 name _ _ _ _ ->
-                name == "viewBox"
+                Property4 name _ _ _ _ ->
+                    name == "viewBox"
 
-            _ ->
-                False
+                _ ->
+                    False
+           )
 
 
 propertyValue : Animation.Model.Property -> String -> String
@@ -282,13 +283,13 @@ propertyValue prop delim =
 
         ColorProperty _ r g b a ->
             "rgba("
-                ++ toString (round r.position)
+                ++ String.fromInt (round r.position)
                 ++ ","
-                ++ toString (round g.position)
+                ++ String.fromInt (round g.position)
                 ++ ","
-                ++ toString (round b.position)
+                ++ String.fromInt (round b.position)
                 ++ ","
-                ++ toString a.position
+                ++ String.fromFloat a.position
                 ++ ")"
 
         ShadowProperty name inset shadow ->
@@ -297,73 +298,73 @@ propertyValue prop delim =
              else
                 ""
             )
-                ++ toString shadow.offsetX.position
+                ++ String.fromFloat shadow.offsetX.position
                 ++ "px"
                 ++ " "
-                ++ toString shadow.offsetY.position
+                ++ String.fromFloat shadow.offsetY.position
                 ++ "px"
                 ++ " "
-                ++ toString shadow.blur.position
+                ++ String.fromFloat shadow.blur.position
                 ++ "px"
                 ++ " "
                 ++ (if name == "text-shadow" || name == "drop-shadow" then
                         ""
                     else
-                        toString shadow.size.position
+                        String.fromFloat shadow.size.position
                             ++ "px"
                             ++ " "
                    )
                 ++ "rgba("
-                ++ toString (round shadow.red.position)
+                ++ String.fromInt (round shadow.red.position)
                 ++ ", "
-                ++ toString (round shadow.green.position)
+                ++ String.fromInt (round shadow.green.position)
                 ++ ", "
-                ++ toString (round shadow.blue.position)
+                ++ String.fromInt (round shadow.blue.position)
                 ++ ", "
-                ++ toString shadow.alpha.position
+                ++ String.fromFloat shadow.alpha.position
                 ++ ")"
 
         Property _ x ->
-            toString x.position ++ x.unit
+            String.fromFloat x.position ++ x.unit
 
         Property2 _ x y ->
-            toString x.position
+            String.fromFloat x.position
                 ++ x.unit
                 ++ delim
-                ++ toString y.position
+                ++ String.fromFloat y.position
                 ++ y.unit
 
         Property3 _ x y z ->
-            toString x.position
+            String.fromFloat x.position
                 ++ x.unit
                 ++ delim
-                ++ toString y.position
+                ++ String.fromFloat y.position
                 ++ y.unit
                 ++ delim
-                ++ toString z.position
+                ++ String.fromFloat z.position
                 ++ z.unit
 
         Property4 _ w x y z ->
-            toString w.position
+            String.fromFloat w.position
                 ++ w.unit
                 ++ delim
-                ++ toString x.position
+                ++ String.fromFloat x.position
                 ++ x.unit
                 ++ delim
-                ++ toString y.position
+                ++ String.fromFloat y.position
                 ++ y.unit
                 ++ delim
-                ++ toString z.position
+                ++ String.fromFloat z.position
                 ++ z.unit
 
         AngleProperty _ x ->
-            toString x.position ++ x.unit
+            String.fromFloat x.position ++ x.unit
 
         Points coords ->
             String.join " " <|
                 List.map
                     (\( x, y ) ->
-                        toString x.position ++ "," ++ toString y.position
+                        String.fromFloat x.position ++ "," ++ String.fromFloat y.position
                     )
                     coords
 
@@ -379,225 +380,225 @@ pathCmdValue cmd =
             String.join " " <|
                 List.map
                     (\( x, y ) ->
-                        toString x.position ++ "," ++ toString y.position
+                        String.fromFloat x.position ++ "," ++ String.fromFloat y.position
                     )
                     coords
     in
-        case cmd of
-            Move x y ->
-                "m " ++ toString x.position ++ "," ++ toString y.position
+    case cmd of
+        Move x y ->
+            "m " ++ String.fromFloat x.position ++ "," ++ String.fromFloat y.position
 
-            MoveTo x y ->
-                "M " ++ toString x.position ++ "," ++ toString y.position
+        MoveTo x y ->
+            "M " ++ String.fromFloat x.position ++ "," ++ String.fromFloat y.position
 
-            Line x y ->
-                "l " ++ toString x.position ++ "," ++ toString y.position
+        Line x y ->
+            "l " ++ String.fromFloat x.position ++ "," ++ String.fromFloat y.position
 
-            LineTo x y ->
-                "L " ++ toString x.position ++ "," ++ toString y.position
+        LineTo x y ->
+            "L " ++ String.fromFloat x.position ++ "," ++ String.fromFloat y.position
 
-            Horizontal a ->
-                "h " ++ toString a.position
+        Horizontal a ->
+            "h " ++ String.fromFloat a.position
 
-            HorizontalTo a ->
-                "H " ++ toString a.position
+        HorizontalTo a ->
+            "H " ++ String.fromFloat a.position
 
-            Vertical a ->
-                "v " ++ toString a.position
+        Vertical a ->
+            "v " ++ String.fromFloat a.position
 
-            VerticalTo a ->
-                "V " ++ toString a.position
+        VerticalTo a ->
+            "V " ++ String.fromFloat a.position
 
-            Curve { control1, control2, point } ->
+        Curve { control1, control2, point } ->
+            let
+                ( c1x, c1y ) =
+                    control1
+
+                ( c2x, c2y ) =
+                    control2
+
+                ( p1x, p1y ) =
+                    point
+            in
+            "c "
+                ++ (String.fromFloat <| c1x.position)
+                ++ " "
+                ++ (String.fromFloat <| c1y.position)
+                ++ ", "
+                ++ (String.fromFloat <| c2x.position)
+                ++ " "
+                ++ (String.fromFloat <| c2y.position)
+                ++ ", "
+                ++ (String.fromFloat <| p1x.position)
+                ++ " "
+                ++ (String.fromFloat <| p1y.position)
+
+        CurveTo { control1, control2, point } ->
+            let
+                ( c1x, c1y ) =
+                    control1
+
+                ( c2x, c2y ) =
+                    control2
+
+                ( p1x, p1y ) =
+                    point
+            in
+            "C "
+                ++ (String.fromFloat <| c1x.position)
+                ++ " "
+                ++ (String.fromFloat <| c1y.position)
+                ++ ", "
+                ++ (String.fromFloat <| c2x.position)
+                ++ " "
+                ++ (String.fromFloat <| c2y.position)
+                ++ ", "
+                ++ (String.fromFloat <| p1x.position)
+                ++ " "
+                ++ (String.fromFloat <| p1y.position)
+
+        Quadratic { control, point } ->
+            let
+                ( c1x, c1y ) =
+                    control
+
+                ( p1x, p1y ) =
+                    point
+            in
+            "q "
+                ++ (String.fromFloat <| c1x.position)
+                ++ " "
+                ++ (String.fromFloat <| c1y.position)
+                ++ ", "
+                ++ (String.fromFloat <| p1x.position)
+                ++ " "
+                ++ (String.fromFloat <| p1y.position)
+
+        QuadraticTo { control, point } ->
+            let
+                ( c1x, c1y ) =
+                    control
+
+                ( p1x, p1y ) =
+                    point
+            in
+            "Q "
+                ++ (String.fromFloat <| c1x.position)
+                ++ " "
+                ++ (String.fromFloat <| c1y.position)
+                ++ ", "
+                ++ (String.fromFloat <| p1x.position)
+                ++ " "
+                ++ (String.fromFloat <| p1y.position)
+
+        SmoothQuadratic points ->
+            "t " ++ renderPoints points
+
+        SmoothQuadraticTo points ->
+            "T " ++ renderPoints points
+
+        Smooth points ->
+            "s " ++ renderPoints points
+
+        SmoothTo points ->
+            "S " ++ renderPoints points
+
+        ClockwiseArc arc ->
+            let
+                deltaAngle =
+                    arc.endAngle.position - arc.startAngle.position
+            in
+            if deltaAngle > (360 - 1.0e-6) then
                 let
-                    ( c1x, c1y ) =
-                        control1
+                    dx =
+                        arc.radius.position * cos (degrees arc.startAngle.position)
 
-                    ( c2x, c2y ) =
-                        control2
-
-                    ( p1x, p1y ) =
-                        point
+                    dy =
+                        arc.radius.position * sin (degrees arc.startAngle.position)
                 in
-                    "c "
-                        ++ (toString <| c1x.position)
-                        ++ " "
-                        ++ (toString <| c1y.position)
-                        ++ ", "
-                        ++ (toString <| c2x.position)
-                        ++ " "
-                        ++ (toString <| c2y.position)
-                        ++ ", "
-                        ++ (toString <| p1x.position)
-                        ++ " "
-                        ++ (toString <| p1y.position)
+                "A "
+                    ++ String.fromFloat arc.radius.position
+                    ++ ","
+                    ++ String.fromFloat arc.radius.position
+                    ++ ",0,1,1,"
+                    ++ String.fromFloat (arc.x.position - dx)
+                    ++ ","
+                    ++ String.fromFloat (arc.y.position - dy)
+                    ++ " A "
+                    ++ String.fromFloat arc.radius.position
+                    ++ ","
+                    ++ String.fromFloat arc.radius.position
+                    ++ ",0,1,1,"
+                    ++ String.fromFloat (arc.x.position + dx)
+                    ++ ","
+                    ++ String.fromFloat (arc.y.position + dy)
+            else
+                "A "
+                    ++ String.fromFloat arc.radius.position
+                    ++ ","
+                    ++ String.fromFloat arc.radius.position
+                    ++ " 0 "
+                    ++ (if deltaAngle >= 180 then
+                            "1"
+                        else
+                            "0"
+                       )
+                    ++ " "
+                    ++ "1"
+                    ++ " "
+                    ++ String.fromFloat (arc.x.position + (arc.radius.position * (cos <| degrees arc.endAngle.position)))
+                    ++ ","
+                    ++ String.fromFloat (arc.y.position + (arc.radius.position * (sin <| degrees arc.endAngle.position)))
 
-            CurveTo { control1, control2, point } ->
+        AntiClockwiseArc arc ->
+            let
+                deltaAngle =
+                    arc.endAngle.position - arc.startAngle.position
+            in
+            if deltaAngle > (360 - 1.0e-6) then
                 let
-                    ( c1x, c1y ) =
-                        control1
+                    dx =
+                        arc.radius.position * cos (degrees arc.startAngle.position)
 
-                    ( c2x, c2y ) =
-                        control2
-
-                    ( p1x, p1y ) =
-                        point
+                    dy =
+                        arc.radius.position * sin (degrees arc.startAngle.position)
                 in
-                    "C "
-                        ++ (toString <| c1x.position)
-                        ++ " "
-                        ++ (toString <| c1y.position)
-                        ++ ", "
-                        ++ (toString <| c2x.position)
-                        ++ " "
-                        ++ (toString <| c2y.position)
-                        ++ ", "
-                        ++ (toString <| p1x.position)
-                        ++ " "
-                        ++ (toString <| p1y.position)
+                "A "
+                    ++ String.fromFloat arc.radius.position
+                    ++ ","
+                    ++ String.fromFloat arc.radius.position
+                    ++ ",0,1,0,"
+                    ++ String.fromFloat (arc.x.position - dx)
+                    ++ ","
+                    ++ String.fromFloat (arc.y.position - dy)
+                    ++ " A "
+                    ++ String.fromFloat arc.radius.position
+                    ++ ","
+                    ++ String.fromFloat arc.radius.position
+                    ++ ",0,1,1,"
+                    ++ String.fromFloat (arc.x.position + dx)
+                    ++ ","
+                    ++ String.fromFloat (arc.y.position + dy)
+            else
+                "A "
+                    ++ String.fromFloat arc.radius.position
+                    ++ ","
+                    ++ String.fromFloat arc.radius.position
+                    ++ " 0 "
+                    ++ (if arc.startAngle.position - arc.endAngle.position >= 180 then
+                            "1"
+                        else
+                            "0"
+                       )
+                    ++ " "
+                    ++ "0"
+                    ++ " "
+                    ++ String.fromFloat (arc.x.position + (arc.radius.position * cos arc.endAngle.position))
+                    ++ ","
+                    ++ String.fromFloat (arc.y.position + (arc.radius.position * sin arc.endAngle.position))
 
-            Quadratic { control, point } ->
-                let
-                    ( c1x, c1y ) =
-                        control
-
-                    ( p1x, p1y ) =
-                        point
-                in
-                    "q "
-                        ++ (toString <| c1x.position)
-                        ++ " "
-                        ++ (toString <| c1y.position)
-                        ++ ", "
-                        ++ (toString <| p1x.position)
-                        ++ " "
-                        ++ (toString <| p1y.position)
-
-            QuadraticTo { control, point } ->
-                let
-                    ( c1x, c1y ) =
-                        control
-
-                    ( p1x, p1y ) =
-                        point
-                in
-                    "Q "
-                        ++ (toString <| c1x.position)
-                        ++ " "
-                        ++ (toString <| c1y.position)
-                        ++ ", "
-                        ++ (toString <| p1x.position)
-                        ++ " "
-                        ++ (toString <| p1y.position)
-
-            SmoothQuadratic points ->
-                "t " ++ renderPoints points
-
-            SmoothQuadraticTo points ->
-                "T " ++ renderPoints points
-
-            Smooth points ->
-                "s " ++ renderPoints points
-
-            SmoothTo points ->
-                "S " ++ renderPoints points
-
-            ClockwiseArc arc ->
-                let
-                    deltaAngle =
-                        arc.endAngle.position - arc.startAngle.position
-                in
-                    if deltaAngle > (360 - 1.0e-6) then
-                        let
-                            dx =
-                                arc.radius.position * cos (degrees arc.startAngle.position)
-
-                            dy =
-                                arc.radius.position * sin (degrees arc.startAngle.position)
-                        in
-                            "A "
-                                ++ toString arc.radius.position
-                                ++ ","
-                                ++ toString arc.radius.position
-                                ++ ",0,1,1,"
-                                ++ toString (arc.x.position - dx)
-                                ++ ","
-                                ++ toString (arc.y.position - dy)
-                                ++ " A "
-                                ++ toString arc.radius.position
-                                ++ ","
-                                ++ toString arc.radius.position
-                                ++ ",0,1,1,"
-                                ++ toString (arc.x.position + dx)
-                                ++ ","
-                                ++ toString (arc.y.position + dy)
-                    else
-                        "A "
-                            ++ toString arc.radius.position
-                            ++ ","
-                            ++ toString arc.radius.position
-                            ++ " 0 "
-                            ++ (if deltaAngle >= 180 then
-                                    "1"
-                                else
-                                    "0"
-                               )
-                            ++ " "
-                            ++ "1"
-                            ++ " "
-                            ++ toString (arc.x.position + (arc.radius.position * (cos <| degrees arc.endAngle.position)))
-                            ++ ","
-                            ++ toString (arc.y.position + (arc.radius.position * (sin <| degrees arc.endAngle.position)))
-
-            AntiClockwiseArc arc ->
-                let
-                    deltaAngle =
-                        arc.endAngle.position - arc.startAngle.position
-                in
-                    if deltaAngle > (360 - 1.0e-6) then
-                        let
-                            dx =
-                                arc.radius.position * cos (degrees arc.startAngle.position)
-
-                            dy =
-                                arc.radius.position * sin (degrees arc.startAngle.position)
-                        in
-                            "A "
-                                ++ toString arc.radius.position
-                                ++ ","
-                                ++ toString arc.radius.position
-                                ++ ",0,1,0,"
-                                ++ toString (arc.x.position - dx)
-                                ++ ","
-                                ++ toString (arc.y.position - dy)
-                                ++ " A "
-                                ++ toString arc.radius.position
-                                ++ ","
-                                ++ toString arc.radius.position
-                                ++ ",0,1,1,"
-                                ++ toString (arc.x.position + dx)
-                                ++ ","
-                                ++ toString (arc.y.position + dy)
-                    else
-                        "A "
-                            ++ toString arc.radius.position
-                            ++ ","
-                            ++ toString arc.radius.position
-                            ++ " 0 "
-                            ++ (if arc.startAngle.position - arc.endAngle.position >= 180 then
-                                    "1"
-                                else
-                                    "0"
-                               )
-                            ++ " "
-                            ++ "0"
-                            ++ " "
-                            ++ toString (arc.x.position + (arc.radius.position * (cos arc.endAngle.position)))
-                            ++ ","
-                            ++ toString (arc.y.position + (arc.radius.position * (sin arc.endAngle.position)))
-
-            Close ->
-                "z"
+        Close ->
+            "z"
 
 
 warnForDoubleListedProperties : List Animation.Model.Property -> List Animation.Model.Property
@@ -616,12 +617,13 @@ warnForDoubleListedProperties props =
 
                             Just name ->
                                 if List.length propGroup > 1 then
-                                    Debug.log "elm-style-animation" ("The \"" ++ name ++ "\" css property is listed more than once.  Only the last instance will be used.")
+                                    ""
+                                    -- Debug.log "elm-style-animation" ("The \"" ++ name ++ "\" css property is listed more than once.  Only the last instance will be used.")
                                 else
                                     ""
                     )
     in
-        props
+    props
 
 
 {-| The following functions are copied from elm-community/list-extra.
@@ -630,12 +632,12 @@ They were copied because there were version number issues
 when the version this library was using and the version
 the user was using got out of sync.
 
-
 Group elements together, using a custom equality test.
-    groupWhile (\x y -> first x == first y) [(0,'a'),(0,'b'),(1,'c'),(1,'d')] == [[(0,'a'),(0,'b')],[(1,'c'),(1,'d')]]
+groupWhile (\x y -> first x == first y) [(0,'a'),(0,'b'),(1,'c'),(1,'d')] == [[(0,'a'),(0,'b')],[(1,'c'),(1,'d')]]
 The equality test should be an equivalent relationship, i.e. it should have the properties of reflexivity, symmetry, and transitivity. For non-equivalent relations it gives non-intuitive behavior:
-    groupWhile (<) [1,2,3,2,4,1,3,2,1] == [[1,2,3,2,4],[1,3,2],[1]]
+groupWhile (<) [1,2,3,2,4,1,3,2,1] == [[1,2,3,2,4],[1,3,2],[1]]
 For grouping elements with a comparison test, which must only hold the property of transitivity, see `groupWhileTransitively`.
+
 -}
 groupWhile : (a -> a -> Bool) -> List a -> List (List a)
 groupWhile eq xs_ =
@@ -648,13 +650,13 @@ groupWhile eq xs_ =
                 ( ys, zs ) =
                     span (eq x) xs
             in
-                (x :: ys) :: groupWhile eq zs
+            (x :: ys) :: groupWhile eq zs
 
 
 {-| Take a predicate and a list, return a tuple. The first part of the tuple is the longest prefix of that list, for each element of which the predicate holds. The second part of the tuple is the remainder of the list. `span p xs` is equivalent to `(takeWhile p xs, dropWhile p xs)`.
-    span ((>) 3) [1,2,3,4,1,2,3,4] == ([1,2],[3,4,1,2,3,4])
-    span ((>) 5) [1,2,3] == ([1,2,3],[])
-    span ((>) 0) [1,2,3] == ([],[1,2,3])
+span ((>) 3) [1,2,3,4,1,2,3,4] == ([1,2],[3,4,1,2,3,4])
+span ((>) 5) [1,2,3] == ([1,2,3],[])
+span ((>) 0) [1,2,3] == ([],[1,2,3])
 -}
 span : (a -> Bool) -> List a -> ( List a, List a )
 span p xs =
@@ -672,12 +674,12 @@ takeWhile predicate =
                     List.reverse memo
 
                 x :: xs ->
-                    if (predicate x) then
+                    if predicate x then
                         takeWhileMemo (x :: memo) xs
                     else
                         List.reverse memo
     in
-        takeWhileMemo []
+    takeWhileMemo []
 
 
 {-| Drop elements in order as long as the predicate evaluates to `True`
@@ -689,7 +691,7 @@ dropWhile predicate list =
             []
 
         x :: xs ->
-            if (predicate x) then
+            if predicate x then
                 dropWhile predicate xs
             else
                 list

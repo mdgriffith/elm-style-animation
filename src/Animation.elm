@@ -1,178 +1,197 @@
 module Animation
     exposing
-        ( render
-        , interrupt
-        , queue
-        , wait
-        , subscription
-        , State
-        , Msg
-        , Step
-        , to
-        , toWith
-        , toWithEach
-        , set
-        , repeat
-        , loop
-        , update
-        , style
-        , styleWith
-        , styleWithEach
-        , Interpolation
-        , spring
-        , easing
-        , speed
-        , Property
-        , Length
-        , Angle
-        , opacity
-        , display
-        , inline
-        , inlineBlock
-        , flex
-        , inlineFlex
-        , listItem
-        , block
-        , none
-        , top
-        , left
-        , right
-        , bottom
-        , width
-        , height
-        , padding
-        , paddingLeft
-        , paddingRight
-        , paddingTop
-        , paddingBottom
-        , margin
-        , marginLeft
-        , marginRight
-        , marginTop
-        , marginBottom
-        , color
-        , backgroundColor
-        , borderColor
-        , borderWidth
-        , borderLeftWidth
-        , borderRightWidth
-        , borderTopWidth
-        , borderBottomWidth
-        , borderRadius
-        , borderTopLeftRadius
-        , borderTopRightRadius
-        , borderBottomLeftRadius
-        , borderBottomRightRadius
-        , shadow
-        , textShadow
-        , insetShadow
-        , scale
-        , scale3d
-        , rotate
-        , rotate3d
-        , transformOrigin
-        , translate
-        , translate3d
-        , viewBox
-        , fill
-        , stroke
-        , strokeWidth
-        , stopColor
-        , offset
-        , x
-        , y
-        , cx
-        , cy
-        , radius
-        , radiusX
-        , radiusY
-        , points
-        , path
-        , PathStep
-        , move
-        , moveTo
-        , line
-        , lineTo
-        , horizontal
-        , horizontalTo
-        , vertical
-        , verticalTo
-        , close
-        , CubicCurve
-        , QuadraticCurve
-        , curve
-        , curveTo
-        , curve2
-        , curve2To
-        , arc
+        ( Angle
         , Arc
-        , filterUrl
-        , blur
-        , brightness
-        , contrast
-        , grayscale
-        , greyscale
-        , hueRotate
-        , invert
-        , saturate
-        , sepia
-        , dropShadow
-        , px
-        , percent
-        , em
-        , rem
-        , turn
-        , deg
-        , grad
-        , rad
-        , custom
-        , custom2
-        , customColor
+        , Color
+        , CubicCurve
+        , Interpolation
+        , Length
+        , Msg
+        , PathStep
+        , Property
+        , QuadraticCurve
+        , State
+        , Step
+        , arc
         , attr
         , attr2
         , attr3
         , attr4
         , attrColor
+        , backgroundColor
+        , block
+        , blur
+        , borderBottomLeftRadius
+        , borderBottomRightRadius
+        , borderBottomWidth
+        , borderColor
+        , borderLeftWidth
+        , borderRadius
+        , borderRightWidth
+        , borderTopLeftRadius
+        , borderTopRightRadius
+        , borderTopWidth
+        , borderWidth
+        , bottom
+        , brightness
+        , close
+        , color
+        , contrast
+        , curve
+        , curve2
+        , curve2To
+        , curveTo
+        , custom
+        , custom2
+        , customColor
+        , cx
+        , cy
+        , deg
+        , display
+        , dropShadow
+        , easing
+        , em
         , exactly
+        , fill
+        , filterUrl
+        , flex
+        , grad
+        , grayscale
+        , greyscale
+        , height
+        , horizontal
+        , horizontalTo
+        , hueRotate
+        , inline
+        , inlineBlock
+        , inlineFlex
+        , insetShadow
+        , interrupt
+        , invert
+        , left
+        , line
+        , lineTo
+        , listItem
+        , loop
+        , margin
+        , marginBottom
+        , marginLeft
+        , marginRight
+        , marginTop
+        , move
+        , moveTo
+        , none
+        , offset
+        , opacity
+        , padding
+        , paddingBottom
+        , paddingLeft
+        , paddingRight
+        , paddingTop
+        , path
+        , percent
+        , points
+        , px
+        , queue
+        , rad
+        , radius
+        , radiusX
+        , radiusY
+        , rem
+        , render
+        , renderPairs
+        , repeat
+        , right
+        , rotate
+        , rotate3d
+        , saturate
+        , scale
+        , scale3d
+        , sepia
+        , set
+        , shadow
+        , speed
+        , spring
+        , stopColor
+        , stroke
+        , strokeWidth
+        , style
+        , styleWith
+        , styleWithEach
+        , subscription
+        , textShadow
+        , to
+        , toWith
+        , toWithEach
+        , top
+        , transformOrigin
+        , translate
+        , translate3d
+        , turn
+        , update
+        , vertical
+        , verticalTo
+        , viewBox
+        , wait
+        , width
+        , x
+        , y
         )
 
 {-| A library for animations.
 
+
 # Setting up an animation
-@docs State, subscription, Msg, render
+
+@docs State, subscription, Msg, render, renderPairs
+
 
 # Creating an animation
+
 @docs interrupt, queue, Step, wait, to, toWith, toWithEach, set, repeat, loop, update, style, styleWith, styleWithEach, Interpolation, spring, easing, speed
 
+
 # Animatable Properties
-@docs Property, opacity, Length, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
+
+@docs Property, opacity, Length, top, left, right, bottom, width, height, padding, paddingLeft, paddingRight, paddingTop, paddingBottom, margin, marginLeft, marginRight, marginTop, marginBottom, Color, color, backgroundColor, borderColor, borderWidth, borderLeftWidth, borderRightWidth, borderTopWidth, borderBottomWidth, borderRadius, borderTopLeftRadius, borderTopRightRadius, borderBottomLeftRadius, borderBottomRightRadius, shadow, textShadow, insetShadow, display, inline, inlineBlock, flex, inlineFlex, block, none, listItem
+
 
 # Transforms
+
 @docs scale, scale3d, Angle, rotate, rotate3d, translate, translate3d, transformOrigin
 
+
 # Animatable CSS Filters
+
 @docs filterUrl, blur, brightness, contrast, grayscale, greyscale, hueRotate, invert, saturate, sepia, dropShadow
 
+
 # Animatable Svg Properties
+
 @docs viewBox, fill, stroke, strokeWidth, stopColor, offset, x, y, cx, cy, radius, radiusX, radiusY, points
 
+
 # Constructing an Svg Path
-@docs path, PathStep, move, moveTo, line, lineTo, horizontal, horizontalTo, vertical, verticalTo,  close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To, arc, Arc
+
+@docs path, PathStep, move, moveTo, line, lineTo, horizontal, horizontalTo, vertical, verticalTo, close, QuadraticCurve, curve, curveTo, CubicCurve, curve2, curve2To, arc, Arc
+
 
 # Units
+
 @docs px, percent, em, rem, turn, deg, grad, rad
 
+
 # Advanced
+
 @docs exactly, custom, custom2, customColor, attr, attr2, attr3, attr4, attrColor
 
 -}
 
-import Html
-import Color exposing (Color)
-import Time exposing (Time, second)
-import AnimationFrame
 import Animation.Model exposing (..)
 import Animation.Render
+import AnimationFrame
+import Html
+import Time
 
 
 {-| _Note_ - The compiler will refer to your `Animation.State` as `Animation.Model.Animation msg`
@@ -212,7 +231,12 @@ type alias Step =
 --------------------------
 
 
-{-| Specify a custom Spring to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
+{-| -}
+type alias Milliseconds =
+    Float
+
+
+{-| Specify a custom Spring to animate with. To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
 
 This should be your preferred interpolation to use.
 
@@ -222,32 +246,32 @@ spring settings =
     Spring settings
 
 
-{-| Specify a custom Easing to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
+{-| Specify a custom Easing to animate with. To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
 
 The [elm-community/easing-functions](https://github.com/elm-community/easing-functions) package has a bunch of useful easing functions!
 
 -}
-easing : { duration : Time, ease : Float -> Float } -> Animation.Model.Interpolation
+easing : { duration : Milliseconds, ease : Float -> Float } -> Animation.Model.Interpolation
 easing { duration, ease } =
     Easing
         { progress = 1
-        , duration = duration
+        , duration = Time.millisToPosix (round duration)
         , start = 0
         , ease = ease
         }
 
 
-{-| Specify a speed to animate with.  To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
+{-| Specify a speed to animate with. To be used in conjunction with `StyleWith`, `StyleWithEach`, `toWith`, and `toWithEach`.
 
-Generally you don't want this.  It's used in the special case of the default interpolation for rotation.
+Generally you don't want this. It's used in the special case of the default interpolation for rotation.
 
 Use `Animation.spring` or `Animation.easing` instead as they are more powerful.
 
 -}
 speed : { perSecond : Float } -> Animation.Model.Interpolation
-speed speed =
+speed speedValue =
     AtSpeed
-        speed
+        speedValue
 
 
 setDefaultInterpolation : Animation.Model.Property -> Animation.Model.Property
@@ -256,21 +280,13 @@ setDefaultInterpolation prop =
         interp =
             defaultInterpolationByProperty prop
     in
-        mapToMotion (\m -> { m | interpolation = interp }) prop
+    mapToMotion (\m -> { m | interpolation = interp }) prop
 
 
-{-|
-
--}
+{-| -}
 defaultInterpolationByProperty : Animation.Model.Property -> Animation.Model.Interpolation
 defaultInterpolationByProperty prop =
     let
-        spring =
-            Spring
-                { stiffness = 170
-                , damping = 26
-                }
-
         -- progress is set to 1 because it is changed to 0 when the animation actually starts
         -- This is analagous to the spring starting at rest.
         linear duration =
@@ -280,40 +296,46 @@ defaultInterpolationByProperty prop =
                 , duration = duration
                 , ease = identity
                 }
+
+        defaultSpring =
+            Spring
+                { stiffness = 170
+                , damping = 26
+                }
     in
-        case prop of
-            ExactProperty _ _ ->
-                spring
+    case prop of
+        ExactProperty _ _ ->
+            defaultSpring
 
-            ColorProperty _ _ _ _ _ ->
-                linear (0.4 * second)
+        ColorProperty _ _ _ _ _ ->
+            linear (Time.millisToPosix 400)
 
-            ShadowProperty _ _ _ ->
-                spring
+        ShadowProperty _ _ _ ->
+            defaultSpring
 
-            Animation.Model.Property _ _ ->
-                spring
+        Animation.Model.Property _ _ ->
+            defaultSpring
 
-            Animation.Model.Property2 _ _ _ ->
-                spring
+        Animation.Model.Property2 _ _ _ ->
+            defaultSpring
 
-            Animation.Model.Property3 name _ _ _ ->
-                if name == "rotate3d" then
-                    speed { perSecond = pi }
-                else
-                    spring
-
-            Animation.Model.Property4 _ _ _ _ _ ->
-                spring
-
-            AngleProperty _ _ ->
+        Animation.Model.Property3 name _ _ _ ->
+            if name == "rotate3d" then
                 speed { perSecond = pi }
+            else
+                defaultSpring
 
-            Points _ ->
-                spring
+        Animation.Model.Property4 _ _ _ _ _ ->
+            defaultSpring
 
-            Path _ ->
-                spring
+        AngleProperty _ _ ->
+            speed { perSecond = pi }
+
+        Points _ ->
+            defaultSpring
+
+        Path _ ->
+            defaultSpring
 
 
 
@@ -323,13 +345,12 @@ defaultInterpolationByProperty prop =
 
 
 {-| -}
-wait : Time -> Animation.Model.Step msg
+wait : Time.Posix -> Animation.Model.Step msg
 wait till =
     Wait till
 
 
 {-| Animate to a set of target values, using the default interpolation.
-
 -}
 to : List Animation.Model.Property -> Animation.Model.Step msg
 to props =
@@ -391,8 +412,8 @@ initialState current =
         { steps = []
         , style = current
         , timing =
-            { current = 0
-            , dt = 0
+            { current = Time.millisToPosix 0
+            , dt = Time.millisToPosix 0
             }
         , running = False
         , interruption = []
@@ -410,7 +431,6 @@ style props =
 
 
 {-| Set an initial style for an animation and override the standard default for interpolation.
-
 -}
 styleWith : Animation.Model.Interpolation -> List Animation.Model.Property -> Animation msg
 styleWith interp props =
@@ -420,6 +440,7 @@ styleWith interp props =
 {-| Set an initial style for an animation and specify the interpolation to be used for each property.
 
 Any property not listed will receive interpolation based on the standard defaults.
+
 -}
 styleWithEach : List ( Animation.Model.Interpolation, Animation.Model.Property ) -> Animation msg
 styleWithEach props =
@@ -427,11 +448,10 @@ styleWithEach props =
         _ =
             Animation.Render.warnForDoubleListedProperties <| List.map Tuple.second props
     in
-        initialState <| List.map (\( interp, prop ) -> mapToMotion (\m -> { m | interpolation = interp }) prop) props
+    initialState <| List.map (\( interp, prop ) -> mapToMotion (\m -> { m | interpolation = interp }) prop) props
 
 
 {-| Add an animation to the queue, execiting once the current animation finishes
-
 -}
 queue : List (Animation.Model.Step msg) -> Animation msg -> Animation msg
 queue steps (Animation model) =
@@ -443,7 +463,6 @@ queue steps (Animation model) =
 
 
 {-| Interrupt any running animations with the following animation.
-
 -}
 interrupt : List (Animation.Model.Step msg) -> Animation msg -> Animation msg
 interrupt steps (Animation model) =
@@ -458,13 +477,12 @@ interrupt steps (Animation model) =
 
 This is used because the wait at the start of an interruption works differently than a normal wait.
 
-
 -}
-extractInitialWait : List (Animation.Model.Step msg) -> ( Time, List (Animation.Model.Step msg) )
+extractInitialWait : List (Animation.Model.Step msg) -> ( Time.Posix, List (Animation.Model.Step msg) )
 extractInitialWait steps =
     case List.head steps of
         Nothing ->
-            ( 0, [] )
+            ( Time.millisToPosix 0, [] )
 
         Just step ->
             case step of
@@ -473,10 +491,10 @@ extractInitialWait steps =
                         ( additionalTime, remainingSteps ) =
                             extractInitialWait (List.drop 1 steps)
                     in
-                        ( till + additionalTime, remainingSteps )
+                    ( Time.millisToPosix (Time.posixToMillis till + Time.posixToMillis additionalTime), remainingSteps )
 
                 _ ->
-                    ( 0, steps )
+                    ( Time.millisToPosix 0, steps )
 
 
 {-| Create a subscription to AnimationFrame.times.
@@ -497,9 +515,8 @@ isRunning (Animation model) =
     model.running
 
 
-{-|
--}
-debug : Animation msg -> List ( String, Motion, Time )
+{-| -}
+debug : Animation msg -> List ( String, Motion, Time.Posix )
 debug (Animation model) =
     let
         time =
@@ -517,7 +534,7 @@ debug (Animation model) =
                     , ( name ++ "-alpha", a, time )
                     ]
 
-                ShadowProperty propName inset shadow ->
+                ShadowProperty propName inset shade ->
                     let
                         name =
                             if inset then
@@ -525,15 +542,15 @@ debug (Animation model) =
                             else
                                 propName
                     in
-                        [ ( name ++ "-offsetX", shadow.offsetX, time )
-                        , ( name ++ "-offsetY", shadow.offsetY, time )
-                        , ( name ++ "-size", shadow.size, time )
-                        , ( name ++ "-blur", shadow.blur, time )
-                        , ( name ++ "-red", shadow.red, time )
-                        , ( name ++ "-green", shadow.green, time )
-                        , ( name ++ "-blue", shadow.blue, time )
-                        , ( name ++ "-alpha", shadow.alpha, time )
-                        ]
+                    [ ( name ++ "-offsetX", shade.offsetX, time )
+                    , ( name ++ "-offsetY", shade.offsetY, time )
+                    , ( name ++ "-size", shade.size, time )
+                    , ( name ++ "-blur", shade.blur, time )
+                    , ( name ++ "-red", shade.red, time )
+                    , ( name ++ "-green", shade.green, time )
+                    , ( name ++ "-blue", shade.blue, time )
+                    , ( name ++ "-alpha", shade.alpha, time )
+                    ]
 
                 Property name m1 ->
                     [ ( name, m1, time ) ]
@@ -564,19 +581,19 @@ debug (Animation model) =
                         name =
                             "points"
                     in
-                        List.concat <|
-                            List.indexedMap
-                                (\i ( x, y ) ->
-                                    [ ( toString i ++ name ++ "-x", x, time )
-                                    , ( toString i ++ name ++ "-y", y, time )
-                                    ]
-                                )
-                                ms
+                    List.concat <|
+                        List.indexedMap
+                            (\i ( x_, y_ ) ->
+                                [ ( String.fromInt i ++ name ++ "-x", x_, time )
+                                , ( String.fromInt i ++ name ++ "-y", y_, time )
+                                ]
+                            )
+                            ms
 
                 Path cmds ->
                     []
     in
-        List.concatMap getValueTuple model.style
+    List.concatMap getValueTuple model.style
 
 
 {-| Update an animation.
@@ -663,14 +680,12 @@ lengthUnitName unit =
             "pc"
 
 
-{-|
--}
+{-| -}
 type Length
     = Length Float LengthUnit
 
 
-{-|
--}
+{-| -}
 type Angle
     = Radians Float
 
@@ -716,167 +731,156 @@ turn a =
 
 {-| -}
 px : Float -> Length
-px x =
-    Length x Px
+px myPx =
+    Length myPx Px
 
 
 {-| -}
 percent : Float -> Length
-percent x =
-    Length x Percent
+percent perc =
+    Length perc Percent
 
 
 {-| -}
 rem : Float -> Length
-rem x =
-    Length x Rem
+rem val =
+    Length val Rem
 
 
 {-| -}
 em : Float -> Length
-em x =
-    Length x Em
+em val =
+    Length val Em
 
 
 {-| -}
 ex : Float -> Length
-ex x =
-    Length x Ex
+ex val =
+    Length val Ex
 
 
 {-| -}
 ch : Float -> Length
-ch x =
-    Length x Ch
+ch val =
+    Length val Ch
 
 
 {-| -}
 vh : Float -> Length
-vh x =
-    Length x Vh
+vh val =
+    Length val Vh
 
 
 {-| -}
 vw : Float -> Length
-vw x =
-    Length x Vw
+vw val =
+    Length val Vw
 
 
 {-| -}
 vmin : Float -> Length
-vmin x =
-    Length x Vmin
+vmin val =
+    Length val Vmin
 
 
 {-| -}
 vmax : Float -> Length
-vmax x =
-    Length x Vmax
+vmax val =
+    Length val Vmax
 
 
 {-| -}
 mm : Float -> Length
-mm x =
-    Length x Mm
+mm val =
+    Length val Mm
 
 
 {-| -}
 cm : Float -> Length
-cm x =
-    Length x Cm
+cm val =
+    Length val Cm
 
 
 {-| -}
 inches : Float -> Length
-inches x =
-    Length x In
+inches val =
+    Length val In
 
 
 {-| -}
 pt : Float -> Length
-pt x =
-    Length x Pt
+pt val =
+    Length val Pt
 
 
 {-| -}
 pc : Float -> Length
-pc x =
-    Length x Pc
+pc val =
+    Length val Pc
 
 
 length : String -> Float -> String -> Animation.Model.Property
-length name x unit =
-    Animation.Model.Property name (initMotion x unit)
+length name val unit =
+    Animation.Model.Property name (initMotion val unit)
 
 
 length2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
-length2 name ( x, len ) ( x2, len2 ) =
+length2 name ( val, len ) ( val2, len2 ) =
     Animation.Model.Property2 name
-        (initMotion x len)
-        (initMotion x2 len2)
+        (initMotion val len)
+        (initMotion val2 len2)
 
 
 length3 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
-length3 name ( x, len ) ( x2, len2 ) ( x3, len3 ) =
+length3 name ( val, len ) ( val2, len2 ) ( val3, len3 ) =
     Animation.Model.Property3 name
-        (initMotion x len)
-        (initMotion x2 len2)
-        (initMotion x3 len3)
+        (initMotion val len)
+        (initMotion val2 len2)
+        (initMotion val3 len3)
 
 
 length4 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
-length4 name ( x, len ) ( x2, len2 ) ( x3, len3 ) ( x4, len4 ) =
+length4 name ( val, len ) ( val2, len2 ) ( val3, len3 ) ( val4, len4 ) =
     Animation.Model.Property4 name
-        (initMotion x len)
-        (initMotion x2 len2)
-        (initMotion x3 len3)
-        (initMotion x4 len4)
+        (initMotion val len)
+        (initMotion val2 len2)
+        (initMotion val3 len3)
+        (initMotion val4 len4)
 
 
 {-| Animate a custom attribute by providing it's name, a float value, and the units it should have.
-
-
 -}
 attr : String -> Float -> String -> Animation.Model.Property
 attr name value unit =
     Animation.Model.Property ("attr:" ++ name) (initMotion value unit)
 
 
-{-|
-
--}
+{-| -}
 attr2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
 attr2 name value1 value2 =
     length2 ("attr:" ++ name) value1 value2
 
 
-{-|
--}
+{-| -}
 attr3 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
 attr3 name value1 value2 value3 =
     length3 ("attr:" ++ name) value1 value2 value3
 
 
-{-|
--}
+{-| -}
 attr4 : String -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
 attr4 name value1 value2 value3 value4 =
     length4 ("attr:" ++ name) value1 value2 value3 value4
 
 
-{-|
--}
+{-| -}
 attrColor : String -> Color -> Animation.Model.Property
-attrColor name color =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgb color
-    in
-        ColorProperty ("attr:" ++ name)
-            (initMotion (toFloat red) "")
-            (initMotion (toFloat green) "")
-            (initMotion (toFloat blue) "")
-            (initMotion alpha "")
+attrColor name { red, green, blue, alpha } =
+    ColorProperty ("attr:" ++ name)
+        (initMotion (toFloat red) "")
+        (initMotion (toFloat green) "")
+        (initMotion (toFloat blue) "")
+        (initMotion alpha "")
 
 
 {-| Animate a custom _style_ property by providing it's name, a float value, and the units it should have.
@@ -886,37 +890,38 @@ custom name value unit =
     Animation.Model.Property name (initMotion value unit)
 
 
-{-|
--}
+{-| -}
 custom2 : String -> ( Float, String ) -> ( Float, String ) -> Animation.Model.Property
 custom2 name value unit =
     length2 name value unit
 
 
-{-|
--}
+{-| -}
+type alias Color =
+    { red : Int
+    , green : Int
+    , blue : Int
+    , alpha : Float
+    }
+
+
+{-| -}
 customColor : String -> Color -> Animation.Model.Property
-customColor name color =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgb color
-    in
-        ColorProperty name
-            (initMotion (toFloat red) "")
-            (initMotion (toFloat green) "")
-            (initMotion (toFloat blue) "")
-            (initMotion alpha "")
+customColor name { red, green, blue, alpha } =
+    ColorProperty name
+        (initMotion (toFloat red) "")
+        (initMotion (toFloat green) "")
+        (initMotion (toFloat blue) "")
+        (initMotion alpha "")
 
 
-{-| Set a non-numerical to an exact value.  This is generally only used with `Animation.set`.
+{-| Set a non-numerical to an exact value. This is generally only used with `Animation.set`.
 
 For example
 
-```
-Animation.set
-    [ Animation.exactly "border-style" "dashed"
-    ]
-```
+    Animation.set
+        [ Animation.exactly "border-style" "dashed"
+        ]
 
 -}
 exactly : String -> String -> Animation.Model.Property
@@ -926,8 +931,8 @@ exactly name value =
 
 {-| -}
 opacity : Float -> Animation.Model.Property
-opacity x =
-    custom "opacity" x ""
+opacity val =
+    custom "opacity" val ""
 
 
 {-| -}
@@ -1018,200 +1023,200 @@ listItem =
 
 {-| -}
 height : Length -> Animation.Model.Property
-height (Length x len) =
-    length "height" x (lengthUnitName len)
+height (Length val len) =
+    length "height" val (lengthUnitName len)
 
 
 {-| -}
 width : Length -> Animation.Model.Property
-width (Length x len) =
-    length "width" x (lengthUnitName len)
+width (Length val len) =
+    length "width" val (lengthUnitName len)
 
 
 {-| -}
 left : Length -> Animation.Model.Property
-left (Length x len) =
-    length "left" x (lengthUnitName len)
+left (Length val len) =
+    length "left" val (lengthUnitName len)
 
 
 {-| -}
 top : Length -> Animation.Model.Property
-top (Length x len) =
-    length "top" x (lengthUnitName len)
+top (Length val len) =
+    length "top" val (lengthUnitName len)
 
 
 {-| -}
 right : Length -> Animation.Model.Property
-right (Length x len) =
-    length "right" x (lengthUnitName len)
+right (Length val len) =
+    length "right" val (lengthUnitName len)
 
 
 {-| -}
 bottom : Length -> Animation.Model.Property
-bottom (Length x len) =
-    length "bottom" x (lengthUnitName len)
+bottom (Length val len) =
+    length "bottom" val (lengthUnitName len)
 
 
 {-| -}
 maxHeight : Length -> Animation.Model.Property
-maxHeight (Length x len) =
-    length "max-height" x (lengthUnitName len)
+maxHeight (Length val len) =
+    length "max-height" val (lengthUnitName len)
 
 
 {-| -}
 maxWidth : Length -> Animation.Model.Property
-maxWidth (Length x len) =
-    length "max-width" x (lengthUnitName len)
+maxWidth (Length val len) =
+    length "max-width" val (lengthUnitName len)
 
 
 {-| -}
 minHeight : Length -> Animation.Model.Property
-minHeight (Length x len) =
-    length "min-height" x (lengthUnitName len)
+minHeight (Length val len) =
+    length "min-height" val (lengthUnitName len)
 
 
 {-| -}
 minWidth : Length -> Animation.Model.Property
-minWidth (Length x len) =
-    length "min-width" x (lengthUnitName len)
+minWidth (Length val len) =
+    length "min-width" val (lengthUnitName len)
 
 
 {-| -}
 padding : Length -> Animation.Model.Property
-padding (Length x len) =
-    length "padding" x (lengthUnitName len)
+padding (Length val len) =
+    length "padding" val (lengthUnitName len)
 
 
 {-| -}
 paddingLeft : Length -> Animation.Model.Property
-paddingLeft (Length x len) =
-    length "padding-left" x (lengthUnitName len)
+paddingLeft (Length val len) =
+    length "padding-left" val (lengthUnitName len)
 
 
 {-| -}
 paddingRight : Length -> Animation.Model.Property
-paddingRight (Length x len) =
-    length "padding-right" x (lengthUnitName len)
+paddingRight (Length val len) =
+    length "padding-right" val (lengthUnitName len)
 
 
 {-| -}
 paddingTop : Length -> Animation.Model.Property
-paddingTop (Length x len) =
-    length "padding-top" x (lengthUnitName len)
+paddingTop (Length val len) =
+    length "padding-top" val (lengthUnitName len)
 
 
 {-| -}
 paddingBottom : Length -> Animation.Model.Property
-paddingBottom (Length x len) =
-    length "padding-bottom" x (lengthUnitName len)
+paddingBottom (Length val len) =
+    length "padding-bottom" val (lengthUnitName len)
 
 
 {-| -}
 margin : Length -> Animation.Model.Property
-margin (Length x len) =
-    length "margin" x (lengthUnitName len)
+margin (Length val len) =
+    length "margin" val (lengthUnitName len)
 
 
 {-| -}
 marginLeft : Length -> Animation.Model.Property
-marginLeft (Length x len) =
-    length "margin-left" x (lengthUnitName len)
+marginLeft (Length val len) =
+    length "margin-left" val (lengthUnitName len)
 
 
 {-| -}
 marginRight : Length -> Animation.Model.Property
-marginRight (Length x len) =
-    length "margin-right" x (lengthUnitName len)
+marginRight (Length val len) =
+    length "margin-right" val (lengthUnitName len)
 
 
 {-| -}
 marginTop : Length -> Animation.Model.Property
-marginTop (Length x len) =
-    length "margin-top" x (lengthUnitName len)
+marginTop (Length val len) =
+    length "margin-top" val (lengthUnitName len)
 
 
 {-| -}
 marginBottom : Length -> Animation.Model.Property
-marginBottom (Length x len) =
-    length "margin-bottom" x (lengthUnitName len)
+marginBottom (Length val len) =
+    length "margin-bottom" val (lengthUnitName len)
 
 
 {-| -}
 borderWidth : Length -> Animation.Model.Property
-borderWidth (Length x len) =
-    length "border-width" x (lengthUnitName len)
+borderWidth (Length val len) =
+    length "border-width" val (lengthUnitName len)
 
 
 {-| -}
 borderLeftWidth : Length -> Animation.Model.Property
-borderLeftWidth (Length x len) =
-    length "border-left-width" x (lengthUnitName len)
+borderLeftWidth (Length val len) =
+    length "border-left-width" val (lengthUnitName len)
 
 
 {-| -}
 borderRightWidth : Length -> Animation.Model.Property
-borderRightWidth (Length x len) =
-    length "border-right-width" x (lengthUnitName len)
+borderRightWidth (Length val len) =
+    length "border-right-width" val (lengthUnitName len)
 
 
 {-| -}
 borderTopWidth : Length -> Animation.Model.Property
-borderTopWidth (Length x len) =
-    length "border-top-width" x (lengthUnitName len)
+borderTopWidth (Length val len) =
+    length "border-top-width" val (lengthUnitName len)
 
 
 {-| -}
 borderBottomWidth : Length -> Animation.Model.Property
-borderBottomWidth (Length x len) =
-    length "border-bottom-width" x (lengthUnitName len)
+borderBottomWidth (Length val len) =
+    length "border-bottom-width" val (lengthUnitName len)
 
 
 {-| -}
 borderRadius : Length -> Animation.Model.Property
-borderRadius (Length x len) =
-    length "border-radius" x (lengthUnitName len)
+borderRadius (Length val len) =
+    length "border-radius" val (lengthUnitName len)
 
 
 {-| -}
 borderTopLeftRadius : Length -> Animation.Model.Property
-borderTopLeftRadius (Length x len) =
-    length "border-top-left-radius" x (lengthUnitName len)
+borderTopLeftRadius (Length val len) =
+    length "border-top-left-radius" val (lengthUnitName len)
 
 
 {-| -}
 borderTopRightRadius : Length -> Animation.Model.Property
-borderTopRightRadius (Length x len) =
-    length "border-top-right-radius" x (lengthUnitName len)
+borderTopRightRadius (Length val len) =
+    length "border-top-right-radius" val (lengthUnitName len)
 
 
 {-| -}
 borderBottomLeftRadius : Length -> Animation.Model.Property
-borderBottomLeftRadius (Length x len) =
-    length "border-bottom-left-radius" x (lengthUnitName len)
+borderBottomLeftRadius (Length val len) =
+    length "border-bottom-left-radius" val (lengthUnitName len)
 
 
 {-| -}
 borderBottomRightRadius : Length -> Animation.Model.Property
-borderBottomRightRadius (Length x len) =
-    length "border-bottom-right-radius" x (lengthUnitName len)
+borderBottomRightRadius (Length val len) =
+    length "border-bottom-right-radius" val (lengthUnitName len)
 
 
 {-| -}
 letterSpacing : Length -> Animation.Model.Property
-letterSpacing (Length x len) =
-    length "letter-spacing" x (lengthUnitName len)
+letterSpacing (Length val len) =
+    length "letter-spacing" val (lengthUnitName len)
 
 
 {-| -}
 lineHeight : Length -> Animation.Model.Property
-lineHeight (Length x len) =
-    length "line-height" x (lengthUnitName len)
+lineHeight (Length val len) =
+    length "line-height" val (lengthUnitName len)
 
 
 {-| -}
 backgroundPosition : Length -> Length -> Animation.Model.Property
-backgroundPosition (Length x len1) (Length y len2) =
-    length2 "background-position" ( x, lengthUnitName len1 ) ( y, lengthUnitName len2 )
+backgroundPosition (Length val len1) (Length valY len2) =
+    length2 "background-position" ( val, lengthUnitName len1 ) ( valY, lengthUnitName len2 )
 
 
 {-| -}
@@ -1234,47 +1239,47 @@ borderColor c =
 
 {-| -}
 translate : Length -> Length -> Animation.Model.Property
-translate (Length x len1) (Length y len2) =
-    length2 "translate" ( x, lengthUnitName len1 ) ( y, lengthUnitName len2 )
+translate (Length valX len1) (Length valY len2) =
+    length2 "translate" ( valX, lengthUnitName len1 ) ( valY, lengthUnitName len2 )
 
 
 {-| -}
 translate3d : Length -> Length -> Length -> Animation.Model.Property
-translate3d (Length x len1) (Length y len2) (Length z len3) =
-    length3 "translate3d" ( x, lengthUnitName len1 ) ( y, lengthUnitName len2 ) ( z, lengthUnitName len3 )
+translate3d (Length valX len1) (Length valY len2) (Length valZ len3) =
+    length3 "translate3d" ( valX, lengthUnitName len1 ) ( valY, lengthUnitName len2 ) ( valZ, lengthUnitName len3 )
 
 
 {-| -}
 transformOrigin : Length -> Length -> Length -> Animation.Model.Property
-transformOrigin (Length x len1) (Length y len2) (Length z len3) =
-    length3 "transform-origin" ( x, lengthUnitName len1 ) ( y, lengthUnitName len2 ) ( z, lengthUnitName len3 )
+transformOrigin (Length valX len1) (Length valY len2) (Length valZ len3) =
+    length3 "transform-origin" ( valX, lengthUnitName len1 ) ( valY, lengthUnitName len2 ) ( valZ, lengthUnitName len3 )
 
 
 {-| -}
 scale : Float -> Animation.Model.Property
-scale x =
-    custom "scale" x ""
+scale valX =
+    custom "scale" valX ""
 
 
 {-| -}
 scale3d : Float -> Float -> Float -> Animation.Model.Property
-scale3d x y z =
+scale3d valX valY valZ =
     Animation.Model.Property3 "scale3d"
-        (initMotion x "")
-        (initMotion y "")
-        (initMotion z "")
+        (initMotion valX "")
+        (initMotion valY "")
+        (initMotion valZ "")
 
 
 {-| -}
 rotate : Angle -> Animation.Model.Property
-rotate (Radians x) =
-    AngleProperty "rotate" (initMotion x "rad")
+rotate (Radians valX) =
+    AngleProperty "rotate" (initMotion valX "rad")
 
 
 {-| -}
 rotate3d : Angle -> Angle -> Angle -> Animation.Model.Property
-rotate3d (Radians x) (Radians y) (Radians z) =
-    length3 "rotate3d" ( x, "rad" ) ( y, "rad" ) ( z, "rad" )
+rotate3d (Radians valX) (Radians valY) (Radians valZ) =
+    length3 "rotate3d" ( valX, "rad" ) ( valY, "rad" ) ( valZ, "rad" )
 
 
 type alias Shadow =
@@ -1286,68 +1291,56 @@ type alias Shadow =
     }
 
 
-{-| Text shadows will ignore the shadow's `size` value.   This is just one of the bizarre quirks of CSS.
+{-| Text shadows will ignore the shadow's `size` value. This is just one of the bizarre quirks of CSS.
 -}
 textShadow : Shadow -> Animation.Model.Property
 textShadow shade =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgb shade.color
-    in
-        ShadowProperty
-            "text-shadow"
-            False
-            { offsetX = initMotion shade.offsetX "px"
-            , offsetY = initMotion shade.offsetY "px"
-            , size = initMotion shade.size "px"
-            , blur = initMotion shade.blur "px"
-            , red = initMotion (toFloat red) "px"
-            , green = initMotion (toFloat green) "px"
-            , blue = initMotion (toFloat blue) "px"
-            , alpha = initMotion alpha "px"
-            }
+    ShadowProperty
+        "text-shadow"
+        False
+        { offsetX = initMotion shade.offsetX "px"
+        , offsetY = initMotion shade.offsetY "px"
+        , size = initMotion shade.size "px"
+        , blur = initMotion shade.blur "px"
+        , red = initMotion (toFloat shade.color.red) "px"
+        , green = initMotion (toFloat shade.color.green) "px"
+        , blue = initMotion (toFloat shade.color.blue) "px"
+        , alpha = initMotion shade.color.alpha "px"
+        }
 
 
 {-| -}
 shadow : Shadow -> Animation.Model.Property
 shadow shade =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgb shade.color
-    in
-        ShadowProperty
-            "box-shadow"
-            False
-            { offsetX = initMotion shade.offsetX "px"
-            , offsetY = initMotion shade.offsetY "px"
-            , size = initMotion shade.size "px"
-            , blur = initMotion shade.blur "px"
-            , red = initMotion (toFloat red) "px"
-            , green = initMotion (toFloat green) "px"
-            , blue = initMotion (toFloat blue) "px"
-            , alpha = initMotion alpha "px"
-            }
+    ShadowProperty
+        "box-shadow"
+        False
+        { offsetX = initMotion shade.offsetX "px"
+        , offsetY = initMotion shade.offsetY "px"
+        , size = initMotion shade.size "px"
+        , blur = initMotion shade.blur "px"
+        , red = initMotion (toFloat shade.color.red) "px"
+        , green = initMotion (toFloat shade.color.green) "px"
+        , blue = initMotion (toFloat shade.color.blue) "px"
+        , alpha = initMotion shade.color.alpha "px"
+        }
 
 
 {-| -}
 insetShadow : Shadow -> Animation.Model.Property
 insetShadow shade =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgb shade.color
-    in
-        ShadowProperty
-            "box-shadow"
-            True
-            { offsetX = initMotion shade.offsetX "px"
-            , offsetY = initMotion shade.offsetY "px"
-            , size = initMotion shade.size "px"
-            , blur = initMotion shade.blur "px"
-            , red = initMotion (toFloat red) "px"
-            , green = initMotion (toFloat green) "px"
-            , blue = initMotion (toFloat blue) "px"
-            , alpha = initMotion alpha "px"
-            }
+    ShadowProperty
+        "box-shadow"
+        True
+        { offsetX = initMotion shade.offsetX "px"
+        , offsetY = initMotion shade.offsetY "px"
+        , size = initMotion shade.size "px"
+        , blur = initMotion shade.blur "px"
+        , red = initMotion (toFloat shade.color.red) "px"
+        , green = initMotion (toFloat shade.color.green) "px"
+        , blue = initMotion (toFloat shade.color.blue) "px"
+        , alpha = initMotion shade.color.alpha "px"
+        }
 
 
 
@@ -1356,26 +1349,26 @@ insetShadow shade =
 
 {-| -}
 x : Float -> Animation.Model.Property
-x x =
-    custom "x" x ""
+x x_ =
+    custom "x" x_ ""
 
 
 {-| -}
 y : Float -> Animation.Model.Property
-y y =
-    custom "y" y ""
+y y_ =
+    custom "y" y_ ""
 
 
 {-| -}
 cx : Float -> Animation.Model.Property
-cx x =
-    custom "cx" x ""
+cx x_ =
+    custom "cx" x_ ""
 
 
 {-| -}
 cy : Float -> Animation.Model.Property
-cy y =
-    custom "cy" y ""
+cy y_ =
+    custom "cy" y_ ""
 
 
 {-| -}
@@ -1396,60 +1389,59 @@ radiusY ry =
     custom "ry" ry ""
 
 
-{-| To be used with the svg path element.  Renders as the d property.
+{-| To be used with the svg path element. Renders as the d property.
 -}
 path : List PathCommand -> Animation.Model.Property
 path commands =
     Path commands
 
 
-{-|
--}
+{-| -}
 move : Float -> Float -> PathCommand
-move x y =
-    Move (initMotion x "") (initMotion y "")
+move x_ y_ =
+    Move (initMotion x_ "") (initMotion y_ "")
 
 
 {-| -}
 moveTo : Float -> Float -> PathCommand
-moveTo x y =
-    MoveTo (initMotion x "") (initMotion y "")
+moveTo x_ y_ =
+    MoveTo (initMotion x_ "") (initMotion y_ "")
 
 
 {-| -}
 line : Float -> Float -> PathCommand
-line x y =
-    Line (initMotion x "") (initMotion y "")
+line x_ y_ =
+    Line (initMotion x_ "") (initMotion y_ "")
 
 
 {-| -}
 lineTo : Float -> Float -> PathCommand
-lineTo x y =
-    LineTo (initMotion x "") (initMotion y "")
+lineTo x_ y_ =
+    LineTo (initMotion x_ "") (initMotion y_ "")
 
 
 {-| -}
 horizontal : Float -> PathCommand
-horizontal x =
-    Horizontal (initMotion x "")
+horizontal x_ =
+    Horizontal (initMotion x_ "")
 
 
 {-| -}
 horizontalTo : Float -> PathCommand
-horizontalTo x =
-    HorizontalTo (initMotion x "")
+horizontalTo x_ =
+    HorizontalTo (initMotion x_ "")
 
 
 {-| -}
 vertical : Float -> PathCommand
-vertical x =
-    Vertical (initMotion x "")
+vertical x_ =
+    Vertical (initMotion x_ "")
 
 
 {-| -}
 verticalTo : Float -> PathCommand
-verticalTo x =
-    VerticalTo (initMotion x "")
+verticalTo x_ =
+    VerticalTo (initMotion x_ "")
 
 
 {-| -}
@@ -1469,7 +1461,6 @@ type alias QuadraticCurve =
 
 {-| Create a relative Curve with 2 control points and a target point.
 This is a Cubic Curve in the svg spec.
-
 -}
 curve2 : CubicCurve -> PathCommand
 curve2 { control1, control2, point } =
@@ -1491,7 +1482,6 @@ curve2 { control1, control2, point } =
 
 {-| Create an absolute Curve with 2 control points and a target point.
 This is a Cubic Curve in the svg spec.
-
 -}
 curve2To : CubicCurve -> PathCommand
 curve2To { control1, control2, point } =
@@ -1556,25 +1546,24 @@ type alias Arc =
     }
 
 
-{-|
--}
+{-| -}
 arc : Arc -> PathCommand
-arc arc =
-    if arc.clockwise then
+arc myArc =
+    if myArc.clockwise then
         ClockwiseArc
-            { x = initMotion arc.x ""
-            , y = initMotion arc.y ""
-            , radius = initMotion arc.radius ""
-            , startAngle = initMotion arc.startAngle ""
-            , endAngle = initMotion arc.endAngle ""
+            { x = initMotion myArc.x ""
+            , y = initMotion myArc.y ""
+            , radius = initMotion myArc.radius ""
+            , startAngle = initMotion myArc.startAngle ""
+            , endAngle = initMotion myArc.endAngle ""
             }
     else
         AntiClockwiseArc
-            { x = initMotion arc.x ""
-            , y = initMotion arc.y ""
-            , radius = initMotion arc.radius ""
-            , startAngle = initMotion arc.startAngle ""
-            , endAngle = initMotion arc.endAngle ""
+            { x = initMotion myArc.x ""
+            , y = initMotion myArc.y ""
+            , radius = initMotion myArc.radius ""
+            , startAngle = initMotion myArc.startAngle ""
+            , endAngle = initMotion myArc.endAngle ""
             }
 
 
@@ -1595,86 +1584,82 @@ filterUrl url =
 {-| Create a CSS blur filter, these stack with other filters.
 -}
 blur : Length -> Animation.Model.Property
-blur (Length x len) =
-    length "blur" x (lengthUnitName len)
+blur (Length val len) =
+    length "blur" val (lengthUnitName len)
 
 
 {-| Create a CSS brightness filter, these stack with other filters.
 -}
 brightness : Float -> Animation.Model.Property
-brightness x =
-    custom "brightness" x "%"
+brightness val =
+    custom "brightness" val "%"
 
 
 {-| Create a CSS contrast filter, these stack with other filters.
 -}
 contrast : Float -> Animation.Model.Property
-contrast x =
-    custom "contrast" x "%"
+contrast val =
+    custom "contrast" val "%"
 
 
 {-| Create a CSS grayscale filter, these stack with other filters.
 -}
 grayscale : Float -> Animation.Model.Property
-grayscale x =
-    custom "grayscale" x "%"
+grayscale val =
+    custom "grayscale" val "%"
 
 
-{-| Create a CSS grayscale filter, these stack with other filters.  This is a spelling adjusment.
+{-| Create a CSS grayscale filter, these stack with other filters. This is a spelling adjusment.
 -}
 greyscale : Float -> Animation.Model.Property
-greyscale x =
-    grayscale x
+greyscale val =
+    grayscale val
 
 
 {-| Create a CSS hue-rotation filter, these stack with other filters.
 -}
 hueRotate : Angle -> Animation.Model.Property
-hueRotate (Radians x) =
-    AngleProperty "hue-rotate" (initMotion x "rad")
+hueRotate (Radians val) =
+    AngleProperty "hue-rotate" (initMotion val "rad")
 
 
 {-| Create a CSS invert filter, these stack with other filters.
 -}
 invert : Float -> Animation.Model.Property
-invert x =
-    custom "invert" x "%"
+invert val =
+    custom "invert" val "%"
 
 
 {-| Create a CSS saturate filter, these stack with other filters.
 -}
 saturate : Float -> Animation.Model.Property
-saturate x =
-    custom "saturate" x "%"
+saturate val =
+    custom "saturate" val "%"
 
 
 {-| Create a CSS sepia filter, these stack with other filters.
 -}
 sepia : Float -> Animation.Model.Property
-sepia x =
-    custom "sepia" x "%"
+sepia val =
+    custom "sepia" val "%"
 
 
-{-| Drop shadows will ignore the shadow's `size` value.   This is just one of the bizarre quirks of CSS.
+{-| Drop shadows will ignore the shadow's `size` value. This is just one of the bizarre quirks of CSS.
 -}
 dropShadow : Shadow -> Animation.Model.Property
 dropShadow shade =
-    let
-        { red, green, blue, alpha } =
-            Color.toRgb shade.color
-    in
-        ShadowProperty
-            "drop-shadow"
-            False
-            { offsetX = initMotion shade.offsetX "px"
-            , offsetY = initMotion shade.offsetY "px"
-            , size = initMotion shade.size "px"
-            , blur = initMotion shade.blur "px"
-            , red = initMotion (toFloat red) "px"
-            , green = initMotion (toFloat green) "px"
-            , blue = initMotion (toFloat blue) "px"
-            , alpha = initMotion alpha "px"
-            }
+    ShadowProperty
+        "drop-shadow"
+        False
+        { offsetX = initMotion shade.offsetX "px"
+        , offsetY = initMotion shade.offsetY "px"
+        , size = initMotion shade.size "px"
+        , blur = initMotion shade.blur "px"
+        , red = initMotion (toFloat shade.color.red) "px"
+        , green = initMotion (toFloat shade.color.green) "px"
+        , blue = initMotion (toFloat shade.color.blue) "px"
+        , alpha = initMotion shade.color.alpha "px"
+        }
 
 
 {-| Used with the svg polygon element
@@ -1683,44 +1668,44 @@ points : List ( Float, Float ) -> Animation.Model.Property
 points pnts =
     Points <|
         List.map
-            (\( x, y ) ->
-                ( initMotion x "", initMotion y "" )
+            (\( x_, y_ ) ->
+                ( initMotion x_ "", initMotion y_ "" )
             )
             (alignStartingPoint pnts)
 
 
 {-| -}
 viewBox : Float -> Float -> Float -> Float -> Animation.Model.Property
-viewBox w x y z =
-    length4 "viewBox" ( w, "" ) ( x, "" ) ( y, "" ) ( z, "" )
+viewBox w_ x_ y_ z_ =
+    length4 "viewBox" ( w_, "" ) ( x_, "" ) ( y_, "" ) ( z_, "" )
 
 
 {-| -}
 fill : Color -> Animation.Model.Property
-fill color =
-    customColor "fill" color
+fill clr =
+    customColor "fill" clr
 
 
 {-| -}
 stroke : Color -> Animation.Model.Property
-stroke color =
-    customColor "stroke" color
+stroke clr =
+    customColor "stroke" clr
 
 
 {-| -}
 strokeWidth : Float -> Animation.Model.Property
-strokeWidth x =
-    length "stroke-width" x ""
+strokeWidth x_ =
+    length "stroke-width" x_ ""
 
 
 {-| Used for svg gradients
 -}
 stopColor : Color -> Animation.Model.Property
-stopColor color =
-    customColor "stop-color" color
+stopColor clr =
+    customColor "stop-color" clr
 
 
-{-| Used for svg gradients.  Accepts a number between 0 and 1.
+{-| Used for svg gradients. Accepts a number between 0 and 1.
 -}
 offset : Float -> Animation.Model.Property
 offset value =
@@ -1730,12 +1715,13 @@ offset value =
 {-| Given two lists of coordinates, rotate the list so that the lowest coordinate is first.
 
 This is to align polygon coordinates so that they can morph smoothely into each other.
+
 -}
 alignStartingPoint : List ( Float, Float ) -> List ( Float, Float )
-alignStartingPoint points =
+alignStartingPoint pnts =
     let
         sums =
-            List.map (\( x, y ) -> x + y) points
+            List.map (\( x_, y_ ) -> x_ + y_) pnts
 
         maybeMin =
             List.minimum sums
@@ -1757,12 +1743,12 @@ alignStartingPoint points =
                                 )
                                 sums
     in
-        case indexOfLowestPoint of
-            Nothing ->
-                points
+    case indexOfLowestPoint of
+        Nothing ->
+            pnts
 
-            Just i ->
-                (List.drop i points) ++ (List.take i points)
+        Just i ->
+            List.drop i pnts ++ List.take i pnts
 
 
 
@@ -1776,7 +1762,24 @@ alignStartingPoint points =
 Combine "transform" based properties into a single css property.
 
 Combine "filter" based properties into a single css property.
+
 -}
 render : Animation msgA -> List (Html.Attribute msgB)
 render =
     Animation.Render.render
+
+
+{-| Render style properties into the style attribute.
+
+Combine "transform" based properties into a single css property.
+
+Combine "filter" based properties into a single css property.
+
+_Note_ this method will _not_ render svg properties like `Animation.points`.
+
+-}
+renderPairs : Animation msgA -> List ( String, String )
+renderPairs anim =
+    anim
+        |> Animation.Render.renderValues
+        |> Tuple.first

@@ -1,15 +1,16 @@
 module Main exposing (..)
 
+import Animation exposing (px)
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Animation exposing (px)
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.embed
+        { init = always init
         , view = view
         , update = update
         , subscriptions = subscriptions
@@ -73,15 +74,13 @@ view model =
     div
         (Animation.render model.style
             ++ [ onClick FadeInFadeOut
-               , style
-                    [ ( "position", "relative" )
-                    , ( "margin", "100px auto" )
-                    , ( "padding", "25px" )
-                    , ( "width", "200px" )
-                    , ( "height", "200px" )
-                    , ( "background-color", "#268bd2" )
-                    , ( "color", "white" )
-                    ]
+               , style "position" "relative"
+               , style "margin" "100px auto"
+               , style "padding" "25px"
+               , style "width" "200px"
+               , style "height" "200px"
+               , style "background-color" "#268bd2"
+               , style "color" "white"
                ]
         )
         [ text "Click to Animate!" ]

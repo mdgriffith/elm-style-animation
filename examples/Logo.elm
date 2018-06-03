@@ -1,13 +1,14 @@
 module Main exposing (..)
 
-import Time exposing (second)
-import Html exposing (h1, div, Html)
+import Animation exposing (px)
+import Browser
+import Color.Palette as Color exposing (green, purple, rgb)
+import Html exposing (Html, div, h1)
 import Html.Attributes as Attr
 import Html.Events exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Animation exposing (px)
-import Color exposing (purple, green, rgb)
+import Time
 
 
 type alias Model =
@@ -98,25 +99,25 @@ update action model =
                         model.index
 
                 newStyles =
-                    (List.drop wrappedIndex polygons) ++ (List.take wrappedIndex polygons)
+                    List.drop wrappedIndex polygons ++ List.take wrappedIndex polygons
             in
-                ( { model
-                    | index = wrappedIndex + 1
-                    , styles =
-                        List.map3
-                            (\i style newStyle ->
-                                Animation.interrupt
-                                    [ Animation.wait (toFloat i * 0.05 * second)
-                                    , Animation.to newStyle
-                                    ]
-                                    style
-                            )
-                            (List.range 0 (List.length model.styles))
-                            model.styles
-                            newStyles
-                  }
-                , Cmd.none
-                )
+            ( { model
+                | index = wrappedIndex + 1
+                , styles =
+                    List.map3
+                        (\i style newStyle ->
+                            Animation.interrupt
+                                [ Animation.wait (Time.millisToPosix (i * 50))
+                                , Animation.to newStyle
+                                ]
+                                style
+                        )
+                        (List.range 0 (List.length model.styles))
+                        model.styles
+                        newStyles
+              }
+            , Cmd.none
+            )
 
         Animate time ->
             ( { model
@@ -130,7 +131,10 @@ view : Model -> Html Msg
 view model =
     div
         [ onClick EverybodySwitch
-        , Attr.style [ ( "margin", "200px auto" ), ( "width", "500px" ), ( "height", "500px" ), ( "cursor", "pointer" ) ]
+        , Attr.style "margin" "200px auto"
+        , Attr.style "width" "500px"
+        , Attr.style "height" "500px"
+        , Attr.style "cursor" "pointer"
         ]
         [ h1 [] [ text "Click to morph!" ]
         , svg
@@ -164,16 +168,15 @@ init =
     )
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.embed
+        { init = always init
         , view = view
         , update = update
         , subscriptions =
-            (\model ->
+            \model ->
                 Animation.subscription
                     Animate
                     model.styles
-            )
         }

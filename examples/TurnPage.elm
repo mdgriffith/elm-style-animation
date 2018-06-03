@@ -1,10 +1,11 @@
 module Main exposing (..)
 
+import Animation exposing (px)
+import Animation.Messenger
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Animation exposing (px)
-import Animation.Messenger
 
 
 type alias Model =
@@ -21,8 +22,10 @@ type Msg
 
 
 {-|
+
     Normally doing a function like this isn't good practice.
     But this example is to show animation!
+
 -}
 get : Int -> List String -> String
 get i list =
@@ -68,37 +71,33 @@ update action model =
                 ( anim, cmd ) =
                     Animation.Messenger.update animMsg model.style
             in
-                ( { model
-                    | style = anim
-                  }
-                , cmd
-                )
+            ( { model
+                | style = anim
+              }
+            , cmd
+            )
 
 
 view : Model -> Html Msg
 view model =
     div
         [ onClick Next
-        , style
-            [ ( "position", "absolute" )
-            , ( "top", "100px" )
-            , ( "left", "50%" )
-            , ( "margin-left", "-150px" )
-            , ( "width", "300px" )
-            , ( "cursor", "pointer" )
-            ]
+        , style "position" "absolute"
+        , style "top" "100px"
+        , style "left" "50%"
+        , style "margin-left" "-150px"
+        , style "width" "300px"
+        , style "cursor" "pointer"
         ]
         [ div
             (Animation.render model.style
-                ++ [ style
-                        [ ( "position", "absolute" )
-                        , ( "top", "-2px" )
-                        , ( "padding", "25px" )
-                        , ( "width", "300px" )
-                        , ( "background-color", "#fafafa" )
-                        , ( "border", "1px solid #eee" )
-                        , ( "border-radius", "3px" )
-                        ]
+                ++ [ style "position" "absolute"
+                   , style "top" "-2px"
+                   , style "padding" "25px"
+                   , style "width" "300px"
+                   , style "background-color" "#fafafa"
+                   , style "border" "1px solid #eee"
+                   , style "border-radius" "3px"
                    ]
             )
             [ h1 [] [ text (get model.current model.pages) ]
@@ -125,10 +124,10 @@ init =
     )
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.embed
+        { init = always init
         , view = view
         , update = update
         , subscriptions = subscriptions
