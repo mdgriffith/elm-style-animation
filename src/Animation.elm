@@ -189,7 +189,7 @@ module Animation
 
 import Animation.Model exposing (..)
 import Animation.Render
-import AnimationFrame
+import Browser.Events
 import Html
 import Time
 
@@ -497,7 +497,7 @@ extractInitialWait steps =
                     ( Time.millisToPosix 0, steps )
 
 
-{-| Create a subscription to AnimationFrame.times.
+{-| Create a subscription to `Browser.Events.onAnimationFrame`.
 
 It is throttled based on whether the current animation is running or not.
 
@@ -505,7 +505,7 @@ It is throttled based on whether the current animation is running or not.
 subscription : (Msg -> msgB) -> List (Animation msgA) -> Sub msgB
 subscription msg states =
     if List.any isRunning states then
-        Sub.map msg (AnimationFrame.times Tick)
+        Sub.map msg (Browser.Events.onAnimationFrame Tick)
     else
         Sub.none
 
