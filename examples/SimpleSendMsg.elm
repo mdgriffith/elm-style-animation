@@ -10,7 +10,7 @@ import Html.Events exposing (..)
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init = always init
         , view = view
         , update = update
