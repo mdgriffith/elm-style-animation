@@ -73,7 +73,7 @@ view model =
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init =
             always
                 ( beginInitialRotate
