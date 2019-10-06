@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (BatSignal, Model, Msg(..), batmanLogos, init, main, startLogo, update, view)
 
 import Animation
 import Browser
@@ -406,6 +406,7 @@ update action model =
                 wrappedIndex =
                     if List.length batmanLogos < model.index then
                         model.index - List.length batmanLogos
+
                     else
                         model.index
 
@@ -476,7 +477,7 @@ init =
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init = always init
         , view = view
         , update = update

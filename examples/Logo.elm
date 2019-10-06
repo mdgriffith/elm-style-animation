@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (Model, Msg(..), Palette, init, main, palette, polygons, update, view)
 
 import Animation exposing (px)
 import Browser
@@ -95,6 +95,7 @@ update action model =
                 wrappedIndex =
                     if List.length model.styles < model.index then
                         model.index - List.length model.styles
+
                     else
                         model.index
 
@@ -170,7 +171,7 @@ init =
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init = always init
         , view = view
         , update = update

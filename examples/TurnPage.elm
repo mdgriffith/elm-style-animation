@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (Model, Msg(..), get, init, main, subscriptions, update, view)
 
 import Animation exposing (px)
 import Animation.Messenger
@@ -60,6 +60,7 @@ update action model =
                 | current =
                     if model.current + 1 >= List.length model.pages then
                         0
+
                     else
                         model.current + 1
               }
@@ -126,7 +127,7 @@ init =
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init = always init
         , view = view
         , update = update

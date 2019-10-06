@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (Model, Msg(..), Widget, init, main, onIndex, onStyle, onWidgetStyle, subscriptions, update, view, viewWidget)
 
 import Animation exposing (percent, px, turn)
 import Browser
@@ -40,6 +40,7 @@ onIndex i list fn =
         (\j val ->
             if i == j then
                 fn val
+
             else
                 val
         )
@@ -280,7 +281,7 @@ subscriptions model =
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init = always init
         , view = view
         , update = update

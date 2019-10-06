@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (Model, Msg(..), Styles, init, main, styles, subscriptions, update, view)
 
 import Animation exposing (px)
 import Browser
@@ -120,7 +120,7 @@ init =
 
 main : Program () Model Msg
 main =
-    Browser.embed
+    Browser.element
         { init = always init
         , view = view
         , update = update
