@@ -11,6 +11,9 @@ __Set an initial style__ in your model.
 ```elm
 import Animation exposing (px)
 
+type alias Model =
+    { style : Animation.State }
+
 init : Model
 init =
     { style = 
